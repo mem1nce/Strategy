@@ -10,14 +10,28 @@ config_version=5
 
 [application]
 
-config/name="Yeni Oyun Projesi"
+config/name="Altı Sancak"
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+Zaman="*res://scripts/sim/zaman.gd"
+
 [display]
 
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1280
+window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
 
 [physics]
 

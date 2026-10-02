@@ -1,0 +1,6 @@
+{
+	"ova": { "ad": "Ova", "hareket": 1.0, "savunma": 1.0 },
+	"orman": { "ad": "Orman", "hareket": 1.5, "savunma": 1.25 },
+	"dag": { "ad": "Dağ", "hareket": 2.0, "savunma": 2.0 },
+	"sehir": { "ad": "Şehir", "hareket": 1.0, "savunma": 1.5 }
+}

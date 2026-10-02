@@ -1,0 +1,56 @@
+{
+	"bloklar": [
+		{
+			"id": "kuzey",
+			"ad": "Kuzey Antlaşması"
+		},
+		{
+			"id": "guney",
+			"ad": "Güney Birliği"
+		}
+	],
+	"ulkeler": [
+		{
+			"id": "vardanya",
+			"ad": "Vardanya",
+			"blok": "kuzey",
+			"renk": "#3b6fb6",
+			"baskent": "b09"
+		},
+		{
+			"id": "kelmor",
+			"ad": "Kelmor",
+			"blok": "kuzey",
+			"renk": "#4a9e5c",
+			"baskent": "b21"
+		},
+		{
+			"id": "suvat",
+			"ad": "Suvat",
+			"blok": "kuzey",
+			"renk": "#8c5fb8",
+			"baskent": "b31"
+		},
+		{
+			"id": "darmek",
+			"ad": "Darmek",
+			"blok": "guney",
+			"renk": "#c4453d",
+			"baskent": "b41"
+		},
+		{
+			"id": "yelbor",
+			"ad": "Yelbor",
+			"blok": "guney",
+			"renk": "#e6c84a",
+			"baskent": "b58"
+		},
+		{
+			"id": "orsin",
+			"ad": "Orsin",
+			"blok": "guney",
+			"renk": "#cc7426",
+			"baskent": "b63"
+		}
+	]
+}
