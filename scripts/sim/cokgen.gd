@@ -1,25 +1,24 @@
 class_name Cokgen
 extends RefCounted
-## Haritadaki tek bir toprak parçası: bir çokgen ve onun sahibi olan ülke.
+## Haritadaki tek bir toprak parçası: bir çokgen ve ait olduğu bölge.
 ##
-## Harita "çokgen + sahip" mantığıyla çalışır. Şimdilik her çokgen bir ülkenin anakarası
-## ya da adasıdır ve sahibi değişmez. İleride ülkeler bölgelere ayrıldığında her bölge
-## kendi çokgen(ler)ine sahip olacak ve `sahip` oyun içinde değişebilecek.
+## Harita "çokgen -> bölge -> sahip ülke" mantığıyla çalışır. Bir bölge birden çok
+## çokgenden oluşabilir (anakara ve adalar). Çokgenin rengi bölgesinin sahibinden gelir;
+## bölge el değiştirince çokgenleri de yeni sahibin rengini alır.
 
 var noktalar: PackedVector2Array = PackedVector2Array()
-## Bu parçanın sahibi olan ülkenin id'si.
-var sahip: String = ""
+## Bu parçanın ait olduğu bölgenin id'si.
+var bolge_id: String = ""
 var alan: float = 0.0
 ## Çokgeni saran dikdörtgen; dokunulan parçayı hızlı bulmak için.
 var sinir_kutusu: Rect2 = Rect2()
 
 
 ## JSON'daki [[x, y], ...] listesinden çokgen kurar.
-static func listeden(nokta_listesi: Array, sahip_id: String) -> Cokgen:
+static func listeden(nokta_listesi: Array, bolgenin_idsi: String) -> Cokgen:
 	var cokgen: Cokgen = Cokgen.new()
-	cokgen.sahip = sahip_id
-	for nokta: Variant in nokta_listesi:
-		cokgen.noktalar.append(noktaya_cevir(nokta))
+	cokgen.bolge_id = bolgenin_idsi
+	cokgen.noktalar = noktalara_cevir(nokta_listesi)
 	if cokgen.noktalar.is_empty():
 		return cokgen
 
@@ -32,6 +31,13 @@ static func listeden(nokta_listesi: Array, sahip_id: String) -> Cokgen:
 	cokgen.sinir_kutusu = kutu
 	cokgen.alan = absf(capraz_toplam) * 0.5
 	return cokgen
+
+
+static func noktalara_cevir(nokta_listesi: Array) -> PackedVector2Array:
+	var sonuc: PackedVector2Array = PackedVector2Array()
+	for nokta: Variant in nokta_listesi:
+		sonuc.append(noktaya_cevir(nokta))
+	return sonuc
 
 
 static func noktaya_cevir(deger: Variant) -> Vector2:

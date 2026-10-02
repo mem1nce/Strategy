@@ -10,37 +10,90 @@ Android, yatay ekran. Godot 4.7, GDScript, 2D, Mobile renderer.
 Oyuncu haritadan bir ülke seçer ve onu yönetir. Zaman 1 Ocak 2026'da başlar,
 durdurulabilir ve üç hızda akar; bitiş tarihi yoktur.
 
-Şu an yalnızca temel vardır: dünya haritası, kamera, ülke seçimi ve zaman.
-Birlik, savaş, ekonomi ve yapay zekâ henüz yoktur (bkz. 8. bölüm).
+Şu an harita temeli ve bölgeler vardır: dünya haritası, bölgelere ayrılmış ülkeler,
+kamera, ülke seçimi ve zaman. Birlik, savaş, ekonomi ve yapay zekâ henüz yoktur
+(bkz. 8. bölüm).
 
 "Yerküre" geçici bir çalışma adıdır; kalıcı ad sonra seçilecek.
 
 ## 2. Harita verisi
 
-- **Kaynak:** Natural Earth'ün kamu malı ülke verisi,
-  `tools/kaynak/ne_110m_admin_0_countries.geojson` (1:110 milyon ölçek, 177 kayıt).
-- **Dönüştürücü:** `tools/dunya_donustur.py` kaynağı `data/world.json` dosyasına çevirir.
-  Çalıştırmak için proje klasöründe: `python tools/dunya_donustur.py`
-- **Oyun yalnızca `data/world.json` dosyasını okur.** Kaynak dosya daha ayrıntılısıyla
-  (ör. 1:50 milyon) değiştirilip dönüştürücü yeniden çalıştırılabilir; oyun kodu değişmez.
+- **Kaynaklar** (Natural Earth, kamu malı), `tools/kaynak/` altında:
+  - `ne_110m_admin_0_countries.geojson`: ülkeler (1:110 milyon ölçek, 177 kayıt)
+  - `ne_50m_populated_places.geojson`: şehirler (1251 kayıt)
+- **Dönüştürücü:** `tools/dunya_donustur.py` kaynakları `data/world.json` ve
+  `data/regions.json` dosyalarına çevirir. Çalıştırmak için proje klasöründe:
 
-Dönüştürücünün yaptıkları:
+  ```
+  python -m pip install -r tools/requirements.txt     (yalnızca ilk seferde; shapely kurar)
+  python tools/dunya_donustur.py
+  ```
 
-- Koordinatları **Miller silindirik projeksiyonla** düzleme çevirir. Harita 4096 birim
+- **Oyun yalnızca `data/` altındaki dosyaları okur.** Kaynak dosyalar daha ayrıntılılarıyla
+  değiştirilip dönüştürücü yeniden çalıştırılabilir; oyun kodu değişmez.
+
+### Ülkeler
+
+- Koordinatlar **Miller silindirik projeksiyonla** düzleme çevrilir. Harita 4096 birim
   genişliğinde, 2066 birim yüksekliğindedir (84,5° kuzey ile 58° güney arası).
-- **Antarktika'yı çıkarır.** Geriye 176 ülke, 279 çokgen kalır.
-- Polygon ve MultiPolygon'u destekler: adalar ayrı çokgendir, aynı ülkeye aittir.
-- İç delikleri yok sayar (Güney Afrika'nın içindeki Lesotho boşluğu gibi).
-- Art arda tekrar eden noktaları, çok küçük çokgenleri ve alanı olmayan sivri uçları atar.
-- **Komşuluk:** iki ülke ortak bir sınır noktası paylaşıyorsa komşudur (delikler dahil).
-- **Renk:** `MAPCOLOR9` alanını kullanır; komşu iki ülke aynı rengi alırsa birini değiştirir.
+- **Antarktika çıkarılır.** Geriye 176 ülke kalır.
+- Polygon ve MultiPolygon desteklenir: adalar ayrı çokgendir, aynı ülkeye aittir.
+- Kaynaktaki iç delikler yok sayılır. Başka bir ülkeyi tümüyle içine alan ülkeden o ülke
+  oyulur (Güney Afrika'dan Lesotho).
+- Art arda tekrar eden noktalar, çok küçük çokgenler ve alanı olmayan sivri uçlar atılır.
+- **Ülke komşuluğu:** iki ülke ortak bir sınır noktası paylaşıyorsa komşudur.
+- **Renk:** `MAPCOLOR9` alanı kullanılır; komşu iki ülke aynı rengi alırsa biri değiştirilir.
+
+### Bölgeler
+
+Her bölge bir şehrin çevresidir ve o şehrin adını taşır.
+
+- **Tohum şehirler:** Her ülkede başkent her zaman seçilir. Sonra, seçilmişlere en uzak
+  ve en kalabalık şehir eklenerek devam edilir (puan = en yakın tohuma uzaklık × nüfus^0,35);
+  böylece bölgeler ülkenin her yanına yayılır. İki tohum arası en az 25 birimdir.
+- **Bölge sayısı:** hedef = karekök(ülke alanı) / 20, en az 1, en çok 14. Küçük ülkeler tek
+  bölgedir. Verisinde şehri olmayan ülke de tek bölgedir ve ülkenin adını taşır.
+- Şehir, kaba kıyı çizgisi yüzünden ülke çokgeninin dışına düşse bile çokgene en çok
+  4 birim uzaktaysa ülke koduna göre o ülkenin şehri sayılır.
+- **Bölme:** Her ülke çokgeni, içindeki tohumlara göre "en yakın tohum" kuralıyla (Voronoi)
+  bölünür. Tohumu olmayan çokgen (ada) bütünüyle en yakın tohumun bölgesine girer. Bir bölge
+  birden çok çokgenden oluşabilir.
+- Bütün köşeler 0,01 birimlik ızgaraya oturtulur; komşu bölgeler sınırlarındaki noktaları
+  birebir paylaşır. Bölgenin ana gövdesinden kopuk, 4 birim kareden küçük kırpıntılar
+  sınırdaş olduğu bölgeye katılır.
+- **Başkent:** Birden çok başkenti olan ülkelerde yönetim merkezi seçilir (Pretoria, La Paz).
+  Kaynakta başkenti olmayan ülkede en büyük şehrin bölgesi başkent bölgesi sayılır.
+- **Nüfus:** Ülke nüfusunun yarısı bölgelerin alanına, yarısı bölgelere düşen şehirlerin
+  nüfusuna göre dağıtılır. Bölge nüfuslarının toplamı ülke nüfusuna eşittir.
+- **Kara komşusu:** ortak bir sınır parçası paylaşan iki bölge (farklı ülkelerden olsalar da).
+  Yalnızca tek köşede değenler komşu değildir. Tek istisna: iki ÜLKE kaynak veride yalnızca
+  tek noktada değiyorsa (Türkiye ile Azerbaycan'ın Nahçıvan sınırı) o noktadaki bölgeleri
+  komşu sayılır; çünkü gerçekte sınırdaştırlar, kaba ölçek sınırı noktaya indirmiştir.
+- **Deniz geçişi:** kara komşusu olmayan ama aralarındaki su 6 birimden dar olan iki bölge
+  (Manş, Cebelitarık, Japon adaları). En kısa yol başka bir karadan geçiyorsa sayılmaz.
+- **Sınır çizgileri:** İki bölge arasındaki ya da bölge ile deniz arasındaki her kesintisiz
+  çizgi ayrıca yazılır. Harita sınırları bunlardan çizer.
+
+Şu anki sonuç: **516 bölge**, 85 tek bölgeli ülke, 1121 kara komşuluğu, 22 deniz geçişi.
+
+### Doğrulama
+
+Dönüştürücü her çalıştığında şunları denetler; hata varsa dosya yazmaz:
+
+1. Kara komşuluğu ve deniz geçişi iki yönlüdür.
+2. Komşu olan her ülke çiftinde en az bir bölge çifti komşudur (ve tersi).
+3. Bir ülkenin bölgelerinin toplam alanı ülke alanından en fazla %1 sapar.
+4. Aynı kara parçasındaki bölgeler komşuluk zinciriyle birbirine ulaşır.
+5. Her ülkenin tam bir başkent bölgesi, her bölgenin çokgeni ve çokgeninin içinde etiket
+   noktası vardır.
+
+En az üç bölgesi olduğu hâlde bir bölgesi ülke alanının %40'ını geçen ülkeler **uyarı**
+olarak listelenir (şehir verisinin seyrek olduğu yerler).
 
 ### `data/world.json`
 
 ```json
 {
-	"kaynak": "Natural Earth (kamu malı) - ne_110m_admin_0_countries.geojson",
-	"projeksiyon": "miller",
 	"genislik": 4096,
 	"yukseklik": 2066,
 	"ulkeler": [
@@ -52,27 +105,52 @@ Dönüştürücünün yaptıkları:
 			"gsyh_milyon_dolar": 761425,
 			"renk": 8,
 			"etiket": [2440.63, 847.61],
+			"anakara_kutusu": [2345.77, 811.23, 211.89, 82.72],
 			"komsular": ["ARM", "AZE", "BGR", "GEO", "GRC", "IRN", "IRQ", "SYR"],
-			"cokgenler": [
-				[[2557.41, 876.36], [2551.96, 878.58], [2547.97, 875.24]],
-				[[2345.15, 814.14], [2356.74, 809.85], [2366.54, 811.68]]
-			]
+			"baskent_bolgesi": "TUR_1",
+			"bolgeler": ["TUR_1", "TUR_2", "TUR_3", "TUR_4", "TUR_5", "TUR_6"]
 		}
 	]
 }
 ```
 
-| Alan | Kaynaktaki karşılığı | Açıklama |
-|---|---|---|
-| `id` | `ADM0_A3` | Üç harfli ülke kodu |
-| `ad` | `NAME_TR` (yoksa `NAME`) | Türkçe ad |
-| `kita` | `CONTINENT` | Türkçeye çevrilir |
-| `nufus` | `POP_EST` | Kişi |
-| `gsyh_milyon_dolar` | `GDP_MD` | Milyon dolar |
-| `renk` | `MAPCOLOR9` | 1–9 arası renk indeksi |
-| `etiket` | `LABEL_X`, `LABEL_Y` | Ülke adının yazılacağı nokta |
-| `komsular` | — | Komşu ülke id'leri |
-| `cokgenler` | geometri | Her biri `[x, y]` noktalarından oluşan liste; büyük parça başta |
+`id` ← `ADM0_A3`, `ad` ← `NAME_TR` (yoksa `NAME`), `kita` ← `CONTINENT`, `nufus` ← `POP_EST`,
+`gsyh_milyon_dolar` ← `GDP_MD`, `renk` ← `MAPCOLOR9`, `etiket` ← `LABEL_X`/`LABEL_Y`.
+`anakara_kutusu`, ülkenin en büyük kara parçasını saran dikdörtgendir (kamera için).
+Ülke çokgenleri bu dosyada durmaz; bölgelerin çokgenleri `regions.json` içindedir.
+
+### `data/regions.json`
+
+```json
+{
+	"bolgeler": [
+		{
+			"id": "TUR_1",
+			"ad": "Ankara",
+			"sahip": "TUR",
+			"baskent": true,
+			"nufus": 12950188,
+			"etiket": [2422.26, 834.39],
+			"kara_komsulari": ["TUR_2", "TUR_4", "TUR_5", "TUR_6"],
+			"deniz_gecisleri": [],
+			"cokgenler": [
+				[[2432.86, 811.47], [2429.31, 811.52], [2416.05, 815.38]]
+			]
+		}
+	],
+	"sinirlar": [
+		{"a": "TUR_1", "b": "TUR_2", "noktalar": [[2402.57, 824.06], [2394.2, 849.3]]},
+		{"a": "TUR_2", "b": "", "noktalar": [[2344.47, 827.76], [2344.32, 830.54]]}
+	]
+}
+```
+
+- Bölge `id`'si ülke kodu ve sıra numarasından oluşur; başkent bölgesi 1 numaradır.
+- Şehir adı kaynaktaki `NAME_TR` alanından gelir (yoksa `NAME`); ülke kodu `ADM0_A3`,
+  nüfus `POP_MAX`, başkentlik `FEATURECLA` alanından okunur.
+- `sahip`: oyun başındaki sahip ülke. Oyun içinde değişebilir.
+- `cokgenler`: büyükten küçüğe; her biri `[x, y]` noktalarından oluşur.
+- `sinirlar` içinde `b` boşsa çizgi kıyıdır.
 
 Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik yalnızca zaman).
 
@@ -84,23 +162,34 @@ Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik
   Batı Sahra, Kuzey Kıbrıs, Somaliland, Kosova, Tayvan, Filistin, Falkland Adaları,
   Grönland, Porto Riko, Yeni Kaledonya, Fransız Güney Toprakları.
 - Adlar kaynaktaki `NAME_TR` alanından gelir (ör. "Çin Halk Cumhuriyeti", "Beyaz Rusya").
+- Şehir verisi seyrektir (ör. Türkiye için 7 şehir, doğuda hiç şehir yok). Bu yüzden bazı
+  bölgeler adını taşıdığı şehirden çok uzağa uzanır (Samsun bölgesi İran sınırına kadar).
+  Daha ayrıntılı şehir verisi (`ne_10m_populated_places`) bunu düzeltir.
 
 ## 3. Harita görünümü
 
-- Harita **"çokgen + sahip ülke"** mantığıyla çalışır: her çokgen, sahibi olan ülkenin
-  rengini alır. Şimdilik en küçük birim ülkedir ve sahiplik değişmez. İleride ülkeler
-  bölgelere ayrılınca her bölge kendi çokgenine ve sahibine kavuşur; çizim kodu aynı kalır.
+- Harita **"çokgen → bölge → sahip ülke"** mantığıyla çalışır: her çokgen, bölgesinin o anki
+  sahibinin rengini alır. Sınır çizgisinin türü de iki yanındaki bölgelerin sahibine göre
+  belirlenir. Bir bölge el değiştirince harita ve ülke sınırları kendiliğinden güncellenir.
 - Deniz düz, koyu mavi-gri bir arka plandır.
 - Ülkeler renk indeksine göre dokuz sakin renkten birini alır; komşular farklı renktedir.
 - Çokgenler büyükten küçüğe çizilir; iç içe ülkelerde küçük olan üstte kalır (Lesotho).
-- Sınır çizgileri, çerçeveler ve yazılar yakınlıktan bağımsız olarak ekranda hep aynı
-  kalınlıkta ve boyutta görünür.
-- **Ülke adları:** bir ad, ülke ekranda adına yetecek kadar büyükse yazılır. Uzaktan
-  yalnızca büyük ülkeler, yakınlaştıkça küçükler de görünür. Adlar üst üste binmez;
-  çakışmada büyük ülkenin adı kalır.
-- Seçili ülke sarı, oyuncunun ülkesi kalın beyaz çerçeveyle işaretlenir.
-- Açılışta her çokgen üçgenlere bölünür. Bölünemeyen çokgen oyunu durdurmaz: konsola
-  ülke adıyla uyarı yazılır, dolgusu atlanır, sınırı yine çizilir.
+- **Sınırlar:** kıyı ince, ülke sınırı kalın, bölge sınırı ince ve soluktur. Hepsi
+  yakınlıktan bağımsız olarak ekranda aynı kalınlıkta görünür.
+- **Uzaktan** harita sadedir: yalnızca ülkeler, ülke sınırları ve büyük ülkelerin adları.
+- **Yakınlaşınca** (yakınlık 1,7 ile 2,6 arasında yavaşça) bölge sınırları, bölge adları ve
+  başkent bölgelerindeki yıldızlar belirir; ülke adları solar ve daha da yakında kaybolur.
+- **Adlar:** bir ad, ülke ya da bölge ekranda adına yetecek kadar büyükse yazılır. Adlar üst
+  üste binmez; çakışmada büyük ülkenin, bölgelerde başkentin ve kalabalık bölgenin adı kalır.
+- Seçili bölge parlak sarı, ülkesi daha hafif bir çerçeveyle; oyuncunun ülkesi kalın beyaz
+  çerçeveyle işaretlenir.
+- Açılışta her çokgen üçgenlere bölünür. Bölünemeyen çokgen oyunu durdurmaz: konsola bölge
+  ve ülke adıyla uyarı yazılır, dolgusu atlanır, sınırı yine çizilir.
+
+**Performans:** Bölgeler tek tek düğüm değildir. Bütün dolgular tek bir ağda (mesh), sınırlar
+türlerine göre üç ağda çizilir. Sınır kalınlığını gölgelendirici (`sinir_cizgisi.gdshader`)
+verdiği için yakınlık değişince ağlar baştan kurulmaz. Adlardan yalnızca ekrandakiler çizilir;
+bölge adlarının hangi yakınlıkta görüneceği açılışta bir kez hesaplanır.
 
 ## 4. Kamera ve dokunma
 
@@ -109,14 +198,14 @@ açıktır: fareyle sürükleme tek parmak gibi çalışır, fare tekerleği yak
 
 | Hareket | Sonuç |
 |---|---|
-| Tek dokunuş | O noktadaki ülkeyi seçer |
+| Tek dokunuş | O noktadaki bölgeyi seçer |
 | Tek parmakla sürükleme | Haritayı kaydırır |
 | İki parmakla kıstırma | Yakınlaştırır / uzaklaştırır |
 
 - Parmak **12 pikselden** az oynadıysa dokunuş, fazla oynadıysa kaydırma sayılır.
-  Kaydırma ya da kıstırma bittiğinde ülke seçilmez.
-- Dokunulan noktada ülke yoksa **30 piksel** içindeki en yakın ülke seçilir (küçük
-  ülkeler ve adalar için). O da yoksa seçim kalkar.
+  Kaydırma ya da kıstırma bittiğinde seçim yapılmaz.
+- Dokunulan noktada bölge yoksa **30 piksel** içindeki en yakın bölge seçilir (küçük
+  bölgeler ve adalar için). O da yoksa seçim kalkar.
 - İç içe ülkelerde en küçük olan seçilir.
 - **En uzak görünüm:** dünyanın tamamı ekrana sığar. **En yakın görünüm:** 16 kat;
   Lüksemburg bu yakınlıkta yaklaşık 100 × 160 piksel yer kaplar.
@@ -130,16 +219,27 @@ açıktır: fareyle sürükleme tek parmak gibi çalışır, fare tekerleği yak
 Temel çözünürlük 1920 × 1080, yatay. Ölçekleme `canvas_items`, en-boy `expand`.
 
 1. Oyun, üstte **"Ülkeni seç"** yazısıyla açılır. Zaman durmuştur, zaman düğmeleri kilitlidir.
-2. Bir ülkeye dokununca **alt panel** açılır: ad, kıta, nüfus ("83,4 milyon"),
-   GSYH ("761 milyar $"), komşu ülkeler ve **"Bu ülkeyle oyna"** düğmesi.
+2. Bir bölgeye dokununca **alt panel** açılır ve **"Bu ülkeyle oyna"** düğmesi görünür;
+   düğme, dokunulan bölgenin ülkesini seçer.
 3. Düğmeye basınca: ülke kalın beyaz çerçeveyle işaretlenir, adı üst çubuğa yazılır,
    kamera o ülkeye kayar, "Ülkeni seç" yazısı kalkar, zaman düğmeleri açılır.
    Zaman durmuş kalır; oyuncu "Devam"a basarak başlatır.
-4. Sonrasında başka ülkelere dokununca bilgi paneli yine açılır ama düğme görünmez.
-   Ülke bir kez seçilir, değiştirilemez.
+4. Sonrasında başka bölgelere dokununca bilgi paneli yine açılır ama "Bu ülkeyle oyna"
+   düğmesi görünmez. Ülke bir kez seçilir, değiştirilemez.
 
-- **Üst çubuk:** solda oyuncunun ülkesi ve tarih-saat; sağda durdur/devam düğmesi ve
-  üç hız düğmesi. Etkin hız ve durdurulmuş hâl sarı renkle vurgulanır.
+**Alt panel**
+
+- Üst satır: bölgenin adı, başkentse "Başkent" yazısı, bölgenin nüfusu.
+- Orta satır: ülkenin adı, kıtası, toplam nüfusu ("83,4 milyon") ve GSYH'si ("761 milyar $").
+- Alt satır: kara komşusu ve deniz geçişi sayıları; yanlarındaki renkli kutular haritadaki
+  vurgu renkleridir.
+- **"Komşuları göster"** düğmesi: basınca seçili bölgenin kara komşuları yeşil-turkuaz,
+  deniz geçişleri turuncu boyanır; tekrar basınca kapanır. Açıkken başka bölge seçilirse
+  vurgu yeni bölgeye geçer.
+
+**Üst çubuk:** solda oyuncunun ülkesi ve tarih-saat; sağda durdur/devam düğmesi ve üç hız
+düğmesi. Etkin hız ve durdurulmuş hâl sarı renkle vurgulanır.
+
 - Dokunulabilir her öğe en az **96 × 96 px**. Düğmeler şu an 132 × 104 px ve daha büyüktür.
 - Arayüz yazıları en az 36 px, harita yazıları en az 24 px.
 - Arayüz, çentik ve yuvarlak köşelerin dışında, güvenli alanın (safe area) içinde kalır.
@@ -167,7 +267,7 @@ Birlikler, savaş ve ekonomi ileride bu sinyallere bağlanacaktır.
 ## 7. Kod mimarisi
 
 ```
-data/              Oyun verisi (JSON): world.json, balance.json
+data/              Oyun verisi (JSON): world.json, regions.json, balance.json
 scenes/main.tscn   Yalnızca kök düğüm; ağaç script'ten kurulur
 scripts/main.gd    Veriyi yükler, harita, kamera ve arayüzü kurup birbirine bağlar
 scripts/sim/       Saf simülasyon (hiçbir şey çizmez, girdi okumaz)
@@ -180,19 +280,34 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 |---|---|
 | `sim/veri_okuyucu.gd` | JSON dosyası okur |
 | `sim/ulke.gd` | Bir ülkenin verisi |
-| `sim/cokgen.gd` | Bir toprak parçası: noktalar ve sahibi olan ülke |
-| `sim/dunya.gd` | Ülkeleri ve çokgenleri yükler, doğrular; "bu noktada hangi parça var", "en yakın parça hangisi" sorularını yanıtlar |
+| `sim/bolge.gd` | Bir bölgenin verisi: ad, sahip, nüfus, komşular, çokgenler |
+| `sim/cokgen.gd` | Bir toprak parçası: noktalar ve ait olduğu bölge |
+| `sim/sinir.gd` | İki bölge (ya da bölge ile deniz) arasındaki sınır çizgisi |
+| `sim/dunya.gd` | Ülkeleri, bölgeleri ve sınırları yükler, doğrular, sorguları yanıtlar |
 | `sim/oyun.gd` | Oyunun durumu: dünya ve oyuncunun ülkesi |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
 | `sim/zaman.gd` | Zaman yöneticisi (autoload `Zaman`) |
-| `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri ve ülke adlarını çizer |
+| `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri, vurguları ve adları çizer |
+| `gorsel/sinir_cizgisi.gdshader` | Sınır çizgilerini ekranda sabit kalınlıkta çizer |
 | `gorsel/harita_kamerasi.gd` | Kaydırma, yakınlaştırma, dokunuşu ayırma, ülkeye odaklanma |
 | `arayuz/arayuz.gd` | Arayüzün kökü ve güvenli alan |
-| `arayuz/ust_cubuk.gd`, `ulke_paneli.gd` | Üst çubuk, alt panel |
+| `arayuz/ust_cubuk.gd`, `bolge_paneli.gd` | Üst çubuk, alt panel |
 | `arayuz/arayuz_temasi.gd`, `bicim.gd` | Ortak görünüm, sayı biçimleme |
 
+**Simülasyon sorguları** (`Dunya`):
+
+| Sorgu | Yanıt |
+|---|---|
+| `bolgenin_sahibi(bolge_id)` | Bölgenin o anki sahibi olan ülke |
+| `ulkenin_bolgeleri(ulke_id)` | Ülkenin o an elindeki bölgeler |
+| `bolgenin_kara_komsulari(bolge_id)` | Ortak sınırı olan bölgeler |
+| `bolgenin_deniz_gecisleri(bolge_id)` | Dar sudan geçilerek ulaşılan bölgeler |
+| `bolgenin_komsulari(bolge_id)` | İkisinin birleşimi |
+| `noktadaki_cokgen(nokta)`, `en_yakin_cokgen(nokta, uzaklik)` | Dokunulan toprak parçası |
+
 Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini çağırır
-(ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler.
+(ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
+sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
 ## 8. Yol haritası
 
@@ -202,7 +317,7 @@ istenen aşama yapılır.
 | # | Durum | Aşama | İçerik |
 |---|---|---|---|
 | 1 | ✅ | **Dünya haritası temeli** | Harita verisi ve dönüştürücü, harita görünümü, kamera, ülke seçimi, zaman |
-| 2 | ⬜ | **Ülkeleri bölgelere ayırma** | Her ülkenin çokgenleri bölgelere bölünür; bölgenin sahibi değişebilir |
+| 2 | ✅ | **Ülkeleri bölgelere ayırma** | Şehir verisi, Voronoi bölme, bölge komşulukları ve deniz geçişleri, bölge seçimi ve paneli |
 | 3 | ⬜ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
 | 4 | ⬜ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
 | 5 | ⬜ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |

@@ -1,43 +1,94 @@
 class_name Dunya
 extends RefCounted
-## Dünya haritasının verisi: ülkeler ve toprak parçaları (çokgenler).
+## Dünya haritasının verisi: ülkeler, bölgeler, toprak parçaları ve sınırlar.
 ##
-## data/world.json dosyasından kurulur. Görsel katman bunu yalnızca okur.
+## data/world.json ve data/regions.json dosyalarından kurulur. Görsel katman bunu yalnızca okur.
 
 const DUNYA_DOSYASI: String = "res://data/world.json"
+const BOLGE_DOSYASI: String = "res://data/regions.json"
 
 ## Haritanın birim cinsinden boyutu.
 var boyut: Vector2 = Vector2.ZERO
 var ulkeler: Dictionary[String, Ulke] = {}
 var ulke_listesi: Array[Ulke] = []
+var bolgeler: Dictionary[String, Bolge] = {}
+var bolge_listesi: Array[Bolge] = []
 ## Bütün toprak parçaları, büyükten küçüğe sıralı. Bu sırayla çizilince küçük
 ## parçalar üstte kalır (ör. Lesotho, Güney Afrika'nın üstünde).
 var cokgenler: Array[Cokgen] = []
+var sinirlar: Array[Sinir] = []
 
 
-## Veri dosyasını okuyup dünyayı kurar. Veri hatalıysa nedenini yazar ve null döndürür.
-static func yukle(yol: String = DUNYA_DOSYASI) -> Dunya:
-	var veri: Dictionary = VeriOkuyucu.sozluk_oku(yol)
-	if veri.is_empty():
+## Veri dosyalarını okuyup dünyayı kurar. Veri hatalıysa nedenini yazar ve null döndürür.
+static func yukle() -> Dunya:
+	var dunya_verisi: Dictionary = VeriOkuyucu.sozluk_oku(DUNYA_DOSYASI)
+	var bolge_verisi: Dictionary = VeriOkuyucu.sozluk_oku(BOLGE_DOSYASI)
+	if dunya_verisi.is_empty() or bolge_verisi.is_empty():
 		return null
-	var dunya: Dunya = Dunya.new()
-	dunya.boyut = Vector2(float(veri.get("genislik", 0)), float(veri.get("yukseklik", 0)))
 
-	var ulke_kayitlari: Array = veri.get("ulkeler", [])
+	var dunya: Dunya = Dunya.new()
+	dunya.boyut = Vector2(float(dunya_verisi.get("genislik", 0)), float(dunya_verisi.get("yukseklik", 0)))
+
+	var ulke_kayitlari: Array = dunya_verisi.get("ulkeler", [])
 	for kayit: Dictionary in ulke_kayitlari:
 		var ulke: Ulke = Ulke.sozlukten(kayit)
 		dunya.ulkeler[ulke.id] = ulke
 		dunya.ulke_listesi.append(ulke)
-		var cokgen_listesi: Array = kayit.get("cokgenler", [])
-		for nokta_listesi: Array in cokgen_listesi:
-			var cokgen: Cokgen = Cokgen.listeden(nokta_listesi, ulke.id)
-			if cokgen.noktalar.size() >= 3:
-				dunya.cokgenler.append(cokgen)
+
+	var bolge_kayitlari: Array = bolge_verisi.get("bolgeler", [])
+	for kayit: Dictionary in bolge_kayitlari:
+		var bolge: Bolge = Bolge.sozlukten(kayit)
+		dunya.bolgeler[bolge.id] = bolge
+		dunya.bolge_listesi.append(bolge)
+		dunya.cokgenler.append_array(bolge.cokgenler)
 	dunya.cokgenler.sort_custom(func(a: Cokgen, b: Cokgen) -> bool: return a.alan > b.alan)
+
+	var sinir_kayitlari: Array = bolge_verisi.get("sinirlar", [])
+	for kayit: Dictionary in sinir_kayitlari:
+		dunya.sinirlar.append(Sinir.sozlukten(kayit))
 
 	if not dunya._dogrula():
 		return null
 	return dunya
+
+
+# --- Sorgular --------------------------------------------------------------
+
+## Bölgenin o anki sahibi olan ülke.
+func bolgenin_sahibi(bolge_id: String) -> Ulke:
+	if not bolgeler.has(bolge_id):
+		return null
+	return ulkeler.get(bolgeler[bolge_id].sahip)
+
+
+## Ülkenin o an elinde tuttuğu bölgeler.
+func ulkenin_bolgeleri(ulke_id: String) -> Array[Bolge]:
+	var sonuc: Array[Bolge] = []
+	for bolge: Bolge in bolge_listesi:
+		if bolge.sahip == ulke_id:
+			sonuc.append(bolge)
+	return sonuc
+
+
+## Bölgeyle ortak sınırı olan bölgeler (başka ülkelerinkiler dahil).
+func bolgenin_kara_komsulari(bolge_id: String) -> Array[Bolge]:
+	if not bolgeler.has(bolge_id):
+		return []
+	return _bolgelere_cevir(bolgeler[bolge_id].kara_komsulari)
+
+
+## Bölgeye dar bir sudan geçilerek ulaşılan bölgeler.
+func bolgenin_deniz_gecisleri(bolge_id: String) -> Array[Bolge]:
+	if not bolgeler.has(bolge_id):
+		return []
+	return _bolgelere_cevir(bolgeler[bolge_id].deniz_gecisleri)
+
+
+## Bölgenin karadan ya da denizden ulaşılabilen bütün komşuları.
+func bolgenin_komsulari(bolge_id: String) -> Array[Bolge]:
+	var sonuc: Array[Bolge] = bolgenin_kara_komsulari(bolge_id)
+	sonuc.append_array(bolgenin_deniz_gecisleri(bolge_id))
+	return sonuc
 
 
 ## Verilen noktayı içeren toprak parçasını döndürür; nokta denizdeyse null döner.
@@ -50,7 +101,7 @@ func noktadaki_cokgen(nokta: Vector2) -> Cokgen:
 
 
 ## Noktaya en çok `azami_uzaklik` kadar uzaktaki en yakın toprak parçasını döndürür.
-## Küçük ülkelere dokunmayı kolaylaştırmak içindir. Yakında parça yoksa null döner.
+## Küçük bölgelere dokunmayı kolaylaştırmak içindir. Yakında parça yoksa null döner.
 func en_yakin_cokgen(nokta: Vector2, azami_uzaklik: float) -> Cokgen:
 	var en_iyi: Cokgen = null
 	var en_iyi_uzaklik: float = azami_uzaklik
@@ -64,34 +115,15 @@ func en_yakin_cokgen(nokta: Vector2, azami_uzaklik: float) -> Cokgen:
 	return en_iyi
 
 
-func ulkenin_cokgenleri(ulke_id: String) -> Array[Cokgen]:
-	var sonuc: Array[Cokgen] = []
-	for cokgen: Cokgen in cokgenler:
-		if cokgen.sahip == ulke_id:
-			sonuc.append(cokgen)
+func _bolgelere_cevir(idler: PackedStringArray) -> Array[Bolge]:
+	var sonuc: Array[Bolge] = []
+	for bolge_id: String in idler:
+		if bolgeler.has(bolge_id):
+			sonuc.append(bolgeler[bolge_id])
 	return sonuc
 
 
-## Ülkenin en büyük toprak parçası (anakarası). Ülkenin toprağı yoksa null döner.
-func ulkenin_anakarasi(ulke_id: String) -> Cokgen:
-	# Liste büyükten küçüğe sıralı olduğu için ilk bulunan en büyüğüdür.
-	for cokgen: Cokgen in cokgenler:
-		if cokgen.sahip == ulke_id:
-			return cokgen
-	return null
-
-
-## Ülkenin komşularının adlarını alfabe sırasıyla döndürür.
-func komsu_adlari(ulke_id: String) -> PackedStringArray:
-	var adlar: PackedStringArray = PackedStringArray()
-	if not ulkeler.has(ulke_id):
-		return adlar
-	for komsu_id: String in ulkeler[ulke_id].komsular:
-		if ulkeler.has(komsu_id):
-			adlar.append(ulkeler[komsu_id].ad)
-	adlar.sort()
-	return adlar
-
+# --- Doğrulama -------------------------------------------------------------
 
 ## Verinin kendi içinde tutarlı olduğunu denetler.
 func _dogrula() -> bool:
@@ -100,20 +132,43 @@ func _dogrula() -> bool:
 		hatalar.append("harita boyutu eksik")
 	if ulke_listesi.is_empty():
 		hatalar.append("hiç ülke yok")
-	if cokgenler.is_empty():
-		hatalar.append("hiç çokgen yok")
+	if bolge_listesi.is_empty():
+		hatalar.append("hiç bölge yok")
+
 	for ulke: Ulke in ulke_listesi:
 		if ulke.id == "":
 			hatalar.append("id'si olmayan bir ülke var")
+		if not bolgeler.has(ulke.baskent_bolgesi):
+			hatalar.append("%s: başkent bölgesi '%s' bulunamadı" % [ulke.id, ulke.baskent_bolgesi])
 		for komsu_id: String in ulke.komsular:
 			if not ulkeler.has(komsu_id):
-				hatalar.append("%s: bilinmeyen komşu '%s'" % [ulke.id, komsu_id])
-			elif not ulkeler[komsu_id].komsular.has(ulke.id):
-				hatalar.append("%s ile %s arasındaki komşuluk tek yönlü" % [ulke.id, komsu_id])
-	for cokgen: Cokgen in cokgenler:
-		if not ulkeler.has(cokgen.sahip):
-			hatalar.append("sahibi bilinmeyen çokgen: '%s'" % cokgen.sahip)
+				hatalar.append("%s: bilinmeyen komşu ülke '%s'" % [ulke.id, komsu_id])
+
+	for bolge: Bolge in bolge_listesi:
+		if not ulkeler.has(bolge.sahip):
+			hatalar.append("%s: bilinmeyen sahip '%s'" % [bolge.id, bolge.sahip])
+		if bolge.cokgenler.is_empty():
+			hatalar.append("%s: çokgeni yok" % bolge.id)
+		_komsulugu_denetle(bolge, bolge.kara_komsulari, true, hatalar)
+		_komsulugu_denetle(bolge, bolge.deniz_gecisleri, false, hatalar)
+
+	for sinir: Sinir in sinirlar:
+		if not bolgeler.has(sinir.a) or (not sinir.kiyi_mi() and not bolgeler.has(sinir.b)):
+			hatalar.append("bilinmeyen bölgeye değen sınır: '%s' - '%s'" % [sinir.a, sinir.b])
+		if sinir.noktalar.size() < 2:
+			hatalar.append("noktası eksik sınır: '%s' - '%s'" % [sinir.a, sinir.b])
 
 	for hata: String in hatalar:
 		push_error("Dünya verisi hatalı: %s" % hata)
 	return hatalar.is_empty()
+
+
+## Bir komşuluk listesindeki her bölgenin var olduğunu ve komşuluğun iki yönlü olduğunu denetler.
+func _komsulugu_denetle(bolge: Bolge, idler: PackedStringArray, kara: bool, hatalar: PackedStringArray) -> void:
+	for komsu_id: String in idler:
+		if not bolgeler.has(komsu_id):
+			hatalar.append("%s: bilinmeyen komşu bölge '%s'" % [bolge.id, komsu_id])
+			continue
+		var karsi: PackedStringArray = bolgeler[komsu_id].kara_komsulari if kara else bolgeler[komsu_id].deniz_gecisleri
+		if not karsi.has(bolge.id):
+			hatalar.append("%s ile %s arasındaki komşuluk tek yönlü" % [bolge.id, komsu_id])

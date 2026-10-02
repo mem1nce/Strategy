@@ -6,7 +6,7 @@ extends Node2D
 ## içine çekilebileceği pay (piksel). Üst çubuğun ve alt panelin yüksekliğine göre seçildi.
 const UST_BOSLUK: float = 180.0
 const ALT_BOSLUK: float = 340.0
-## Dokunulan noktada ülke yoksa bu yarıçap içindeki en yakın ülke seçilir (ekran pikseli).
+## Dokunulan noktada bölge yoksa bu yarıçap içindeki en yakın bölge seçilir (ekran pikseli).
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
 
 var _oyun: Oyun = null
@@ -31,7 +31,7 @@ func _ready() -> void:
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
 	add_child(_kamera)
-	_kamera.yakinlik_degisti.connect(_harita.yakinligi_ayarla)
+	_kamera.gorunum_degisti.connect(_gorunum_degisti)
 	_kamera.dokunuldu.connect(_haritaya_dokunuldu)
 	_kamera.kur(Rect2(Vector2.ZERO, dunya.boyut), UST_BOSLUK, ALT_BOSLUK)
 
@@ -40,33 +40,39 @@ func _ready() -> void:
 	add_child(_arayuz)
 	_arayuz.kur(dunya)
 	_arayuz.oyna_istendi.connect(_oyun.oyuncuyu_sec)
+	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 
-	print("Dünya yüklendi: %d ülke, %d çokgen, üçgenlenemeyen %d." % [
-		dunya.ulke_listesi.size(), dunya.cokgenler.size(), _harita.ucgenlenemeyenler.size()])
+	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
+		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
+		_harita.ucgenlenemeyenler.size()])
 
 
-## Dokunulan ülkeyi seçer. Tam o noktada ülke yoksa yakındaki en yakın ülkeye bakılır
-## (küçük ülkeler için). O da yoksa seçim kalkar.
+## Kamera her kaydığında ya da yakınlaştığında haritaya yeni görünümü bildirir.
+func _gorunum_degisti() -> void:
+	_harita.gorunumu_ayarla(_kamera.position, _kamera.zoom.x, get_viewport_rect().size)
+
+
+## Dokunulan bölgeyi seçer. Tam o noktada bölge yoksa yakındaki en yakın bölgeye bakılır
+## (küçük bölgeler ve adalar için). O da yoksa seçim kalkar.
 func _haritaya_dokunuldu(dunya_konumu: Vector2) -> void:
 	var cokgen: Cokgen = _oyun.dunya.noktadaki_cokgen(dunya_konumu)
 	if cokgen == null:
 		cokgen = _oyun.dunya.en_yakin_cokgen(dunya_konumu, YAKIN_DOKUNMA_YARICAPI / _kamera.zoom.x)
-	_ulkeyi_sec(cokgen.sahip if cokgen != null else "")
+	_bolgeyi_sec(cokgen.bolge_id if cokgen != null else "")
 
 
-## Ülkeyi haritada vurgular ve alt panelde gösterir. Boş id seçimi kaldırır.
-func _ulkeyi_sec(ulke_id: String) -> void:
-	var ulke: Ulke = _oyun.dunya.ulkeler.get(ulke_id)
-	_harita.secimi_ayarla(ulke_id)
-	_arayuz.ulkeyi_goster(ulke, not _oyun.oyuncu_secildi_mi())
+## Bölgeyi haritada vurgular ve alt panelde gösterir. Boş id seçimi kaldırır.
+func _bolgeyi_sec(bolge_id: String) -> void:
+	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
+	_harita.secimi_ayarla(bolge_id)
+	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi())
 
 
 ## Oyuncu ülkesini seçti: ülke işaretlenir, kamera oraya kayar, zaman düğmeleri açılır.
 func _oyuncu_secildi(ulke_id: String) -> void:
-	_ulkeyi_sec("")
+	var ulke: Ulke = _oyun.dunya.ulkeler[ulke_id]
+	_bolgeyi_sec("")
 	_harita.oyuncuyu_ayarla(ulke_id)
-	_arayuz.oyuncuyu_goster(_oyun.dunya.ulkeler[ulke_id])
-	var anakara: Cokgen = _oyun.dunya.ulkenin_anakarasi(ulke_id)
-	if anakara != null:
-		_kamera.odaklan(anakara.sinir_kutusu)
+	_arayuz.oyuncuyu_goster(ulke)
+	_kamera.odaklan(ulke.anakara_kutusu)
 	Zaman.kilidi_ac()

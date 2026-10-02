@@ -11,8 +11,8 @@ sonra kod.
 ## Kurallar
 
 1. **Simülasyon mantığı görsel koddan ayrı tutulur.**
-   - `scripts/sim/`: dünya, ülkeler, çokgenler, oyun durumu, zaman (ileride birlik,
-     savaş, ekonomi, yapay zekâ). Buradaki kod hiçbir şey çizmez, girdi okumaz ve
+   - `scripts/sim/`: dünya, ülkeler, bölgeler, çokgenler, sınırlar, oyun durumu, zaman
+     (ileride birlik, savaş, ekonomi, yapay zekâ). Buradaki kod hiçbir şey çizmez, girdi okumaz ve
      görsel düğümlere dokunmaz; ekran olmadan çalıştırılıp sınanabilir olmalıdır.
    - Autoload'lar (ör. `Zaman`) düğümdür, çünkü `_process` gerekir; bunun dışında
      aynı kurala uyarlar.
@@ -23,13 +23,18 @@ sonra kod.
 2. **Tüm oyun verisi `data/` klasöründe JSON olarak durur.**
    - Ülke verisi ve denge sayıları koda gömülmez.
    - `data/` dosyaları oyun çalışırken değiştirilmez; kayıtlar `user://` altına yazılır.
-   - `data/world.json` elle düzenlenmez; `python tools/dunya_donustur.py` ile
-     `tools/kaynak/` altındaki Natural Earth verisinden üretilir. Oyun kaynak dosyayı okumaz.
+   - `data/world.json` ve `data/regions.json` elle düzenlenmez; `python tools/dunya_donustur.py`
+     ile `tools/kaynak/` altındaki Natural Earth verisinden üretilir. Oyun kaynak dosyaları okumaz.
+   - Dönüştürücü ürettiği veriyi doğrular; doğrulama hatası varsa dosya yazmaz. Hata,
+     denetimi gevşeterek değil nedenini düzelterek giderilir.
 
-3. **Harita "çokgen + sahip ülke" mantığıyla çalışır.**
-   - Harita kodu ülkeyi değil çokgeni çizer ve rengini `sahip` alanından alır.
-   - İleride ülkeler bölgelere ayrılacak; yeni kod buna engel olacak varsayımlar
-     (ör. "bir çokgenin sahibi hiç değişmez") içermemelidir.
+3. **Harita "çokgen → bölge → sahip ülke" mantığıyla çalışır.**
+   - Harita kodu ülkeyi değil çokgeni çizer; rengini çokgenin bölgesinin `sahip` alanından alır.
+     Sınır çizgisinin türü (ülke sınırı mı, bölge sınırı mı) de iki yandaki bölgelerin
+     sahibine bakılarak belirlenir.
+   - İleride bölgeler el değiştirecek; yeni kod "bir bölgenin sahibi hiç değişmez"
+     varsayımını içermemelidir. Sahiplik değişince `HaritaGorunumu.yenile()` çağrılır.
+   - Yüzlerce bölge tek tek düğüm yapılmaz; dolgular ve sınırlar toplu ağlarla (mesh) çizilir.
 
 4. **Fare değil dokunmatik ekran varsayılır.**
    - Üzerine gelme (hover), sağ tık ve klavye kısayolu kullanılmaz.
@@ -69,12 +74,13 @@ sonra kod.
   `Godot_v4.7.2-stable_win64.exe` kullanılır (`_console.exe` sürümü yoldaki boşluk
   yüzünden çalışmıyor; çıktı için `Start-Process -RedirectStandardOutput` kullan).
 - Hata denetimi: `--headless --path . --import`, ardından `--headless --path . --quit-after 120`.
-  Açılışta konsola "Dünya yüklendi: … ülke, … çokgen, üçgenlenemeyen …" yazılır.
 - Yeni `class_name` eklendiyse önce `--import` çalıştırılmalıdır.
 - Girdi taklit ederken `Input.parse_input_event` konumları **pencere pikseli** ister,
   1920 × 1080 birimini değil.
 - Python ve Node bu bilgisayarda kuruludur; `tools/` altındaki betikler Python'la yazılır.
+  Dönüştürücü `shapely` kullanır (`python -m pip install -r tools/requirements.txt`).
   `tools/.gdignore` sayesinde Godot bu klasörü görmez.
+- Açılışta konsola "Dünya yüklendi: … ülke, … bölge, … çokgen, üçgenlenemeyen …" yazılır.
 
 ## Kullanıcı
 

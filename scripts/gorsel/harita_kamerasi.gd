@@ -8,7 +8,8 @@ extends Camera2D
 
 ## Parmak kaydırmadan kaldırıldığında, dokunulan dünya noktasıyla yayılır.
 signal dokunuldu(dunya_konumu: Vector2)
-signal yakinlik_degisti(yakinlik: float)
+## Kamera kaydığında ya da yakınlığı değiştiğinde yayılır.
+signal gorunum_degisti
 
 ## Parmak bundan az oynadıysa dokunuş, fazla oynadıysa kaydırma sayılır (piksel).
 const DOKUNMA_ESIGI: float = 12.0
@@ -46,7 +47,6 @@ func kur(alan: Rect2, ust_bosluk: float, alt_bosluk: float) -> void:
 	_asgari_yakinligi_hesapla()
 	zoom = Vector2(_asgari_yakinlik, _asgari_yakinlik)
 	_sinirla()
-	yakinlik_degisti.emit(zoom.x)
 
 
 func ekrandan_dunyaya(ekran_konumu: Vector2) -> Vector2:
@@ -72,8 +72,7 @@ func odaklan(hedef: Rect2) -> void:
 		var yeni: float = exp(lerpf(ilk_log, son_log, t))
 		zoom = Vector2(yeni, yeni)
 		position = ilk_konum.lerp(son_konum, t)
-		_sinirla()
-		yakinlik_degisti.emit(yeni), 0.0, 1.0, ODAK_SURESI)
+		_sinirla(), 0.0, 1.0, ODAK_SURESI)
 
 
 func _unhandled_input(olay: InputEvent) -> void:
@@ -155,17 +154,18 @@ func _yakinlastir(carpan: float, ekran_noktasi: Vector2) -> void:
 	zoom = Vector2(yeni, yeni)
 	position += once - ekrandan_dunyaya(ekran_noktasi)
 	_sinirla()
-	yakinlik_degisti.emit(yeni)
 
 
 ## Kameranın haritadan uzaklaşmasını engeller. Yatayda harita kenarı ekranın içine
-## giremez; dikeyde yalnızca arayüz boşluğu kadar girebilir.
+## giremez; dikeyde yalnızca arayüz boşluğu kadar girebilir. Kameranın her hareketi
+## buradan geçtiği için görünümün değiştiği de burada bildirilir.
 func _sinirla() -> void:
 	var yari: Vector2 = get_viewport_rect().size * 0.5 / zoom.x
 	var ust: float = _alan.position.y - _ust_bosluk / zoom.x
 	var alt: float = _alan.end.y + _alt_bosluk / zoom.x
 	position.x = _eksende_sinirla(position.x, _alan.position.x + yari.x, _alan.end.x - yari.x)
 	position.y = _eksende_sinirla(position.y, ust + yari.y, alt - yari.y)
+	gorunum_degisti.emit()
 
 
 ## Görünüm haritadan genişse (alt > ust) harita ortalanır.
@@ -185,7 +185,6 @@ func _gorunum_degisti() -> void:
 	_asgari_yakinligi_hesapla()
 	if zoom.x < _asgari_yakinlik:
 		zoom = Vector2(_asgari_yakinlik, _asgari_yakinlik)
-		yakinlik_degisti.emit(zoom.x)
 	_sinirla()
 
 

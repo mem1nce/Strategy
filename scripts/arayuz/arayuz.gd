@@ -1,11 +1,13 @@
 class_name Arayuz
 extends CanvasLayer
-## Haritanın üstündeki arayüz: üst çubuk ve alt ülke paneli.
+## Haritanın üstündeki arayüz: üst çubuk ve alt bölge paneli.
 ##
 ## Paneller ve düğmeler dokunuşu yutar, aralarındaki boşluklar haritaya geçirir.
 
 ## Oyuncu "Bu ülkeyle oyna" düğmesine bastığında yayılır.
 signal oyna_istendi(ulke_id: String)
+## Oyuncu "Komşuları göster" düğmesini açıp kapadığında yayılır.
+signal komsular_degisti(acik: bool)
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
@@ -13,7 +15,7 @@ const KENAR_BOSLUGU: int = 20
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
 var _ust_cubuk: UstCubuk = null
-var _ulke_paneli: UlkePaneli = null
+var _bolge_paneli: BolgePaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -43,17 +45,18 @@ func kur(dunya: Dunya) -> void:
 	bosluk.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dikey.add_child(bosluk)
 
-	_ulke_paneli = UlkePaneli.new()
-	dikey.add_child(_ulke_paneli)
-	_ulke_paneli.oyna_basildi.connect(func(ulke_id: String) -> void: oyna_istendi.emit(ulke_id))
+	_bolge_paneli = BolgePaneli.new()
+	dikey.add_child(_bolge_paneli)
+	_bolge_paneli.oyna_basildi.connect(func(ulke_id: String) -> void: oyna_istendi.emit(ulke_id))
+	_bolge_paneli.komsular_degisti.connect(func(acik: bool) -> void: komsular_degisti.emit(acik))
 
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
 
 
-## Alt panelde verilen ülkeyi gösterir. Null verilirse panel gizlenir.
-func ulkeyi_goster(ulke: Ulke, oyna_dugmesi_gorunur: bool) -> void:
-	_ulke_paneli.goster(ulke, _dunya, oyna_dugmesi_gorunur)
+## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.
+func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool) -> void:
+	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur)
 
 
 ## Oyuncunun ülkesini üst çubuğa yazar.

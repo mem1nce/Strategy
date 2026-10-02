@@ -1,0 +1,3 @@
+# tools/dunya_donustur.py için gereken Python kütüphaneleri.
+# Kurmak için: python -m pip install -r tools/requirements.txt
+shapely>=2.0
