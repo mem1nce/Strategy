@@ -1,16 +1,19 @@
 class_name Arayuz
 extends CanvasLayer
-## Haritanın üstündeki arayüz: üst çubuk, alt bölge paneli ve "Süre doldu" yazısı.
+## Haritanın üstündeki arayüz: üst çubuk ve alt ülke paneli.
 ##
 ## Paneller ve düğmeler dokunuşu yutar, aralarındaki boşluklar haritaya geçirir.
+
+## Oyuncu "Bu ülkeyle oyna" düğmesine bastığında yayılır.
+signal oyna_istendi(ulke_id: String)
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
 
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
-var _bolge_paneli: BolgePaneli = null
-var _sure_doldu: PanelContainer = null
+var _ust_cubuk: UstCubuk = null
+var _ulke_paneli: UlkePaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -32,48 +35,30 @@ func kur(dunya: Dunya) -> void:
 	dikey.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_kenar.add_child(dikey)
 
-	dikey.add_child(UstCubuk.new())
+	_ust_cubuk = UstCubuk.new()
+	dikey.add_child(_ust_cubuk)
 
 	var bosluk: Control = Control.new()
 	bosluk.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	bosluk.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dikey.add_child(bosluk)
 
-	_bolge_paneli = BolgePaneli.new()
-	dikey.add_child(_bolge_paneli)
-
-	_sure_doldu_yazisini_kur(kok)
+	_ulke_paneli = UlkePaneli.new()
+	dikey.add_child(_ulke_paneli)
+	_ulke_paneli.oyna_basildi.connect(func(ulke_id: String) -> void: oyna_istendi.emit(ulke_id))
 
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
-	Zaman.sure_doldu.connect(_sure_doldu.show)
-	if Zaman.bitti:
-		_sure_doldu.show()
 
 
-## Alt panelde verilen bölgeyi gösterir. Null verilirse panel gizlenir.
-func bolgeyi_goster(bolge: Bolge) -> void:
-	_bolge_paneli.goster(bolge, _dunya)
+## Alt panelde verilen ülkeyi gösterir. Null verilirse panel gizlenir.
+func ulkeyi_goster(ulke: Ulke, oyna_dugmesi_gorunur: bool) -> void:
+	_ulke_paneli.goster(ulke, _dunya, oyna_dugmesi_gorunur)
 
 
-func _sure_doldu_yazisini_kur(kok: Control) -> void:
-	var ortalayici: CenterContainer = CenterContainer.new()
-	ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	kok.add_child(ortalayici)
-
-	_sure_doldu = PanelContainer.new()
-	_sure_doldu.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ortalayici.add_child(_sure_doldu)
-
-	var yazi: Label = Label.new()
-	yazi.text = "Süre doldu"
-	yazi.add_theme_font_size_override("font_size", 96)
-	yazi.custom_minimum_size = Vector2(640.0, 160.0)
-	yazi.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	yazi.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_sure_doldu.add_child(yazi)
-	_sure_doldu.hide()
+## Oyuncunun ülkesini üst çubuğa yazar.
+func oyuncuyu_goster(ulke: Ulke) -> void:
+	_ust_cubuk.oyuncuyu_goster(ulke)
 
 
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.

@@ -9,10 +9,8 @@ extends Node
 signal saat_gecti(toplam_saat: int)
 ## Her gün başında (saat 00:00 olunca), saat_gecti'den sonra yayılır.
 signal gun_basladi(toplam_gun: int)
-## Durdurma ya da hız değişince yayılır.
+## Durdurma, hız ya da kilit değişince yayılır.
 signal durum_degisti
-## Oyunun bitiş tarihine ulaşılınca bir kez yayılır.
-signal sure_doldu
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 
@@ -21,11 +19,11 @@ var toplam_saat: int = 0
 var durdu: bool = true
 ## Seçili hız (1'den başlar).
 var hiz: int = 1
-## Bitiş tarihine ulaşıldı mı?
-var bitti: bool = false
-var baslangic_yili: int = 1931
+## Kilitliyken zaman başlatılamaz. Oyuncu ülkesini seçene kadar kilitlidir.
+var kilitli: bool = true
 
-var _bitis_saati: int = 0
+## Oyunun başladığı anın Unix zamanı.
+var _baslangic_unix: int = 0
 ## Her hız için saniyede atılacak tick sayısı.
 var _hizlar: PackedFloat32Array = PackedFloat32Array([2.0, 6.0, 24.0])
 var _kare_basina_azami_tick: int = 5
@@ -38,7 +36,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if durdu or bitti:
+	if durdu:
 		return
 	_birikim += delta * _hizlar[hiz - 1]
 	var atilan: int = 0
@@ -53,18 +51,10 @@ func _process(delta: float) -> void:
 
 ## Oyunu bir saat ilerletir. Durdurulmuş olsa da çalışır (sınama için).
 func bir_saat_ilerle() -> void:
-	if bitti:
-		return
 	toplam_saat += 1
 	saat_gecti.emit(toplam_saat)
 	if Takvim.saat(toplam_saat) == 0:
 		gun_basladi.emit(Takvim.gun_sayisi(toplam_saat))
-	if toplam_saat >= _bitis_saati:
-		bitti = true
-		durdu = true
-		_birikim = 0.0
-		durum_degisti.emit()
-		sure_doldu.emit()
 
 
 func durdur() -> void:
@@ -75,7 +65,7 @@ func durdur() -> void:
 
 
 func devam_et() -> void:
-	if not durdu or bitti:
+	if not durdu or kilitli:
 		return
 	durdu = false
 	_birikim = 0.0
@@ -91,7 +81,7 @@ func durdurmayi_degistir() -> void:
 
 func hiz_sec(yeni_hiz: int) -> void:
 	var sinirli: int = clampi(yeni_hiz, 1, _hizlar.size())
-	if sinirli == hiz:
+	if sinirli == hiz or kilitli:
 		return
 	hiz = sinirli
 	durum_degisti.emit()
@@ -101,16 +91,22 @@ func hiz_sayisi() -> int:
 	return _hizlar.size()
 
 
+## Zamanın başlatılmasına izin verir. Zaman durdurulmuş kalır; oyuncu kendisi başlatır.
+func kilidi_ac() -> void:
+	if not kilitli:
+		return
+	kilitli = false
+	durum_degisti.emit()
+
+
 func tarih_metni() -> String:
-	return Takvim.metin(toplam_saat, baslangic_yili)
+	return Takvim.metin(_baslangic_unix, toplam_saat)
 
 
 func _ayarlari_yukle() -> void:
 	var veri: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI)
 	var ayarlar: Dictionary = veri.get("zaman", {})
-	baslangic_yili = int(ayarlar.get("baslangic_yili", 1931))
-	var bitis_yili: int = int(ayarlar.get("bitis_yili", 1935))
-	_bitis_saati = Takvim.yil_basi_saati(bitis_yili, baslangic_yili)
+	_baslangic_unix = Takvim.tarihten_unix(str(ayarlar.get("baslangic_tarihi", "2026-01-01")))
 	_kare_basina_azami_tick = maxi(1, int(ayarlar.get("kare_basina_azami_tick", 5)))
 
 	var hiz_listesi: Array = ayarlar.get("hizlar_tick_saniye", [])

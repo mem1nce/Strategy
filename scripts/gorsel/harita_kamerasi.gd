@@ -12,10 +12,19 @@ signal yakinlik_degisti(yakinlik: float)
 
 ## Parmak bundan az oynadıysa dokunuş, fazla oynadıysa kaydırma sayılır (piksel).
 const DOKUNMA_ESIGI: float = 12.0
-const AZAMI_YAKINLIK: float = 2.5
-const TEKERLEK_CARPANI: float = 1.12
+## En yakın görünüm. Lüksemburg gibi küçük ülkeler bu yakınlıkta parmak genişliğini aşar.
+const AZAMI_YAKINLIK: float = 16.0
+const TEKERLEK_CARPANI: float = 1.2
+const ODAK_SURESI: float = 0.6
+## Odaklanılan alan ekranın en çok bu kadarını kaplar.
+const ODAK_DOLULUGU: float = 0.55
 
+## Haritanın alanı (harita birimi).
 var _alan: Rect2 = Rect2()
+## Haritanın üst ve alt kenarı, arayüzün altında kalmasın diye ekranın içine
+## bu kadar (ekran pikseli) çekilebilir. Açılan yer deniz rengindedir.
+var _ust_bosluk: float = 0.0
+var _alt_bosluk: float = 0.0
 var _asgari_yakinlik: float = 0.1
 ## Ekrandaki parmaklar: parmak sırası -> ekran konumu.
 var _parmaklar: Dictionary[int, Vector2] = {}
@@ -24,11 +33,14 @@ var _baslangic: Vector2 = Vector2.ZERO
 var _kaydirma: bool = false
 ## Bu dokunuş sırasında ekrana ikinci bir parmak değdi mi?
 var _cok_parmak: bool = false
+var _odak: Tween = null
 
 
 ## Kameranın gezebileceği alanı ayarlar ve haritanın tamamını gösterir.
-func kur(alan: Rect2) -> void:
+func kur(alan: Rect2, ust_bosluk: float, alt_bosluk: float) -> void:
 	_alan = alan
+	_ust_bosluk = ust_bosluk
+	_alt_bosluk = alt_bosluk
 	position = alan.get_center()
 	get_viewport().size_changed.connect(_gorunum_degisti)
 	_asgari_yakinligi_hesapla()
@@ -37,12 +49,31 @@ func kur(alan: Rect2) -> void:
 	yakinlik_degisti.emit(zoom.x)
 
 
-func yakinlik() -> float:
-	return zoom.x
-
-
 func ekrandan_dunyaya(ekran_konumu: Vector2) -> Vector2:
 	return position + (ekran_konumu - get_viewport_rect().size * 0.5) / zoom.x
+
+
+## Kamerayı yumuşak bir geçişle verilen alana götürür ve alan ekrana sığacak kadar yaklaşır.
+func odaklan(hedef: Rect2) -> void:
+	var ekran: Vector2 = get_viewport_rect().size
+	var sigdiran: float = minf(
+			ekran.x * ODAK_DOLULUGU / maxf(hedef.size.x, 1.0),
+			ekran.y * ODAK_DOLULUGU / maxf(hedef.size.y, 1.0))
+	var hedef_yakinlik: float = clampf(sigdiran, _asgari_yakinlik, AZAMI_YAKINLIK)
+
+	_odagi_durdur()
+	var ilk_konum: Vector2 = position
+	var son_konum: Vector2 = hedef.get_center()
+	# Yakınlık logaritmik değiştirilir ki geçiş boyunca hız aynı hissedilsin.
+	var ilk_log: float = log(zoom.x)
+	var son_log: float = log(hedef_yakinlik)
+	_odak = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_odak.tween_method(func(t: float) -> void:
+		var yeni: float = exp(lerpf(ilk_log, son_log, t))
+		zoom = Vector2(yeni, yeni)
+		position = ilk_konum.lerp(son_konum, t)
+		_sinirla()
+		yakinlik_degisti.emit(yeni), 0.0, 1.0, ODAK_SURESI)
 
 
 func _unhandled_input(olay: InputEvent) -> void:
@@ -56,6 +87,7 @@ func _unhandled_input(olay: InputEvent) -> void:
 
 func _dokunma(olay: InputEventScreenTouch) -> void:
 	if olay.pressed:
+		_odagi_durdur()
 		if _parmaklar.is_empty():
 			_baslangic = olay.position
 			_kaydirma = false
@@ -106,8 +138,10 @@ func _tekerlek(olay: InputEventMouseButton) -> void:
 	if not olay.pressed:
 		return
 	if olay.button_index == MOUSE_BUTTON_WHEEL_UP:
+		_odagi_durdur()
 		_yakinlastir(TEKERLEK_CARPANI, olay.position)
 	elif olay.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		_odagi_durdur()
 		_yakinlastir(1.0 / TEKERLEK_CARPANI, olay.position)
 
 
@@ -124,23 +158,27 @@ func _yakinlastir(carpan: float, ekran_noktasi: Vector2) -> void:
 	yakinlik_degisti.emit(yeni)
 
 
-## Kameranın harita dışını göstermesini engeller.
+## Kameranın haritadan uzaklaşmasını engeller. Yatayda harita kenarı ekranın içine
+## giremez; dikeyde yalnızca arayüz boşluğu kadar girebilir.
 func _sinirla() -> void:
 	var yari: Vector2 = get_viewport_rect().size * 0.5 / zoom.x
+	var ust: float = _alan.position.y - _ust_bosluk / zoom.x
+	var alt: float = _alan.end.y + _alt_bosluk / zoom.x
 	position.x = _eksende_sinirla(position.x, _alan.position.x + yari.x, _alan.end.x - yari.x)
-	position.y = _eksende_sinirla(position.y, _alan.position.y + yari.y, _alan.end.y - yari.y)
+	position.y = _eksende_sinirla(position.y, ust + yari.y, alt - yari.y)
 
 
+## Görünüm haritadan genişse (alt > ust) harita ortalanır.
 static func _eksende_sinirla(deger: float, alt: float, ust: float) -> float:
 	if alt > ust:
 		return (alt + ust) * 0.5
 	return clampf(deger, alt, ust)
 
 
-## En uzak görünümde bile ekran haritayla dolu kalsın diye alt sınırı hesaplar.
+## En uzak görünüm, haritanın tamamının ekrana sığdığı yakınlıktır.
 func _asgari_yakinligi_hesapla() -> void:
 	var ekran: Vector2 = get_viewport_rect().size
-	_asgari_yakinlik = minf(maxf(ekran.x / _alan.size.x, ekran.y / _alan.size.y), AZAMI_YAKINLIK)
+	_asgari_yakinlik = minf(minf(ekran.x / _alan.size.x, ekran.y / _alan.size.y), AZAMI_YAKINLIK)
 
 
 func _gorunum_degisti() -> void:
@@ -149,3 +187,9 @@ func _gorunum_degisti() -> void:
 		zoom = Vector2(_asgari_yakinlik, _asgari_yakinlik)
 		yakinlik_degisti.emit(zoom.x)
 	_sinirla()
+
+
+func _odagi_durdur() -> void:
+	if _odak != null and _odak.is_valid():
+		_odak.kill()
+	_odak = null
