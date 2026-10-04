@@ -17,6 +17,8 @@ var bolge_listesi: Array[Bolge] = []
 ## parçalar üstte kalır (ör. Lesotho, Güney Afrika'nın üstünde).
 var cokgenler: Array[Cokgen] = []
 var sinirlar: Array[Sinir] = []
+## Bölgeler arası, saat cinsinden süreye göre en hızlı yolu bulur (kara + deniz yolu).
+var yol_bulucu: YolBulucu = null
 
 
 ## Veri dosyalarını okuyup dünyayı kurar. Veri hatalıysa nedenini yazar ve null döndürür.
@@ -49,6 +51,7 @@ static func yukle() -> Dunya:
 
 	if not dunya._dogrula():
 		return null
+	dunya.yol_bulucu = YolBulucu.kur(dunya)
 	return dunya
 
 

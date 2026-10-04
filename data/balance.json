@@ -10,5 +10,10 @@
 		"gsyh_bolen": 50000,
 		"asgari_tumen": 1,
 		"azami_tumen": 24
+	},
+	"hareket": {
+		"kara_saat": 24,
+		"deniz_taban_saat": 48,
+		"deniz_saat_birim_basi": 1.5
 	}
 }

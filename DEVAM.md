@@ -62,15 +62,30 @@ haritada gösterim.
   belirmesi, bölge adları gibi aynı koddan geldiği için güvenilir ama ayrıca ekran
   görüntüsüyle doğrulanmadı (kamerayı sınama aracından yakınlaştırmanın bir yolu yok).
 
+B) BİRLİKLER VE HAREKET — yol bulma alt yapısı tamamlandı:
+- `sim/yol_bulucu.gd` (`YolBulucu extends AStar2D`): bölgeler arası en hızlı yolu saat
+  cinsinden bulur. Kara komşuluğu sabit `kara_saat` (24); deniz yolu
+  `deniz_taban_saat + uzaklık * deniz_saat_birim_basi` (data/balance.json → "hareket").
+  `_compute_cost`/`_estimate_cost` override edilerek AStar2D'nin varsayılan Öklid
+  maliyeti yerine gerçek saat kullanılıyor; tahmini maliyet her zaman 0 (her zaman
+  kabul edilebilir/admissible, performans yerine doğruluk tercih edildi — 516 düğümde
+  fark etmiyor).
+  `Dunya.yol_bulucu`, `Dunya.yukle()` içinde bir kez kuruluyor.
+- 4 yeni sınama (`tests/sim/yol_bulucu_testi.gd`): aynı bölgeye süre 0, kara komşuluğu tam
+  24 saat, deniz yolu karadan belirgin yavaş, uzak bölgeler (TUR_1 -> AUS_1) arasında yol
+  bulunuyor. Toplam 20/20 sınama geçiyor.
+- Henüz yok: "savaşta olmadığın ülkeye giremezsin" kısıtlaması (hareket emri verildiğinde
+  uygulanacak, henüz emir arayüzü yok), gerçek birlik hareketi/animasyon.
+
 ## Sıradaki iş
 
-B) BİRLİKLER VE HAREKET — sıradaki alt adım: seçme ve emir.
+B) BİRLİKLER VE HAREKET — sıradaki alt adım: seçme ve emir (arayüz).
 - Kendi birliğinin olduğu bölgeye dokun → birlik kartı açılsın.
-- Hedef bölgeye dokun → yol çizgisi görünsün, birlik yürüsün. "Yarısını ayır" düğmesi.
-- Kara komşusuna geçiş 24 saat; deniz yolu mesafeyle orantılı ve belirgin yavaş; yol bulma
-  AStar ile. Savaşta olmadığın ülkenin toprağına girilemez (henüz savaş yok, o yüzden bu
-  kısıtlama şimdilik "kendi ülken değilse giremezsin" olarak uygulanabilir; savaş eklenince
-  gevşetilir).
+- Hedef bölgeye dokun → yol çizgisi görünsün (YolBulucu.en_kisa_yol ile), birlik
+  YolBulucu.en_kisa_sure kadar sürede yürüsün. "Yarısını ayır" düğmesi.
+- Savaşta olmadığın ülkenin toprağına girilemez (henüz savaş yok; şimdilik "kendi ülken
+  değilse giremezsin" olarak uygulanabilir, savaş eklenince gevşetilir — bu bir Karar
+  olarak işaretlenecek).
 
 ## Kararlar
 
@@ -94,6 +109,10 @@ B) BİRLİKLER VE HAREKET — sıradaki alt adım: seçme ve emir.
 - 2026-10-04: Tümen kutuları, bölge sınırları/adlarıyla aynı yakınlık eşiğinde (yakınlık
   > 1,7) görünür. İlk sürümde her zaman açıktı; dünya görünümünde yüzlerce kutu üst üste
   bindiği ekran görüntüsüyle görüldü, aynı eşik koda eklendi.
+- 2026-10-04: Deniz yolu süresi `48 + uzaklık * 1,5` saat (taban + mesafeye bağlı). Yalnızca
+  mesafeyle orantılı bir çarpan (ör. mesafe * 1,5) kısa boğazları (ör. Cebelitarık ~1-2
+  birim) kara komşuluğundan (24 saat) HIZLI yapardı; "belirgin yavaş" isteğini karşılamak
+  için bir taban süre eklendi. Sayılar kaba bir ilk tahmin, H) DENGE'de ayarlanacak.
 
 ## Bilinen sorunlar
 
