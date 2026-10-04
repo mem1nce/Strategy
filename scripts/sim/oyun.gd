@@ -19,12 +19,16 @@ signal ulke_teslim_oldu(ulke_id: String, galip_id: String)
 signal baris_yapildi(ulke_a: String, ulke_b: String)
 ## Bir ülkenin hazinesi değiştiğinde (her oyun günü başında gelir eklenince) yayılır.
 signal hazine_degisti
+## Bir ülkenin inşa kuyruğuna iş eklendiğinde ya da bir iş tamamlandığında yayılır.
+signal insa_kuyrugu_degisti(ulke_id: String)
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
 const ASGARI_GUC: float = 1.0
 ## Barış teklifinin otomatik kabul edilmesi için bir savaşın en az bu kadar sürmesi gerekir.
 const BARIS_ESIGI_SAAT: int = 180 * 24
+## İnşa kuyruğunda aynı anda en fazla bu kadar iş bekleyebilir.
+const AZAMI_KUYRUK_UZUNLUGU: int = 5
 
 var dunya: Dunya = null
 ## Oyuncunun yönettiği ülkenin id'si. Seçim yapılmadıysa boştur.
@@ -45,8 +49,21 @@ var _cekilme_esigi: float = 0.25
 var _sanayi_gsyh_bolen: float = 5000.0
 var _isgal_cezasi_gun: int = 60
 var _isgal_cezasi_orani: float = 0.5
+var _tumen_maliyeti: float = 50.0
+var _tumen_suresi_saat: int = 120
+var _fabrika_maliyeti: float = 500.0
+var _fabrika_suresi_saat: int = 720
+var _fabrika_sanayi_artisi: float = 2.0
+var _bakim_birim_maliyeti: float = 0.5
+## Yeni kurulan tümenin başlangıç gücü (OrduKurucu'nun kullandığı değerle aynı; bkz.
+## data/balance.json -> "ordu").
+var _baslangic_gucu: float = 100.0
+
 ## Ülke id'si -> birikmiş üretim. Her oyun günü başında gelir eklenir (bkz. gun_basladi).
 var hazineler: Dictionary[String, float] = {}
+## Ülke id'si -> o ülkenin inşa kuyruğu (Array[InsaIsi], en fazla AZAMI_KUYRUK_UZUNLUGU).
+## Yalnızca kuyruğun önündeki iş ilerler (tek kuyruk).
+var insa_kuyruklari: Dictionary[String, Array] = {}
 
 
 func _init(yeni_dunya: Dunya) -> void:
@@ -63,6 +80,15 @@ func _init(yeni_dunya: Dunya) -> void:
 	_sanayi_gsyh_bolen = float(ekonomi_ayarlari.get("sanayi_gsyh_bolen", _sanayi_gsyh_bolen))
 	_isgal_cezasi_gun = int(ekonomi_ayarlari.get("isgal_cezasi_gun", _isgal_cezasi_gun))
 	_isgal_cezasi_orani = float(ekonomi_ayarlari.get("isgal_cezasi_orani", _isgal_cezasi_orani))
+	_tumen_maliyeti = float(ekonomi_ayarlari.get("tumen_maliyeti", _tumen_maliyeti))
+	_tumen_suresi_saat = int(ekonomi_ayarlari.get("tumen_suresi_saat", _tumen_suresi_saat))
+	_fabrika_maliyeti = float(ekonomi_ayarlari.get("fabrika_maliyeti", _fabrika_maliyeti))
+	_fabrika_suresi_saat = int(ekonomi_ayarlari.get("fabrika_suresi_saat", _fabrika_suresi_saat))
+	_fabrika_sanayi_artisi = float(ekonomi_ayarlari.get("fabrika_sanayi_artisi", _fabrika_sanayi_artisi))
+	_bakim_birim_maliyeti = float(ekonomi_ayarlari.get("bakim_birim_maliyeti", _bakim_birim_maliyeti))
+
+	var ordu_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("ordu", {})
+	_baslangic_gucu = float(ordu_ayarlari.get("baslangic_gucu", _baslangic_gucu))
 
 
 ## Verilen bölgedeki tümenler.
@@ -144,6 +170,7 @@ func saat_ilerledi(su_anki_saat: int) -> void:
 	if tasima_oldu:
 		birlikler_degisti.emit()
 	_muharebeleri_isle(su_anki_saat)
+	_insa_islerini_isle()
 
 
 ## Gelen tümen, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait) tümen
@@ -355,12 +382,101 @@ func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:
 
 
 ## Her oyun günü başında (Zaman.gun_basladi) çağrılır: her ülkenin o günkü geliri
-## hazinesine eklenir. `su_anki_saat`, gün başındaki Zaman.toplam_saat değeridir.
+## hazinesine eklenir, ardından tümen bakımı düşülür. `su_anki_saat`, gün başındaki
+## Zaman.toplam_saat değeridir.
 func gun_basladi(su_anki_saat: int) -> void:
 	for ulke: Ulke in dunya.ulke_listesi:
 		var gelir: float = ulkenin_geliri(ulke.id, su_anki_saat)
 		hazineler[ulke.id] = hazineler.get(ulke.id, 0.0) + gelir
+	_bakimi_uygula()
 	hazine_degisti.emit()
+	birlikler_degisti.emit()
+
+
+## Her ülkenin tümen başına günlük bakım masrafını hazinesinden düşer. Hazine yetmezse
+## (eksiye düşerse) açık, o ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak
+## yansıtılır (bkz. _guc_azalt) ve hazine 0'da kalır.
+func _bakimi_uygula() -> void:
+	var ulke_birlikleri: Dictionary[String, Array] = {}
+	for birlik: Birlik in birlikler:
+		if not ulke_birlikleri.has(birlik.sahip):
+			ulke_birlikleri[birlik.sahip] = [] as Array[Birlik]
+		(ulke_birlikleri[birlik.sahip] as Array[Birlik]).append(birlik)
+
+	for ulke_id: String in ulke_birlikleri:
+		var liste: Array[Birlik] = ulke_birlikleri[ulke_id]
+		var bakim: float = liste.size() * _bakim_birim_maliyeti
+		var mevcut: float = hazineler.get(ulke_id, 0.0)
+		if mevcut >= bakim:
+			hazineler[ulke_id] = mevcut - bakim
+			continue
+		hazineler[ulke_id] = 0.0
+		_guc_azalt(liste, bakim - mevcut)
+		_olenleri_temizle(liste)
+
+
+## Verilen ülkenin, verilen (kendi) bölgesinde yeni bir tümen sıralar. Kuyruk doluysa,
+## bölge o ülkeye ait değilse ya da hazine yetmezse false döner (maliyet hemen kesilir).
+func tumen_sirala(ulke_id: String, bolge_id: String) -> bool:
+	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.TUMEN, _tumen_maliyeti, _tumen_suresi_saat)
+
+
+## Verilen ülkenin, verilen (kendi) bölgesinde fabrika sıralar; tamamlanınca bölgenin
+## sanayisini kalıcı olarak artırır.
+func fabrika_sirala(ulke_id: String, bolge_id: String) -> bool:
+	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.FABRIKA, _fabrika_maliyeti, _fabrika_suresi_saat)
+
+
+func _ise_sirala(ulke_id: String, bolge_id: String, tur: InsaIsi.Tur, maliyet: float, sure_saat: int) -> bool:
+	var bolge: Bolge = dunya.bolgeler.get(bolge_id)
+	if bolge == null or bolge.sahip != ulke_id:
+		return false
+	var kuyruk: Array = insa_kuyruklari.get(ulke_id, [])
+	if kuyruk.size() >= AZAMI_KUYRUK_UZUNLUGU or hazineler.get(ulke_id, 0.0) < maliyet:
+		return false
+
+	hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) - maliyet
+	var yeni_is: InsaIsi = InsaIsi.new()
+	yeni_is.tur = tur
+	yeni_is.sahip = ulke_id
+	yeni_is.bolge_id = bolge_id
+	yeni_is.kalan_saat = sure_saat
+	kuyruk.append(yeni_is)
+	insa_kuyruklari[ulke_id] = kuyruk
+
+	hazine_degisti.emit()
+	insa_kuyrugu_degisti.emit(ulke_id)
+	return true
+
+
+## Her ülkenin kuyruğunun önündeki işi bir saat ilerletir; süresi dolan iş tamamlanır ve
+## kuyruktan çıkar (tek kuyruk: arkadaki işler önceki bitmeden ilerlemez).
+func _insa_islerini_isle() -> void:
+	for ulke_id: String in insa_kuyruklari.keys():
+		var kuyruk: Array = insa_kuyruklari[ulke_id]
+		if kuyruk.is_empty():
+			continue
+		var on: InsaIsi = kuyruk[0]
+		on.kalan_saat -= 1
+		if on.kalan_saat > 0:
+			continue
+		kuyruk.pop_front()
+		_insayi_tamamla(on)
+		insa_kuyrugu_degisti.emit(ulke_id)
+
+
+func _insayi_tamamla(is_: InsaIsi) -> void:
+	if is_.tur == InsaIsi.Tur.TUMEN:
+		var yeni: Birlik = Birlik.new()
+		yeni.sahip = is_.sahip
+		yeni.bolge_id = is_.bolge_id
+		yeni.guc = _baslangic_gucu
+		birlikler.append(yeni)
+		birlikler_degisti.emit()
+	else:
+		var bolge: Bolge = dunya.bolgeler.get(is_.bolge_id)
+		if bolge != null:
+			bolge.fabrika_sanayisi += _fabrika_sanayi_artisi
 
 
 ## Bir ülkenin günlük geliri: o an sahip olduğu bölgelerin sanayilerinin toplamı.
@@ -371,19 +487,19 @@ func ulkenin_geliri(ulke_id: String, su_anki_saat: int) -> float:
 	return toplam
 
 
-## Bir bölgenin günlük ürettiği sanayi. Bölgenin "ev sahibi" ülkesinin (bölge id'sinin
-## öneki, ör. "TUR_1" -> "TUR") GSYH'sinden ve o ülke içindeki nüfus payından türer; kimin
-## elinde olduğundan bağımsızdır (toprağın kendi ekonomik niteliğini yansıtır). Son
-## `isgal_cezasi_gun` gün içinde ele geçirilmiş ve hâlâ ev sahibinde olmayan bölge
-## `isgal_cezasi_orani` kadar üretir.
+## Bir bölgenin günlük ürettiği sanayi. Taban değer, bölgenin "ev sahibi" ülkesinin (bölge
+## id'sinin öneki, ör. "TUR_1" -> "TUR") GSYH'sinden ve o ülke içindeki nüfus payından türer;
+## buna bölgedeki fabrikaların kattığı sanayi eklenir. Kimin elinde olduğundan bağımsızdır
+## (toprağın kendi ekonomik niteliğini yansıtır). Son `isgal_cezasi_gun` gün içinde ele
+## geçirilmiş ve hâlâ ev sahibinde olmayan bölge toplamın `isgal_cezasi_orani` kadarını üretir.
 func bolge_sanayisi(bolge: Bolge, su_anki_saat: int) -> float:
 	var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
-	if ev_ulke == null or ev_ulke.nufus <= 0:
-		return 0.0
-	var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
-	var pay: float = float(bolge.nufus) / float(ev_ulke.nufus)
-	var sanayi: float = ulke_sanayisi * pay
-	var isgal_altinda: bool = bolge.isgal_saati >= 0 and bolge.sahip != ev_ulke.id \
+	var taban: float = 0.0
+	if ev_ulke != null and ev_ulke.nufus > 0:
+		var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
+		taban = ulke_sanayisi * (float(bolge.nufus) / float(ev_ulke.nufus))
+	var sanayi: float = taban + bolge.fabrika_sanayisi
+	var isgal_altinda: bool = ev_ulke != null and bolge.isgal_saati >= 0 and bolge.sahip != ev_ulke.id \
 			and su_anki_saat - bolge.isgal_saati < _isgal_cezasi_gun * 24
 	if isgal_altinda:
 		sanayi *= _isgal_cezasi_orani

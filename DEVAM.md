@@ -222,13 +222,46 @@ D) EKONOMİ — üretim ve gelir tamamlandı:
 - Henüz yok: harcama (tümen kur, fabrika kur — tek kuyruk, en fazla 5 iş), bakım (her
   tümen günlük üretim yer; gelir eksiye düşerse tümenler güç kaybeder).
 
+D) EKONOMİ tamamlandı (TASARIM.md yol haritasında ✅):
+- `InsaIsi` (sim/insa_isi.gd): tek bir inşa işi (tür, sahip, bölge, kalan saat).
+- `Oyun.tumen_sirala()`/`fabrika_sirala()`: kendi bölgende, maliyet hemen hazineden
+  düşülerek sıralanır (yetmezse ya da kuyruk (5 iş) doluysa false). Tek kuyruk: yalnızca
+  önündeki iş ilerler (`Oyun._insa_islerini_isle()`, saat_ilerledi içinden her saat
+  çağrılır). Süresi dolan tümen işi `baslangic_gucu` ile yeni tümen doğurur; fabrika işi
+  `Bolge.fabrika_sanayisi`'ni kalıcı artırır (artık `bolge_sanayisi()`'ne ekleniyor).
+- `Oyun._bakimi_uygula()`: her gün başı (gelir eklendikten sonra), tümen sayısı ×
+  bakim_birim_maliyeti hazineden düşülür; yetmezse açık, muharebedeki `_guc_azalt` ile
+  AYNI mekanizma kullanılarak tümenlere orantılı güç kaybı olarak yansıtılır (kod tekrarı
+  yerine var olan yardımcı yeniden kullanıldı).
+- 9 yeni sınama (`tests/sim/insa_testi.gd`): başkasının bölgesine sıralanamaz, hazine
+  yetmezse sıralanamaz, sıralanınca maliyet düşer, kuyruk 5'i aşamaz, süre dolunca tümen
+  doğar, tek kuyrukta ikinci iş ilerlemez, fabrika tamamlanınca sanayi artar, bakım
+  karşılanamazsa güç azalır, karşılanırsa etkilemez. Toplam 56/56 sınama geçiyor.
+  - **Testte bulunan kurulum hatası (üretim kodu değil):** "hazine yetersiz" sınaması
+    `gun_basladi()` üzerinden kurulmuştu, ama `gun_basladi` önce geliri EKLİYOR —
+    TUR'un gerçek geliri bakım masrafını karşılayabildiği için önkoşul hiç
+    sağlanmıyordu. `_bakimi_uygula()` doğrudan çağrılarak (gelirden izole) düzeltildi.
+- Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): tümen sıralanıp süresi
+  dolunca Ankara kutusu 200→300 oldu, hazine 1000→950 düştü.
+- **Henüz yok (bilinçli olarak bu aşamaya dahil edilmedi):** tümen/fabrika kurma
+  düğmeleri arayüzde yok — yalnızca `Oyun` sim katmanında var (YolBulucu'nun da önce
+  sadece backend olarak eklenip sonra arayüze bağlanması gibi). Hangi bölgede
+  kurulacağını seçme arayüzü de yok ("başkentte ya da seçilen bölgede" — şimdilik
+  yalnızca `tumen_sirala(ulke_id, bolge_id)` çağrısı herhangi bir kendi bölgeni kabul
+  ediyor, main.gd'den henüz çağrılmıyor).
+
 ## Sıradaki iş
 
-D) EKONOMİ — sıradaki alt adım: harcama ve bakım.
-- Tümen kur (başkentte ya da seçilen bölgede doğar) ve fabrika kur (bölgenin sanayisini
-  artırır, pahalı ve uzun). Tek kuyruk, en fazla 5 iş.
-- Bakım: her tümen günlük üretim yer. Gelir eksiye düşerse tümenler güç kaybeder.
-- Bu tamamlanınca D) EKONOMİ TASARIM.md'de ✅ işaretlenecek ve E) YAPAY ZEKÂ'ya geçilecek.
+İki seçenek var:
+1. D) EKONOMİ'nin arayüz eksiğini kapatmak: üst çubuğa (ya da birlik paneline) "Tümen
+   kur" / "Fabrika kur" düğmeleri eklemek.
+2. E) YAPAY ZEKÂ'ya geçmek (TASARIM.md yol haritasında sıradaki aşama): her ülke günde
+   bir kez düşünür, barışta tümen kurar ve sınırlara dağıtır, savaşta saldırır/savunur,
+   ara sıra savaş ilan eder. Bu, oyunu ilk kez "tek başına oynanabilir" hâle getirir
+   (şu an diğer bütün ülkeler tamamen hareketsiz).
+Seçim: E) YAPAY ZEKÂ'ya geçilecek — çünkü yapay zekâ olmadan oyun gerçekten
+"oynanamıyor" (diğer ülkeler hiçbir şey yapmıyor); arayüz cilası (1) G) ARAYÜZ
+aşamasında toplu olarak ele alınacak.
 
 ## Kararlar
 

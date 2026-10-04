@@ -13,6 +13,9 @@ var nufus: int = 0
 ## Son ele geçirildiği saat (Zaman.toplam_saat); hiç el değiştirmediyse -1. Ekonomide
 ## işgal cezası için kullanılır (bkz. Oyun.bolge_sanayisi).
 var isgal_saati: int = -1
+## Bölgede kurulan fabrikaların sanayiye kattığı toplam (bkz. Oyun.bolge_sanayisi,
+## Oyun._insayi_tamamla).
+var fabrika_sanayisi: float = 0.0
 ## Bölge, en az bir kıyı (deniz) sınırına değiyor mu?
 var kiyi: bool = false
 ## Bölge adının ve işaretlerinin çizileceği nokta (en büyük çokgenin içinde).

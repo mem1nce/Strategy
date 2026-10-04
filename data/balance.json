@@ -25,6 +25,12 @@
 	"ekonomi": {
 		"sanayi_gsyh_bolen": 5000,
 		"isgal_cezasi_gun": 60,
-		"isgal_cezasi_orani": 0.5
+		"isgal_cezasi_orani": 0.5,
+		"tumen_maliyeti": 50,
+		"tumen_suresi_saat": 120,
+		"fabrika_maliyeti": 500,
+		"fabrika_suresi_saat": 720,
+		"fabrika_sanayi_artisi": 2.0,
+		"bakim_birim_maliyeti": 0.5
 	}
 }

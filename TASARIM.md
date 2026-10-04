@@ -368,8 +368,20 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
 - **Hazine:** `Oyun.hazineler` (ülke id'si → birikmiş üretim), her oyun günü başında
   (`Oyun.gun_basladi()`, `Zaman.gun_basladi`'den main.gd aracılığıyla çağrılır) o günün
   geliri eklenerek güncellenir. Üst çubukta oyuncunun hazinesi yazılı.
-- Henüz yok: harcama (tümen/fabrika kurma), bakım (tümen bakım masrafı) (bkz. 11. Yol
-  haritası, D).
+- **Harcama:** `Oyun.tumen_sirala()` ve `fabrika_sirala()`, bir ülkenin (kendi) bir
+  bölgesinde iş sıralar; maliyet hemen hazineden düşülür (yetmezse sıralanamaz). Her
+  ülkenin **tek** bir inşa kuyruğu vardır (`Oyun.insa_kuyruklari`), en fazla
+  `AZAMI_KUYRUK_UZUNLUGU` (5) iş bekleyebilir; yalnızca kuyruğun ÖNÜNDEKİ iş ilerler,
+  arkadakiler sırasını bekler. Süresi dolan tümen işi, belirtilen bölgede
+  `baslangic_gucu` ile yeni bir tümen doğurur; fabrika işi bölgenin `fabrika_sanayisi`'ni
+  kalıcı olarak `fabrika_sanayi_artisi` kadar artırır (bkz. yukarıdaki "Sanayi"). Sabitler
+  data/balance.json → "ekonomi" (`tumen_maliyeti`, `tumen_suresi_saat`, ...).
+- **Bakım:** her oyun günü başında (gelir eklendikten sonra), her ülkenin tümen sayısı ×
+  `bakim_birim_maliyeti` hazinesinden düşülür. Hazine yetmezse 0'da kalır ve açık, o
+  ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak yansıtılır (muharebedeki
+  `_guc_azalt` ile aynı mekanizma); güç `ASGARI_GUC` altına düşen tümen silinir.
+- Arayüz: şimdilik yok — tümen/fabrika sıralama yalnızca sim katmanında (`Oyun`) var;
+  düğmeler G) ARAYÜZ aşamasında (ya da öncesinde küçük bir ek adımda) eklenecek.
 
 ## 10. Kod mimarisi
 
@@ -394,6 +406,7 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler, savaş, hazineler |
 | `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
 | `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
+| `sim/insa_isi.gd` | İnşa kuyruğundaki tek bir iş: tümen ya da fabrika |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
 | `sim/zaman.gd` | Zaman yöneticisi (autoload `Zaman`) |
 | `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri, vurguları, adları ve tümen kutularını çizer |
@@ -430,7 +443,7 @@ istenen aşama yapılır.
 | 2 | ✅ | **Ülkeleri bölgelere ayırma** | Şehir verisi, Voronoi bölme, bölge komşulukları ve deniz geçişleri, bölge seçimi ve paneli |
 | 3 | ✅ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
 | 4 | ✅ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
-| 5 | ⬜ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
+| 5 | ✅ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
 | 6 | ⬜ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ⬜ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 8 | ⬜ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
