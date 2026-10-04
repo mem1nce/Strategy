@@ -19,7 +19,7 @@ func sina_kendi_topragina_yurur_ve_varir() -> String:
 	var tasinanlar: Array[Birlik] = oyun.bolgedeki_birlikler("TUR_1").duplicate()
 	if tasinanlar.is_empty():
 		return "TUR_1'de tümen yok, sınama kurulamadı."
-	if not oyun.birlikleri_yurut("TUR_1", hedef_id, 0):
+	if not oyun.birlikleri_yurut(tasinanlar, hedef_id, 0):
 		return "Kendi toprağına yürütme kabul edilmeliydi."
 	for birlik: Birlik in tasinanlar:
 		if not birlik.yuruyor_mu() or birlik.hedef_bolge_id != hedef_id:
@@ -58,7 +58,8 @@ func sina_dusman_topragina_yurutme_reddedilir() -> String:
 	if kaynak_id == "":
 		return "Sınırda, tümeni olan bir bölge bulunamadı, sınama kurulamadı."
 
-	if oyun.birlikleri_yurut(kaynak_id, hedef_id, 0):
+	var tasinacaklar: Array[Birlik] = oyun.bolgedeki_birlikler(kaynak_id)
+	if oyun.birlikleri_yurut(tasinacaklar, hedef_id, 0):
 		return "Düşman (savaşta olunmayan) toprağına yürütme kabul edilmemeliydi."
 	for birlik: Birlik in oyun.bolgedeki_birlikler(kaynak_id):
 		if birlik.yuruyor_mu():
@@ -66,9 +67,64 @@ func sina_dusman_topragina_yurutme_reddedilir() -> String:
 	return ""
 
 
-func sina_var_olmayan_bolgeden_yurutme_false_doner() -> String:
+func sina_bos_listeden_yurutme_false_doner() -> String:
 	var dunya: Dunya = Dunya.yukle()
 	var oyun: Oyun = Oyun.new(dunya)
-	if oyun.birlikleri_yurut("YOK_1", "TUR_1", 0):
-		return "Var olmayan kaynak bölgeden yürütme false dönmeli."
+	var bos: Array[Birlik] = []
+	if oyun.birlikleri_yurut(bos, "TUR_1", 0):
+		return "Boş listeden yürütme false dönmeli."
+	return ""
+
+
+func sina_tek_tumen_yariya_ayrilir() -> String:
+	var dunya: Dunya = Dunya.yukle()
+	var oyun: Oyun = Oyun.new(dunya)
+	var tek: Birlik = Birlik.new()
+	tek.sahip = "TUR"
+	tek.bolge_id = "TUR_1"
+	tek.guc = 100.0
+	var oncesi: int = oyun.birlikler.size()
+
+	var ayrilan: Array[Birlik] = oyun.yariya_ayir([tek])
+	if ayrilan.size() != 1:
+		return "Tek tümen ayrılınca bir yeni tümen dönmeli."
+	if not is_equal_approx(tek.guc, 50.0) or not is_equal_approx(ayrilan[0].guc, 50.0):
+		return "Güç tam ikiye bölünmeli, geldi: %.1f / %.1f" % [tek.guc, ayrilan[0].guc]
+	if ayrilan[0].bolge_id != "TUR_1" or ayrilan[0].sahip != "TUR":
+		return "Yeni tümen aynı bölgede ve aynı sahipte olmalı."
+	if oyun.birlikler.size() != oncesi + 1:
+		return "Yeni tümen Oyun.birlikler listesine eklenmeli."
+	return ""
+
+
+func sina_coklu_tumen_sayica_yariya_ayrilir() -> String:
+	var dunya: Dunya = Dunya.yukle()
+	var oyun: Oyun = Oyun.new(dunya)
+	var stok: Array[Birlik] = []
+	for i: int in 3:
+		var b: Birlik = Birlik.new()
+		b.sahip = "TUR"
+		b.bolge_id = "TUR_1"
+		b.guc = 100.0
+		stok.append(b)
+
+	var ayrilan: Array[Birlik] = oyun.yariya_ayir(stok)
+	if ayrilan.size() != 1:
+		return "3 tümende 1'i ayrılmalı (3/2 tam bölüm), geldi: %d" % ayrilan.size()
+	for birlik: Birlik in ayrilan:
+		if not stok.has(birlik):
+			return "Ayrılanlar orijinal listeden olmalı."
+	return ""
+
+
+func sina_cok_zayif_tek_tumen_ayrilmaz() -> String:
+	var dunya: Dunya = Dunya.yukle()
+	var oyun: Oyun = Oyun.new(dunya)
+	var zayif: Birlik = Birlik.new()
+	zayif.sahip = "TUR"
+	zayif.bolge_id = "TUR_1"
+	zayif.guc = 1.0
+	var ayrilan: Array[Birlik] = oyun.yariya_ayir([zayif])
+	if not ayrilan.is_empty():
+		return "Gücü 2'den az tek tümen ayrılmamalı."
 	return ""

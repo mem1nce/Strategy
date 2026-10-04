@@ -8,6 +8,8 @@ extends CanvasLayer
 signal oyna_istendi(ulke_id: String)
 ## Oyuncu "Komşuları göster" düğmesini açıp kapadığında yayılır.
 signal komsular_degisti(acik: bool)
+## Oyuncu birlik panelinde "Yarısını ayır" düğmesine bastığında yayılır.
+signal yarisini_ayir_istendi
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
@@ -53,6 +55,7 @@ func kur(dunya: Dunya) -> void:
 
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
+	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
 
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()

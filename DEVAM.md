@@ -111,11 +111,31 @@ B) BİRLİKLER VE HAREKET — emir (hedef seçip yürütme) tamamlandı:
 - Henüz yok: "Yarısını ayır" düğmesi, birlik hareketinin görsel animasyonu (şu an anlık
   ışınlanma gibi; yalnızca varış anında bölge değişir).
 
+B) BİRLİKLER VE HAREKET tamamlandı (TASARIM.md yol haritasında ✅):
+- `Oyun.birlikleri_yurut()` artık bir bölge id'si değil, doğrudan `Array[Birlik]` alıyor
+  (daha genel: "yarısını ayır" gibi alt kümeleri de yürütebilsin diye). Çağıran taraf
+  (main.gd) `_secili_birlikler: Array[Birlik]` tutar.
+  - `Oyun.yariya_ayir(stok)`: tek tümende gücü ikiye böler (yeni bir Birlik oluşturur,
+    `Oyun.birlikler`e ekler); birden çok tümende sayıca yarısını (aşağı yuvarlayarak)
+    ayırıp döndürür. Ayrılan liste, main.gd'nin `_secili_birlikler`'i olur.
+  - `BirlikPaneli`'ye "Yarısını ayır" düğmesi eklendi (`yarisini_ayir_basildi` sinyali,
+    `Arayuz.yarisini_ayir_istendi` ile main.gd'ye kadar iletiliyor).
+- 5 yeni sınama (`tests/sim/hareket_testi.gd`): boş listeden yürütme false döner, tek
+  tümen tam ortadan ikiye bölünür (yeni tümen `Oyun.birlikler`e eklenir), çoklu tümen
+  sayıca yarıya ayrılır (3'te 1 ayrılır), gücü 2'den az tek tümen ayrılmaz. Toplam
+  26/26 sınama geçiyor.
+- Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): düğme panelde doğru görünüyor.
+
 ## Sıradaki iş
 
-B) BİRLİKLER VE HAREKET — sıradaki alt adım: "Yarısını ayır" düğmesi (birlik panelinde).
-Bu tamamlanınca B aşaması TASARIM.md'deki yol haritasında ✅ işaretlenecek ve C) SAVAŞ'a
-geçilecek.
+C) SAVAŞ — ilk alt adım: savaş ilanı ve boş bölge işgali.
+- Ülke panelinde onay soran "Savaş ilan et" düğmesi; yalnızca kara ya da deniz yoluyla
+  ulaşabildiğin ülkelere (YolBulucu zaten bunu hesaplayabiliyor).
+- Boş düşman bölgesine giren birlik orayı ele geçirir: sahibi, rengi ve sınır çizgileri
+  güncellenir (HaritaGorunumu.yenile() zaten bölge sahipliği değişince haritayı günceller).
+- Muharebe (dolu düşman bölgesine girme, saatlik çarpışma, kayıplar) bu alt adımda henüz
+  yok — yalnızca "savaş hâli" ve "boş bölge işgali" kurulacak; Oyun.birlikleri_yurut
+  içindeki "yalnızca kendi toprağın" kısıtlaması savaştaki ülkelere genişletilecek.
 
 ## Kararlar
 

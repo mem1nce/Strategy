@@ -3,12 +3,19 @@ extends PanelContainer
 ## Alt panel: dokunulan bölgedeki, oyuncuya ait tümenleri gösterir. Seçim yokken gizlidir.
 ##
 ## Yalnızca oyuncunun kendi tümenlerinin olduğu bir bölgeye dokununca açılır (bkz. main.gd).
-## Hedef seçip birlik yürütme ve "Yarısını ayır" henüz yok (sıradaki adım).
+## "Yarısını ayır" düğmesi gösterilen tümenlerin yarısını ayırır; sonraki hedef seçimi
+## yalnızca ayrılan yarıyı yürütür.
+
+const AYIR_DUGMESI_BOYUTU: Vector2 = Vector2(260.0, 112.0)
+
+## "Yarısını ayır" düğmesine basıldığında yayılır.
+signal yarisini_ayir_basildi
 
 var _renk_kutusu: ColorRect = null
 var _ad: Label = null
 var _tumen_sayisi: Label = null
 var _toplam_guc: Label = null
+var _ayir: Button = null
 
 
 func _ready() -> void:
@@ -28,6 +35,14 @@ func _ready() -> void:
 
 	_tumen_sayisi = _etiket_ekle(bilgi)
 	_toplam_guc = _etiket_ekle(bilgi)
+
+	_ayir = Button.new()
+	_ayir.text = "Yarısını ayır"
+	_ayir.custom_minimum_size = AYIR_DUGMESI_BOYUTU
+	_ayir.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_ayir.focus_mode = Control.FOCUS_NONE
+	_ayir.pressed.connect(func() -> void: yarisini_ayir_basildi.emit())
+	yatay.add_child(_ayir)
 
 	hide()
 

@@ -30,16 +30,16 @@ func bolgedeki_birlikler(bolge_id: String) -> Array[Birlik]:
 	return sonuc
 
 
-## Kaynak bölgedeki bütün tümenleri hedef bölgeye yürütür. Süre, YolBulucu'dan (kara
-## komşuluğu 24 saat, deniz yolu daha yavaş) gelir. Savaş henüz olmadığından, yalnızca
+## Verilen tümenleri (hepsi aynı bölgede olmalı) hedef bölgeye yürütür. Süre, YolBulucu'dan
+## (kara komşuluğu 24 saat, deniz yolu daha yavaş) gelir. Savaş henüz olmadığından, yalnızca
 ## iki bölge de aynı ülkeye aitse yürütme kabul edilir (savaş eklenince gevşetilecek bir
 ## kural; bkz. DEVAM.md). `su_anki_saat`, Zaman.toplam_saat değeridir; Oyun'un Zaman
-## autoload'ına bağlı olmadan sınanabilmesi için parametre olarak alınır. Kaynakta hiç
-## tümen yoksa ya da yürütme kabul edilmezse false döner.
-func birlikleri_yurut(kaynak_bolge_id: String, hedef_bolge_id: String, su_anki_saat: int) -> bool:
-	var tasinacaklar: Array[Birlik] = bolgedeki_birlikler(kaynak_bolge_id)
+## autoload'ına bağlı olmadan sınanabilmesi için parametre olarak alınır. `tasinacaklar`
+## boşsa ya da yürütme kabul edilmezse false döner.
+func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_anki_saat: int) -> bool:
 	if tasinacaklar.is_empty():
 		return false
+	var kaynak_bolge_id: String = tasinacaklar[0].bolge_id
 	var kaynak_sahibi: Ulke = dunya.bolgenin_sahibi(kaynak_bolge_id)
 	var hedef_sahibi: Ulke = dunya.bolgenin_sahibi(hedef_bolge_id)
 	if kaynak_sahibi == null or hedef_sahibi == null or kaynak_sahibi.id != hedef_sahibi.id:
@@ -54,6 +54,28 @@ func birlikleri_yurut(kaynak_bolge_id: String, hedef_bolge_id: String, su_anki_s
 		birlik.varis_saati = varis
 	birlikler_degisti.emit()
 	return true
+
+
+## Verilen tümenleri yarıya ayırır ve ayrılan yarıyı döndürür; kalan yarı `stok`ta, aynı
+## bölgede kalır. Tek tümen varsa gücü ikiye bölünüp yeni bir tümen oluşturulur (güç 2'den
+## azsa bölünemeyecek kadar küçüktür, boş dizi döner). Birden çok tümen varsa sayıca yarısı
+## ayrılır (3 tümende 1'i ayrılır, 2'si kalır).
+func yariya_ayir(stok: Array[Birlik]) -> Array[Birlik]:
+	if stok.is_empty():
+		return []
+	if stok.size() == 1:
+		var tek: Birlik = stok[0]
+		if tek.guc < 2.0:
+			return []
+		var yeni: Birlik = Birlik.new()
+		yeni.sahip = tek.sahip
+		yeni.bolge_id = tek.bolge_id
+		yeni.guc = tek.guc / 2.0
+		tek.guc -= yeni.guc
+		birlikler.append(yeni)
+		birlikler_degisti.emit()
+		return [yeni]
+	return stok.slice(0, stok.size() / 2)
 
 
 ## Zaman ilerledikçe çağrılır; varış saatine ulaşan tümenleri hedeflerine taşır.

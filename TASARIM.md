@@ -290,7 +290,16 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
 - **Gösterim:** aynı bölgedeki bütün tümenler haritada tek bir kutu olarak görünür; kutu
   bölgenin sahibinin renginde, içinde o bölgedeki toplam güç yazar. Kutu, bölge adları gibi
   yakınlıktan bağımsız, sabit ekran boyutundadır.
-- Henüz yok: seçme, hareket, savaş, bakım (bkz. 9. Yol haritası, B).
+- **Seçme ve emir:** oyuncunun kendi tümenlerinin olduğu bölgeye dokununca birlik kartı
+  açılır. Kart açıkken başka bir bölgeye dokunmak hareket emridir: tümenler
+  `YolBulucu`nun bulduğu sürede (kara 24 saat, deniz daha yavaş) hedefe yürür; yürürken
+  kaynak-hedef arası sarı bir çizgi görünür. Savaş henüz olmadığından yalnızca kendi
+  toprağın içinde hareket edilebilir.
+- **Yarısını ayır:** birlik kartındaki düğme, gösterilen tümenleri yarıya ayırır (tek
+  tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
+  sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
+- Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
+  değişir) (bkz. 9. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
@@ -351,7 +360,7 @@ istenen aşama yapılır.
 |---|---|---|---|
 | 1 | ✅ | **Dünya haritası temeli** | Harita verisi ve dönüştürücü, harita görünümü, kamera, ülke seçimi, zaman |
 | 2 | ✅ | **Ülkeleri bölgelere ayırma** | Şehir verisi, Voronoi bölme, bölge komşulukları ve deniz geçişleri, bölge seçimi ve paneli |
-| 3 | ⬜ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
+| 3 | ✅ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
 | 4 | ⬜ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
 | 5 | ⬜ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
 | 6 | ⬜ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
