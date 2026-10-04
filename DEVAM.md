@@ -46,13 +46,31 @@ Altyapı bu oturumda kuruldu:
   (headless OLMADAN) 2 saniye bekleyip PNG kaydediyor, denendi ve çalıştı.
 - CLAUDE.md'nin Sınama bölümü bu makineye göre güncellendi (macOS Godot yolu, yeni komutlar).
 
+B) BİRLİKLER VE HAREKET — ilk alt adım tamamlandı: birlik verisi, başlangıç ordusu ve
+haritada gösterim.
+- `sim/birlik.gd`: tümen verisi (sahip, bölge, güç 0-100).
+- `sim/ordu_kurucu.gd`: ülke başına 1-24 tümen, nüfus+GSYH puanıyla (data/balance.json →
+  "ordu"); başkente ve kara sınırı olan bölgelere sırayla dağıtılır.
+- `Oyun.birlikler` + `Oyun.bolgedeki_birlikler()`: oyunun o anki tümen listesi ve sorgusu.
+- Harita: aynı bölgedeki tümenler tek kutuda (ülke rengi, toplam güç yazılı) gösterilir;
+  kutular bölge sınırları/adlarıyla aynı yakınlık eşiğinde belirir (ilk sürümde her zaman
+  açıktı, dünya görünümünü karmaşıklaştırdığı için eşik eklendi — ekran görüntüsüyle
+  görüldü ve düzeltildi).
+- 3 yeni sınama (`tests/sim/ordu_kurucu_testi.gd`): her ülkenin 1-24 tümeni var, başkentte
+  tümen var, tümenler kendi sahibinin bölgesinde. Toplam 16/16 sınama geçiyor.
+- Ekran görüntüsüyle sınandı: dünya görünümü temiz (kutular gizli); yakınlaşınca
+  belirmesi, bölge adları gibi aynı koddan geldiği için güvenilir ama ayrıca ekran
+  görüntüsüyle doğrulanmadı (kamerayı sınama aracından yakınlaştırmanın bir yolu yok).
+
 ## Sıradaki iş
 
-B) BİRLİKLER VE HAREKET — ilk alt adım: birlik verisi + haritada gösterim.
-- Tek birlik türü: tümen, güç 0-100.
-- Haritada ülke renginde sade bir kutu, içinde güç yazsın; aynı bölgedeki tümenler tek
-  işaret ve sayı olarak görünsün.
-- Bu alt adımda henüz: başlangıç ordusu dağıtımı, seçme, hareket YOK (sıradaki alt adımlar).
+B) BİRLİKLER VE HAREKET — sıradaki alt adım: seçme ve emir.
+- Kendi birliğinin olduğu bölgeye dokun → birlik kartı açılsın.
+- Hedef bölgeye dokun → yol çizgisi görünsün, birlik yürüsün. "Yarısını ayır" düğmesi.
+- Kara komşusuna geçiş 24 saat; deniz yolu mesafeyle orantılı ve belirgin yavaş; yol bulma
+  AStar ile. Savaşta olmadığın ülkenin toprağına girilemez (henüz savaş yok, o yüzden bu
+  kısıtlama şimdilik "kendi ülken değilse giremezsin" olarak uygulanabilir; savaş eklenince
+  gevşetilir).
 
 ## Kararlar
 
@@ -66,6 +84,16 @@ B) BİRLİKLER VE HAREKET — ilk alt adım: birlik verisi + haritada gösterim.
 - 2026-10-04: Tüm oturum boyunca, görev kapsamı ve kurallar kullanıcının verdiği uzun
   talimat metninden geliyor (A-J aşamaları, self-test kurulumu, commit/push disiplini).
   Belirsiz noktalarda en sade seçenek seçiliyor ve buraya not düşülüyor.
+- 2026-10-04: Denge dosyasının adı `data/balance.json` olarak kaldı (kullanıcının talimatı
+  "data/denge.json" diyordu, ama CLAUDE.md'nin kendi kuralı "data/ altındaki dosyalar
+  İngilizce adlıdır" diyor ve dosya zaten balance.json olarak kurulu; gereksiz bir yeniden
+  adlandırma yapılmadı).
+- 2026-10-04: Başlangıç ordusu tümen sayısı formülü: `(sqrt(nüfus/2000000) +
+  sqrt(gsyh_milyon_dolar/50000)) / 2`, 1-24 arasına sınırlı. Kaba bir ilk tahmindir;
+  TASARIM.md'nin H) DENGE aşamasında uzun koşu sınamasıyla ayarlanacak.
+- 2026-10-04: Tümen kutuları, bölge sınırları/adlarıyla aynı yakınlık eşiğinde (yakınlık
+  > 1,7) görünür. İlk sürümde her zaman açıktı; dünya görünümünde yüzlerce kutu üst üste
+  bindiği ekran görüntüsüyle görüldü, aynı eşik koda eklendi.
 
 ## Bilinen sorunlar
 

@@ -3,5 +3,12 @@
 		"baslangic_tarihi": "2026-01-01",
 		"hizlar_tick_saniye": [2, 6, 24],
 		"kare_basina_azami_tick": 5
+	},
+	"ordu": {
+		"baslangic_gucu": 100,
+		"nufus_bolen": 2000000,
+		"gsyh_bolen": 50000,
+		"asgari_tumen": 1,
+		"azami_tumen": 24
 	}
 }

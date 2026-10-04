@@ -76,6 +76,14 @@ const BOLGE_ADI_SIGMA_SINIRI: float = 10.0
 ## İki ad arasında bırakılan en az boşluk (piksel).
 const YAZI_ARALIGI: float = 6.0
 const YILDIZ_YARICAPI: float = 13.0
+## Aynı bölgedeki bütün tümenler tek kutuda, toplam güçleriyle gösterilir. Bölge adları gibi
+## yakınlıktan bağımsız sabit ekran boyutundadır.
+const BIRLIK_KUTU_BOYUTU: Vector2 = Vector2(64.0, 40.0)
+const BIRLIK_KUTU_KENAR_RENGI: Color = Color(0.0, 0.0, 0.0, 0.85)
+const BIRLIK_KUTU_KENAR_KALINLIGI: float = 3.0
+const BIRLIK_YAZI_BOYUTU: int = 26
+## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir.
+const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
 ## Ekranın biraz dışındaki adlar da çizilir ki kaydırırken kenarda birden belirmesinler (piksel).
 const GORUNUM_PAYI: float = 260.0
 
@@ -90,6 +98,7 @@ enum SinirTuru { KIYI, ULKE, BOLGE }
 var ucgenlenemeyenler: PackedStringArray = PackedStringArray()
 
 var _dunya: Dunya = null
+var _oyun: Oyun = null
 var _merkez: Vector2 = Vector2.ZERO
 var _yakinlik: float = 1.0
 var _ekran: Vector2 = Vector2(1920.0, 1080.0)
@@ -127,8 +136,9 @@ static func ulke_rengi(ulke: Ulke) -> Color:
 	return PALET[posmod(ulke.renk_indeksi - 1, PALET.size())]
 
 
-func kur(dunya: Dunya) -> void:
+func kur(dunya: Dunya, oyun: Oyun) -> void:
 	_dunya = dunya
+	_oyun = oyun
 	_yazi_tipi = ThemeDB.fallback_font
 	RenderingServer.set_default_clear_color(DENIZ_RENGI)
 
@@ -177,6 +187,11 @@ func oyuncuyu_ayarla(ulke_id: String) -> void:
 func komsulari_goster(acik: bool) -> void:
 	_komsular_gorunur = acik
 	_vurgu_agini_kur()
+	_ust_katmani_yenile()
+
+
+## Tümenler hareket edince ya da güçleri değişince çağrılır.
+func birlikleri_yenile() -> void:
 	_ust_katmani_yenile()
 
 
@@ -452,6 +467,7 @@ func _ust_katmani_ciz() -> void:
 
 	_ulke_adlarini_ciz(gorunen, olcek)
 	_bolge_adlarini_ciz(gorunen, olcek)
+	_birlikleri_ciz(gorunen, olcek)
 	_ust_katman.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -578,6 +594,41 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float) -> void:
 			taban_y = YILDIZ_YARICAPI * 0.6 + BOLGE_ADI_BOYUTU
 		if ad_gorunur:
 			_yazi_ciz(bolge.ad, Vector2(-_bolge_adi_genisligi[i] * 0.5, taban_y), BOLGE_ADI_BOYUTU, oge_opakligi)
+
+
+## Aynı bölgedeki tümenleri tek kutuda, toplam güçleriyle çizer. Bölge sınırları ve adları
+## gibi yalnızca yakınlaşınca görünür; uzaktan dünya genelinde yüzlerce kutu dünyayı
+## karmaşıklaştırmasın diye.
+func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
+	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
+		return
+	var toplam_guc: Dictionary[String, float] = {}
+	for birlik: Birlik in _oyun.birlikler:
+		toplam_guc[birlik.bolge_id] = toplam_guc.get(birlik.bolge_id, 0.0) + birlik.guc
+
+	for bolge_id: String in toplam_guc:
+		var bolge: Bolge = _dunya.bolgeler.get(bolge_id)
+		if bolge == null or not gorunen.has_point(bolge.etiket):
+			continue
+		var sahip: Ulke = _dunya.bolgenin_sahibi(bolge_id)
+		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
+		_ust_katman.draw_set_transform(bolge.etiket + BIRLIK_KONUM_PAYI, 0.0, Vector2(olcek, olcek))
+		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id])
+
+
+func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
+	var yarim: Vector2 = BIRLIK_KUTU_BOYUTU * 0.5
+	var kose: PackedVector2Array = PackedVector2Array([
+		Vector2(-yarim.x, -yarim.y), Vector2(yarim.x, -yarim.y),
+		Vector2(yarim.x, yarim.y), Vector2(-yarim.x, yarim.y),
+	])
+	_ust_katman.draw_colored_polygon(kose, renk)
+	kose.append(kose[0])
+	_ust_katman.draw_polyline(kose, BIRLIK_KUTU_KENAR_RENGI, BIRLIK_KUTU_KENAR_KALINLIGI, true)
+
+	var metin: String = str(roundi(guc))
+	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
+	_yazi_ciz(metin, Vector2(-genislik * 0.5, BIRLIK_YAZI_BOYUTU * 0.35), BIRLIK_YAZI_BOYUTU, 1.0)
 
 
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.

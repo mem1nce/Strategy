@@ -32,7 +32,7 @@ func _ready() -> void:
 	_harita = HaritaGorunumu.new()
 	_harita.name = "Harita"
 	add_child(_harita)
-	_harita.kur(dunya)
+	_harita.kur(dunya, _oyun)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"

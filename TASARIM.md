@@ -276,7 +276,26 @@ Zaman, `Zaman` adlı autoload ile yönetilir ve şu sinyalleri yayar:
 
 Birlikler, savaş ve ekonomi ileride bu sinyallere bağlanacaktır.
 
-## 7. Kod mimarisi
+## 7. Birlikler
+
+Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.json → "ordu").
+
+- **Başlangıç ordusu:** ülke başına tümen sayısı nüfus ve GSYH'den basit bir puanla çıkar:
+  `puan = (sqrt(nufus / nufus_bolen) + sqrt(gsyh_milyon_dolar / gsyh_bolen)) / 2`, yuvarlanıp
+  `asgari_tumen`-`azami_tumen` (1-24) arasına sınırlanır. Sabitler data/balance.json →
+  "ordu" içindedir; dengesi ileride uzun koşu sınamasıyla ayarlanacaktır (bkz. 9. Yol
+  haritası, H).
+- **Yerleşim:** tümenler başkent bölgesine ve kara sınırı olan (başka ülkeye komşu) bölgelere
+  sırayla dağıtılır; sınır bölgesi yoksa (ör. ada ülkesi) hepsi başkente yerleşir.
+- **Gösterim:** aynı bölgedeki bütün tümenler haritada tek bir kutu olarak görünür; kutu
+  bölgenin sahibinin renginde, içinde o bölgedeki toplam güç yazar. Kutu, bölge adları gibi
+  yakınlıktan bağımsız, sabit ekran boyutundadır.
+- Henüz yok: seçme, hareket, savaş, bakım (bkz. 9. Yol haritası, B).
+
+Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
+üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
+
+## 8. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -296,10 +315,12 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/cokgen.gd` | Bir toprak parçası: noktalar ve ait olduğu bölge |
 | `sim/sinir.gd` | İki bölge (ya da bölge ile deniz) arasındaki sınır çizgisi |
 | `sim/dunya.gd` | Ülkeleri, bölgeleri ve sınırları yükler, doğrular, sorguları yanıtlar |
-| `sim/oyun.gd` | Oyunun durumu: dünya ve oyuncunun ülkesi |
+| `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler |
+| `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
+| `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
 | `sim/zaman.gd` | Zaman yöneticisi (autoload `Zaman`) |
-| `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri, vurguları ve adları çizer |
+| `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri, vurguları, adları ve tümen kutularını çizer |
 | `gorsel/sinir_cizgisi.gdshader` | Sınır çizgilerini ekranda sabit kalınlıkta çizer |
 | `gorsel/harita_kamerasi.gd` | Kaydırma, yakınlaştırma, dokunuşu ayırma, ülkeye odaklanma |
 | `arayuz/arayuz.gd` | Arayüzün kökü ve güvenli alan |
@@ -321,7 +342,7 @@ Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini 
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 8. Yol haritası
+## 9. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -340,7 +361,7 @@ istenen aşama yapılır.
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 9. Geçmiş
+## 10. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman
