@@ -10,6 +10,8 @@ var sahip: String = ""
 ## Bu bölge, başlangıçtaki sahibinin başkenti mi?
 var baskent: bool = false
 var nufus: int = 0
+## Bölge, en az bir kıyı (deniz) sınırına değiyor mu?
+var kiyi: bool = false
 ## Bölge adının ve işaretlerinin çizileceği nokta (en büyük çokgenin içinde).
 var etiket: Vector2 = Vector2.ZERO
 ## Ortak sınır paylaşan bölgelerin id'leri (başka ülkelerinkiler dahil).
@@ -29,6 +31,7 @@ static func sozlukten(veri: Dictionary) -> Bolge:
 	bolge.sahip = str(veri.get("sahip", ""))
 	bolge.baskent = bool(veri.get("baskent", false))
 	bolge.nufus = int(veri.get("nufus", 0))
+	bolge.kiyi = bool(veri.get("kiyi", false))
 	bolge.etiket = Cokgen.noktaya_cevir(veri.get("etiket", []))
 	bolge.kara_komsulari = _metin_listesi(veri.get("kara_komsulari", []))
 	bolge.deniz_gecisleri = _metin_listesi(veri.get("deniz_gecisleri", []))

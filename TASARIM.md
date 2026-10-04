@@ -69,23 +69,33 @@ Her bölge bir şehrin çevresidir ve o şehrin adını taşır.
   Yalnızca tek köşede değenler komşu değildir. Tek istisna: iki ÜLKE kaynak veride yalnızca
   tek noktada değiyorsa (Türkiye ile Azerbaycan'ın Nahçıvan sınırı) o noktadaki bölgeleri
   komşu sayılır; çünkü gerçekte sınırdaştırlar, kaba ölçek sınırı noktaya indirmiştir.
-- **Deniz geçişi:** kara komşusu olmayan ama aralarındaki su 6 birimden dar olan iki bölge
-  (Manş, Cebelitarık, Japon adaları). En kısa yol başka bir karadan geçiyorsa sayılmaz.
+- **Kıyı bölgesi:** en az bir kıyı (deniz) sınırı olan bölge kıyı bölgesi sayılır (`kiyi` alanı).
+- **Deniz yolu:** kara komşusu olmayan iki kıyı bölgesi arasında, aralarındaki en kısa çizgi
+  220 harita biriminden kısaysa ve başka bir karadan geçmiyorsa deniz yolu vardır. Her kıyı
+  bölgesi için en yakın 3 deniz yolu tutulur (bir bölge, başka bir bölgenin en yakın 3'üne
+  girdiği için bundan fazla deniz yoluna sahip olabilir).
+- **Dünya bağlantısı:** kara komşuluğu ve deniz yollarıyla dünyadaki her bölgeye başka her
+  bölgeden ulaşılabilir. 220 birim içinde deniz yolu bulamayan bir ada kalırsa (ör. uzak
+  Pasifik adaları), o adanın en yakın kıyı bölgesi, erişilebilir ana kümenin en yakın kıyı
+  bölgesine ek bir deniz yoluyla bağlanır.
 - **Sınır çizgileri:** İki bölge arasındaki ya da bölge ile deniz arasındaki her kesintisiz
   çizgi ayrıca yazılır. Harita sınırları bunlardan çizer.
 
-Şu anki sonuç: **516 bölge**, 85 tek bölgeli ülke, 1121 kara komşuluğu, 22 deniz geçişi.
+Şu anki sonuç: **516 bölge**, 85 tek bölgeli ülke, 1121 kara komşuluğu (sayılar deniz yolu
+kuralı değiştiği için yeniden üretimde güncellenir).
 
 ### Doğrulama
 
 Dönüştürücü her çalıştığında şunları denetler; hata varsa dosya yazmaz:
 
-1. Kara komşuluğu ve deniz geçişi iki yönlüdür.
+1. Kara komşuluğu ve deniz yolu iki yönlüdür; bir bölge çifti aynı anda ikisi de olamaz.
 2. Komşu olan her ülke çiftinde en az bir bölge çifti komşudur (ve tersi).
 3. Bir ülkenin bölgelerinin toplam alanı ülke alanından en fazla %1 sapar.
 4. Aynı kara parçasındaki bölgeler komşuluk zinciriyle birbirine ulaşır.
 5. Her ülkenin tam bir başkent bölgesi, her bölgenin çokgeni ve çokgeninin içinde etiket
    noktası vardır.
+6. Kara komşuluğu ve deniz yollarının birleşimiyle dünyadaki her bölgeye her bölgeden
+   ulaşılabilir (bağlantı tamamlama adımı bunu zaten garanti eder; bu denetim onu doğrular).
 
 En az üç bölgesi olduğu hâlde bir bölgesi ülke alanının %40'ını geçen ülkeler **uyarı**
 olarak listelenir (şehir verisinin seyrek olduğu yerler).
@@ -130,6 +140,7 @@ olarak listelenir (şehir verisinin seyrek olduğu yerler).
 			"sahip": "TUR",
 			"baskent": true,
 			"nufus": 12950188,
+			"kiyi": false,
 			"etiket": [2422.26, 834.39],
 			"kara_komsulari": ["TUR_2", "TUR_4", "TUR_5", "TUR_6"],
 			"deniz_gecisleri": [],
@@ -149,6 +160,7 @@ olarak listelenir (şehir verisinin seyrek olduğu yerler).
 - Şehir adı kaynaktaki `NAME_TR` alanından gelir (yoksa `NAME`); ülke kodu `ADM0_A3`,
   nüfus `POP_MAX`, başkentlik `FEATURECLA` alanından okunur.
 - `sahip`: oyun başındaki sahip ülke. Oyun içinde değişebilir.
+- `kiyi`: en az bir kıyı sınırı olan bölgede `true`.
 - `cokgenler`: büyükten küçüğe; her biri `[x, y]` noktalarından oluşur.
 - `sinirlar` içinde `b` boşsa çizgi kıyıdır.
 

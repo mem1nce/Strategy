@@ -9,7 +9,8 @@ Yaptıkları:
   1. Ülke çokgenlerini okur, Miller projeksiyonuyla düzleme çevirir, temizler.
   2. Şehirleri okur; her ülke için başkenti ve ülkeye yayılmış büyük şehirleri tohum seçer.
   3. Ülke çokgenlerini "en yakın tohum" kuralıyla (Voronoi) bölgelere ayırır.
-  4. Bölgelerin kara komşularını, deniz geçişlerini, nüfusunu ve sınır çizgilerini çıkarır.
+  4. Bölgelerin kara komşularını, deniz yollarını, nüfusunu ve sınır çizgilerini çıkarır;
+     dünyanın kara ve deniz yollarıyla tek parça olduğundan emin olur.
   5. Sonucu doğrular; hata varsa dosya yazmaz.
 
 Kaynak dosyalar daha ayrıntılılarıyla değiştirilebilir; aynı alan adlarını taşıdıkları
@@ -69,8 +70,10 @@ NUFUS_AGIRLIGI = 0.35
 KIYI_PAYI = 4.0
 # Bölgenin ana gövdesinden kopuk, bundan küçük parçalar komşu bölgeye katılır (birim kare).
 KIRPINTI_ALANI = 4.0
-# Kara komşusu olmayan iki bölge arasındaki su bundan darsa deniz geçişi vardır (harita birimi).
-DENIZ_GECISI_GENISLIGI = 6.0
+# İki kıyı bölgesi arasındaki çizgi bundan kısaysa (ve karadan geçmiyorsa) deniz yoludur.
+DENIZ_YOLU_AZAMI_UZAKLIK = 220.0
+# Bir kıyı bölgesi için tutulan en yakın deniz yolu sayısı (karşı taraf için de geçerlidir).
+DENIZ_YOLU_AZAMI_SAYI = 3
 # Bir bölge ülke alanının bu oranını geçerse (ve ülkede yeterli bölge varsa) uyarı verilir.
 BUYUK_BOLGE_ORANI = 0.40
 # Şehir verisindeki ülke kodu ülke verisindekinden farklıysa buradan çevrilir.
@@ -542,6 +545,7 @@ def bolgeleri_kur(ulkeler, yuzler, tohumlar, adaylar):
                 "sahip": ulke_id,
                 "baskent": sira == 0,
                 "nufus": 0,
+                "kiyi": False,
                 "etiket": None,
                 "kara_komsulari": [],
                 "deniz_gecisleri": [],
@@ -563,13 +567,18 @@ def bolgeleri_kur(ulkeler, yuzler, tohumlar, adaylar):
         bolgeler[a]["kara_komsulari"].append(b)
         bolgeler[b]["kara_komsulari"].append(a)
 
-    deniz_gecislerini_bul(bolgeler)
+    kiyi_idleri = {sinir["a"] for sinir in sinirlar if sinir["b"] == ""}
+    for bolge_id, bolge in bolgeler.items():
+        bolge["kiyi"] = bolge_id in kiyi_idleri
+
+    deniz_gecislerini_bul(bolgeler, kiyi_idleri)
+    baglanan = dunya_baglantisini_tamamla(bolgeler, kiyi_idleri)
     for bolge in bolgeler.values():
         bolge["kara_komsulari"].sort()
         bolge["deniz_gecisleri"].sort()
 
     nufusu_dagit(ulkeler, bolgeler, adaylar)
-    return bolgeler, sinirlar, nokta_komsuluklari
+    return bolgeler, sinirlar, nokta_komsuluklari, baglanan
 
 
 def nokta_komsuluklarini_bul(ulkeler, bolgeler, yuzler, paylasilan):
@@ -654,29 +663,98 @@ def sinirlari_cikar(yuzler):
     return sinirlar, paylasilan
 
 
-def deniz_gecislerini_bul(bolgeler):
-    """Kara komşusu olmayan ama aralarındaki su dar olan bölge çiftlerini bulur."""
-    idler = sorted(bolgeler)
-    geometriler = [bolgeler[i]["_geo"] for i in idler]
-    agac = STRtree(geometriler)
-    for sira, bolge_id in enumerate(idler):
+def _karadan_geciyor_mu(kara_agaci, p, q):
+    """p-q çizgisinin ucuna yakın kısımları (bölgelerin kendi kıyısı) hariç, arada kara var mı?"""
+    hat = LineString([p, q])
+    ic_hat = LineString([hat.interpolate(0.05, normalized=True), hat.interpolate(0.95, normalized=True)])
+    return len(kara_agaci.query(ic_hat, predicate="intersects")) > 0
+
+
+def deniz_gecislerini_bul(bolgeler, kiyi_idleri):
+    """Kıyı bölgeleri arasındaki deniz yollarını bulur.
+
+    İki kıyı bölgesi arasında, aralarındaki en kısa çizgi karadan geçmiyorsa ve
+    DENIZ_YOLU_AZAMI_UZAKLIK'tan kısaysa aday bir deniz yoludur. Her bölge için en yakın
+    DENIZ_YOLU_AZAMI_SAYI aday tutulur; bir kenar, iki ucundan birinin en yakınları arasındaysa
+    tutulur (bu yüzden bir bölgenin deniz yolu sayısı bu sayıyı geçebilir).
+    """
+    tum_idler = sorted(bolgeler)
+    kara_agaci = STRtree([bolgeler[i]["_geo"] for i in tum_idler])
+
+    kiyi_listesi = sorted(kiyi_idleri)
+    kiyi_geo = [bolgeler[i]["_geo"] for i in kiyi_listesi]
+    kiyi_agaci = STRtree(kiyi_geo)
+
+    adaylar = {bolge_id: [] for bolge_id in kiyi_listesi}
+    for sira, bolge_id in enumerate(kiyi_listesi):
         bolge = bolgeler[bolge_id]
-        for diger_sira in agac.query(geometriler[sira], predicate="dwithin", distance=DENIZ_GECISI_GENISLIGI):
-            diger_id = idler[diger_sira]
+        for diger_sira in kiyi_agaci.query(kiyi_geo[sira], predicate="dwithin", distance=DENIZ_YOLU_AZAMI_UZAKLIK):
+            diger_id = kiyi_listesi[diger_sira]
             if diger_sira <= sira or diger_id in bolge["kara_komsulari"]:
                 continue
-            p, q = nearest_points(geometriler[sira], geometriler[diger_sira])
+            p, q = nearest_points(kiyi_geo[sira], kiyi_geo[diger_sira])
             aralik = p.distance(q)
             # Birbirine köşeden değen bölgelerin arasında su yoktur.
             if aralik < 5 * IZGARA:
                 continue
-            # En kısa yol gerçekten sudan mı geçiyor? Arada başka bir kara varsa geçiş sayılmaz.
-            hat = LineString([p, q])
-            ic_hat = LineString([hat.interpolate(0.05, normalized=True), hat.interpolate(0.95, normalized=True)])
-            if len(agac.query(ic_hat, predicate="intersects")) > 0:
+            if _karadan_geciyor_mu(kara_agaci, p, q):
                 continue
-            bolge["deniz_gecisleri"].append(diger_id)
-            bolgeler[diger_id]["deniz_gecisleri"].append(bolge_id)
+            adaylar[bolge_id].append((aralik, diger_id))
+            adaylar[diger_id].append((aralik, bolge_id))
+
+    eklenen = set()
+    for bolge_id, liste in adaylar.items():
+        liste.sort()
+        for (_, diger_id) in liste[:DENIZ_YOLU_AZAMI_SAYI]:
+            eklenen.add(kenar_anahtari(bolge_id, diger_id))
+    for (a, b) in eklenen:
+        bolgeler[a]["deniz_gecisleri"].append(b)
+        bolgeler[b]["deniz_gecisleri"].append(a)
+
+
+def dunya_baglantisini_tamamla(bolgeler, kiyi_idleri):
+    """Kara komşuluğu ve deniz yollarıyla dünyanın tek parça olduğundan emin olur.
+
+    DENIZ_YOLU_AZAMI_UZAKLIK içinde deniz yolu bulamayan bir ada kalırsa (ör. uzak bir
+    Pasifik adası), o adanın en yakın kıyı bölgesini, erişilebilir en büyük kümenin en yakın
+    kıyı bölgesine ek bir deniz yoluyla bağlar. Eklenen (a, b) çiftlerini döndürür.
+    """
+    def bilesenleri_bul():
+        gorulen = set()
+        bilesenler = []
+        for baslangic in sorted(bolgeler):
+            if baslangic in gorulen:
+                continue
+            kume = {baslangic}
+            kuyruk = [baslangic]
+            while kuyruk:
+                su_an = kuyruk.pop()
+                for komsu in bolgeler[su_an]["kara_komsulari"] + bolgeler[su_an]["deniz_gecisleri"]:
+                    if komsu not in kume:
+                        kume.add(komsu)
+                        kuyruk.append(komsu)
+            gorulen |= kume
+            bilesenler.append(kume)
+        return bilesenler
+
+    eklenen = []
+    while True:
+        bilesenler = bilesenleri_bul()
+        if len(bilesenler) <= 1:
+            return eklenen
+        ana = max(bilesenler, key=len)
+        hedef_bilesen = min((b for b in bilesenler if b is not ana), key=len)
+
+        ana_kiyilari = sorted(b for b in ana if b in kiyi_idleri) or sorted(ana)
+        aday_kiyilari = sorted(b for b in hedef_bilesen if b in kiyi_idleri) or sorted(hedef_bilesen)
+        en_iyi = min(
+            ((bolgeler[a]["_geo"].distance(bolgeler[b]["_geo"]), a, b)
+             for a in aday_kiyilari for b in ana_kiyilari),
+            key=lambda x: x[0])
+        _, a, b = en_iyi
+        bolgeler[a]["deniz_gecisleri"].append(b)
+        bolgeler[b]["deniz_gecisleri"].append(a)
+        eklenen.append((a, b))
 
 
 def nufusu_dagit(ulkeler, bolgeler, adaylar):
@@ -777,6 +855,22 @@ def dogrula(ulkeler, parcalar, bolgeler, tohumlar):
         if gorulen != uyeler:
             hatalar.append("Aynı kara parçasında birbirine ulaşamayan bölgeler var: %s ... (ulaşılamayan %d bölge: %s)" % (
                 ilk, len(uyeler - gorulen), ", ".join(sorted(uyeler - gorulen)[:8])))
+
+    # 6. Kara komşuluğu ve deniz yollarının birleşimiyle dünyadaki her bölgeye ulaşılabilmeli.
+    tum_bolge_idleri = set(bolgeler)
+    baslangic = next(iter(tum_bolge_idleri))
+    gorulen = {baslangic}
+    kuyruk = [baslangic]
+    while kuyruk:
+        su_an = kuyruk.pop()
+        for komsu in bolgeler[su_an]["kara_komsulari"] + bolgeler[su_an]["deniz_gecisleri"]:
+            if komsu not in gorulen:
+                gorulen.add(komsu)
+                kuyruk.append(komsu)
+    if gorulen != tum_bolge_idleri:
+        kayip = tum_bolge_idleri - gorulen
+        hatalar.append("Dünyada ulaşılamayan %d bölge var: %s" % (
+            len(kayip), ", ".join(sorted(kayip)[:8])))
 
     # 5. Yeterli bölgesi olduğu hâlde bir bölgesi çok büyük kalan ülkeler (uyarı).
     for ulke_id in sorted(ulkeler):
@@ -890,9 +984,10 @@ def donustur():
     tohumlar, adaylar = tohumlari_sec(ulkeler, parcalar, sehirler)
     yuzler = bolgelere_ayir(ulkeler, parcalar, tohumlar)
     tasinan = kirpintilari_kat(yuzler)
-    bolgeler, sinirlar, nokta_komsuluklari = bolgeleri_kur(ulkeler, yuzler, tohumlar, adaylar)
+    bolgeler, sinirlar, nokta_komsuluklari, baglanan = bolgeleri_kur(ulkeler, yuzler, tohumlar, adaylar)
     hatalar, uyarilar = dogrula(ulkeler, parcalar, bolgeler, tohumlar)
 
+    kiyi = sum(1 for b in bolgeler.values() if b["kiyi"])
     kara = sum(len(b["kara_komsulari"]) for b in bolgeler.values()) // 2
     deniz = sum(len(b["deniz_gecisleri"]) for b in bolgeler.values()) // 2
     print("Harita : %d x %d birim (Miller, %.1f° ile %.1f° arası)" % (
@@ -903,10 +998,14 @@ def donustur():
         len(bolgeler), sum(len(b["cokgenler"]) for b in bolgeler.values()),
         sum(len(c) for b in bolgeler.values() for c in b["cokgenler"]), tasinan))
     print("Tek bölgeli ülke: %d" % sum(1 for u in ulkeler if sum(1 for b in bolgeler.values() if b["sahip"] == u) == 1))
-    print("Sınır  : %d çizgi   Kara komşuluğu: %d   Deniz geçişi: %d" % (len(sinirlar), kara, deniz))
+    print("Sınır  : %d çizgi   Kıyı bölgesi: %d   Kara komşuluğu: %d   Deniz yolu: %d" % (
+        len(sinirlar), kiyi, kara, deniz))
 
     for (a, b) in sorted(nokta_komsuluklari):
         print("Tek noktada değen ülkeler için eklenen kara komşuluğu: %s (%s) - %s (%s)" % (
+            a, bolgeler[a]["ad"], b, bolgeler[b]["ad"]))
+    for (a, b) in baglanan:
+        print("Dünya bağlantısını tamamlamak için eklenen deniz yolu: %s (%s) - %s (%s)" % (
             a, bolgeler[a]["ad"], b, bolgeler[b]["ad"]))
     for uyari in uyarilar:
         print("UYARI: %s" % uyari)
