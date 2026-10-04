@@ -77,12 +77,23 @@ B) BİRLİKLER VE HAREKET — yol bulma alt yapısı tamamlandı:
 - Henüz yok: "savaşta olmadığın ülkeye giremezsin" kısıtlaması (hareket emri verildiğinde
   uygulanacak, henüz emir arayüzü yok), gerçek birlik hareketi/animasyon.
 
+B) BİRLİKLER VE HAREKET — seçme (birlik kartı) tamamlandı:
+- `arayuz/birlik_paneli.gd` (BirlikPaneli): bölge paneliyle aynı alt panel yuvasını
+  paylaşır, ikisi karşılıklı dışlanır (`Arayuz.bolgeyi_goster`/`birligi_goster` birbirini
+  gizler).
+- `main.gd._bolgeyi_sec()`: dokunulan bölge oyuncunun kendi ülkesine aitse ve orada tümen
+  varsa birlik paneli açılır (bölge adı, tümen sayısı, toplam güç); değilse eskisi gibi
+  bölge paneli açılır.
+- Geçici bir hata ayıklama satırıyla (oyuncu=TUR, TUR_1 seçili) ekran görüntüsü alınıp
+  panel doğrulandı, sonra kod geri alındı (commit edilen kodda yok).
+- Henüz yok: hedef bölge seçip birlik yürütme, "Yarısını ayır" düğmesi.
+
 ## Sıradaki iş
 
-B) BİRLİKLER VE HAREKET — sıradaki alt adım: seçme ve emir (arayüz).
-- Kendi birliğinin olduğu bölgeye dokun → birlik kartı açılsın.
-- Hedef bölgeye dokun → yol çizgisi görünsün (YolBulucu.en_kisa_yol ile), birlik
-  YolBulucu.en_kisa_sure kadar sürede yürüsün. "Yarısını ayır" düğmesi.
+B) BİRLİKLER VE HAREKET — sıradaki alt adım: emir (hedef seçip yürütme).
+- Birlik kartı açıkken hedef bölgeye dokun → yol çizgisi görünsün (YolBulucu.en_kisa_yol
+  ile), birlik YolBulucu.en_kisa_sure kadar sürede yürüsün.
+- "Yarısını ayır" düğmesi.
 - Savaşta olmadığın ülkenin toprağına girilemez (henüz savaş yok; şimdilik "kendi ülken
   değilse giremezsin" olarak uygulanabilir, savaş eklenince gevşetilir — bu bir Karar
   olarak işaretlenecek).

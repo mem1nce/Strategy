@@ -16,6 +16,7 @@ var _dunya: Dunya = null
 var _kenar: MarginContainer = null
 var _ust_cubuk: UstCubuk = null
 var _bolge_paneli: BolgePaneli = null
+var _birlik_paneli: BirlikPaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -50,13 +51,23 @@ func kur(dunya: Dunya) -> void:
 	_bolge_paneli.oyna_basildi.connect(func(ulke_id: String) -> void: oyna_istendi.emit(ulke_id))
 	_bolge_paneli.komsular_degisti.connect(func(acik: bool) -> void: komsular_degisti.emit(acik))
 
+	_birlik_paneli = BirlikPaneli.new()
+	dikey.add_child(_birlik_paneli)
+
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
 
 
 ## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.
 func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool) -> void:
+	_birlik_paneli.hide()
 	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur)
+
+
+## Alt panelde, verilen bölgedeki oyuncu tümenlerini gösterir (bölge paneli yerine).
+func birligi_goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
+	_bolge_paneli.hide()
+	_birlik_paneli.goster(bolge, birlikler, ulke)
 
 
 ## Oyuncunun ülkesini üst çubuğa yazar.

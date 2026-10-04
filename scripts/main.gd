@@ -70,9 +70,15 @@ func _haritaya_dokunuldu(dunya_konumu: Vector2) -> void:
 
 
 ## Bölgeyi haritada vurgular ve alt panelde gösterir. Boş id seçimi kaldırır.
+## Oyuncunun kendi tümenlerinin olduğu bir bölgeyse bölge paneli yerine birlik paneli açılır.
 func _bolgeyi_sec(bolge_id: String) -> void:
 	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
 	_harita.secimi_ayarla(bolge_id)
+	if bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi:
+		var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge_id)
+		if not birlikler.is_empty():
+			_arayuz.birligi_goster(bolge, birlikler, _oyun.dunya.ulkeler[_oyun.oyuncu_ulkesi])
+			return
 	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi())
 
 
