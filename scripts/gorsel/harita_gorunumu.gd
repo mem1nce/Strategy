@@ -84,6 +84,9 @@ const BIRLIK_KUTU_KENAR_KALINLIGI: float = 3.0
 const BIRLIK_YAZI_BOYUTU: int = 26
 ## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir.
 const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
+## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu. Yakınlıktan bağımsız her zaman görünür.
+const YOL_CIZGISI_RENGI: Color = Color(1.0, 0.95, 0.42, 0.85)
+const YOL_CIZGISI_KALINLIGI: float = 4.0
 ## Ekranın biraz dışındaki adlar da çizilir ki kaydırırken kenarda birden belirmesinler (piksel).
 const GORUNUM_PAYI: float = 260.0
 
@@ -464,6 +467,7 @@ func _ust_katmani_ciz() -> void:
 	_cerceve_ciz(_oyuncu_sinirlari, OYUNCU_RENGI, OYUNCU_KALINLIGI, olcek)
 	_cerceve_ciz(_secili_ulke_sinirlari, SECILI_ULKE_RENGI, SECILI_ULKE_KALINLIGI, olcek)
 	_cerceve_ciz(_secili_bolge_sinirlari, SECIM_RENGI, SECIM_KALINLIGI, olcek)
+	_yol_cizgilerini_ciz(olcek)
 
 	_ulke_adlarini_ciz(gorunen, olcek)
 	_bolge_adlarini_ciz(gorunen, olcek)
@@ -596,6 +600,26 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float) -> void:
 			_yazi_ciz(bolge.ad, Vector2(-_bolge_adi_genisligi[i] * 0.5, taban_y), BOLGE_ADI_BOYUTU, oge_opakligi)
 
 
+## Yürüyen tümenlerin kaynak-hedef çizgisini çizer. Aynı yolu paylaşan tümenler tek
+## çizgide birleşir.
+func _yol_cizgilerini_ciz(olcek: float) -> void:
+	if _oyun == null:
+		return
+	var cizilen: Dictionary[String, bool] = {}
+	for birlik: Birlik in _oyun.birlikler:
+		if not birlik.yuruyor_mu():
+			continue
+		var anahtar: String = "%s>%s" % [birlik.bolge_id, birlik.hedef_bolge_id]
+		if cizilen.has(anahtar):
+			continue
+		cizilen[anahtar] = true
+		var kaynak: Bolge = _dunya.bolgeler.get(birlik.bolge_id)
+		var hedef: Bolge = _dunya.bolgeler.get(birlik.hedef_bolge_id)
+		if kaynak == null or hedef == null:
+			continue
+		_ust_katman.draw_line(kaynak.etiket, hedef.etiket, YOL_CIZGISI_RENGI, YOL_CIZGISI_KALINLIGI * olcek, true)
+
+
 ## Aynı bölgedeki tümenleri tek kutuda, toplam güçleriyle çizer. Bölge sınırları ve adları
 ## gibi yalnızca yakınlaşınca görünür; uzaktan dünya genelinde yüzlerce kutu dünyayı
 ## karmaşıklaştırmasın diye.
@@ -612,15 +636,19 @@ func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
 			continue
 		var sahip: Ulke = _dunya.bolgenin_sahibi(bolge_id)
 		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
-		_ust_katman.draw_set_transform(bolge.etiket + BIRLIK_KONUM_PAYI, 0.0, Vector2(olcek, olcek))
+		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
 		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id])
 
 
+## `konum` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
+## yakınlıktan bağımsız olarak bölge etiketine göre hep aynı ekran uzaklığında kalsın
+## (konum dönüşüm köküne eklenseydi, kamera yakınlığıyla birlikte ekranda büyürdü).
 func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
+	var merkez: Vector2 = BIRLIK_KONUM_PAYI
 	var yarim: Vector2 = BIRLIK_KUTU_BOYUTU * 0.5
 	var kose: PackedVector2Array = PackedVector2Array([
-		Vector2(-yarim.x, -yarim.y), Vector2(yarim.x, -yarim.y),
-		Vector2(yarim.x, yarim.y), Vector2(-yarim.x, yarim.y),
+		merkez + Vector2(-yarim.x, -yarim.y), merkez + Vector2(yarim.x, -yarim.y),
+		merkez + Vector2(yarim.x, yarim.y), merkez + Vector2(-yarim.x, yarim.y),
 	])
 	_ust_katman.draw_colored_polygon(kose, renk)
 	kose.append(kose[0])
@@ -628,7 +656,7 @@ func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
 
 	var metin: String = str(roundi(guc))
 	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
-	_yazi_ciz(metin, Vector2(-genislik * 0.5, BIRLIK_YAZI_BOYUTU * 0.35), BIRLIK_YAZI_BOYUTU, 1.0)
+	_yazi_ciz(metin, merkez + Vector2(-genislik * 0.5, BIRLIK_YAZI_BOYUTU * 0.35), BIRLIK_YAZI_BOYUTU, 1.0)
 
 
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.

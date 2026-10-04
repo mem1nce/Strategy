@@ -88,15 +88,34 @@ B) BİRLİKLER VE HAREKET — seçme (birlik kartı) tamamlandı:
   panel doğrulandı, sonra kod geri alındı (commit edilen kodda yok).
 - Henüz yok: hedef bölge seçip birlik yürütme, "Yarısını ayır" düğmesi.
 
+B) BİRLİKLER VE HAREKET — emir (hedef seçip yürütme) tamamlandı:
+- `Birlik.hedef_bolge_id`/`varis_saati`; `Oyun.birlikleri_yurut(kaynak, hedef, su_anki_saat)`
+  (yalnızca aynı ülkeye ait iki bölge arasında kabul edilir — savaş henüz yok) ve
+  `Oyun.saat_ilerledi(su_anki_saat)` (varış saatine ulaşanları hedefe taşır). İkisi de
+  `Zaman` autoload'ına değil, parametre olarak verilen saate bağlı; `zaman_testi.gd`'deki
+  gibi autoload'sız sınanabilir.
+- `main.gd`: birlik kartı açıkken başka bir bölgeye dokunmak hareket emri verir (kabul
+  edilmezse dokunulan bölge normal gösterilir); `Zaman.saat_gecti` → `Oyun.saat_ilerledi`,
+  `Oyun.birlikler_degisti` → `HaritaGorunumu.birlikleri_yenile()` bağlandı.
+- Harita: yürüyen tümenlerin kaynak-hedef çizgisi sarı bir çizgiyle gösterilir (yakınlıktan
+  bağımsız her zaman görünür).
+- 3 yeni sınama (`tests/sim/hareket_testi.gd`): kendi toprağına yürüyüp süresi dolunca
+  varıyor, düşman toprağına yürütme reddediliyor, var olmayan bölgeden yürütme false
+  dönüyor. Toplam 23/23 sınama geçiyor.
+- **Ekran görüntüsüyle bulunan ve düzeltilen hata:** tümen kutusunun konum payı
+  (BIRLIK_KONUM_PAYI) yanlışlıkla dönüşüm KÖKENİNE ekleniyordu; bu da kamera yakınlığıyla
+  birlikte ekranda büyüyüp kutuyu bölge etiketinden uzaklaştırıyordu (dünya görünümünde
+  fark edilmiyordu, bir ülkeye yakınlaşınca kutu yıldızdan uzağa kayıyordu). Payı,
+  ölçeklenmiş yerel çerçeve içine taşıyarak (adlar/yıldız gibi) düzeltildi; ekran
+  görüntüsüyle doğrulandı.
+- Henüz yok: "Yarısını ayır" düğmesi, birlik hareketinin görsel animasyonu (şu an anlık
+  ışınlanma gibi; yalnızca varış anında bölge değişir).
+
 ## Sıradaki iş
 
-B) BİRLİKLER VE HAREKET — sıradaki alt adım: emir (hedef seçip yürütme).
-- Birlik kartı açıkken hedef bölgeye dokun → yol çizgisi görünsün (YolBulucu.en_kisa_yol
-  ile), birlik YolBulucu.en_kisa_sure kadar sürede yürüsün.
-- "Yarısını ayır" düğmesi.
-- Savaşta olmadığın ülkenin toprağına girilemez (henüz savaş yok; şimdilik "kendi ülken
-  değilse giremezsin" olarak uygulanabilir, savaş eklenince gevşetilir — bu bir Karar
-  olarak işaretlenecek).
+B) BİRLİKLER VE HAREKET — sıradaki alt adım: "Yarısını ayır" düğmesi (birlik panelinde).
+Bu tamamlanınca B aşaması TASARIM.md'deki yol haritasında ✅ işaretlenecek ve C) SAVAŞ'a
+geçilecek.
 
 ## Kararlar
 
@@ -124,6 +143,14 @@ B) BİRLİKLER VE HAREKET — sıradaki alt adım: emir (hedef seçip yürütme)
   mesafeyle orantılı bir çarpan (ör. mesafe * 1,5) kısa boğazları (ör. Cebelitarık ~1-2
   birim) kara komşuluğundan (24 saat) HIZLI yapardı; "belirgin yavaş" isteğini karşılamak
   için bir taban süre eklendi. Sayılar kaba bir ilk tahmin, H) DENGE'de ayarlanacak.
+- 2026-10-04: Oyun.birlikleri_yurut/saat_ilerledi, Zaman autoload'ına DOĞRUDAN bağlanmaz;
+  çağıran (main.gd) güncel saati parametre olarak verir. Zaman'ın zaten kendi testinde
+  (zaman_testi.gd) aynı sebeple autoload'sız örneklendiği görülmüştü; Oyun için de aynı
+  deseni sürdürmek, --script sınama çalıştırıcısında autoload'ların kullanılabilir olup
+  olmadığına güvenmeden sınanabilmesini sağlıyor.
+- 2026-10-04: Savaş henüz yokken hareket, yalnızca kaynak ve hedef bölge aynı ülkeye aitse
+  kabul edilir (Oyun.birlikleri_yurut içinde). Savaş eklenince ("savaşta olduğun ülkenin
+  toprağına girebilirsin") bu denetim gevşetilecek.
 
 ## Bilinen sorunlar
 

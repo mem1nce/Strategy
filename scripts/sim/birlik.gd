@@ -8,3 +8,11 @@ extends RefCounted
 var sahip: String = ""
 var bolge_id: String = ""
 var guc: float = 0.0
+## Yürüyorsa gideceği bölge; durağansa boştur.
+var hedef_bolge_id: String = ""
+## Yürüyorsa vardığı an (Zaman.toplam_saat cinsinden); durağansa -1.
+var varis_saati: int = -1
+
+
+func yuruyor_mu() -> bool:
+	return hedef_bolge_id != ""

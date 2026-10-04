@@ -19,6 +19,9 @@ var _oyun: Oyun = null
 var _harita: HaritaGorunumu = null
 var _kamera: HaritaKamerasi = null
 var _arayuz: Arayuz = null
+## Birlik kartı açıkken, kartın ait olduğu bölge; seçim yoksa boştur. Bir sonraki dokunuş
+## başka bir bölgeyse (boş değilse) oraya hareket emri olarak yorumlanır.
+var _secili_birlik_bolgesi: String = ""
 
 
 func _ready() -> void:
@@ -28,6 +31,8 @@ func _ready() -> void:
 		return
 	_oyun = Oyun.new(dunya)
 	_oyun.oyuncu_secildi.connect(_oyuncu_secildi)
+	_oyun.birlikler_degisti.connect(_birlikler_degisti)
+	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
 
 	_harita = HaritaGorunumu.new()
 	_harita.name = "Harita"
@@ -70,16 +75,34 @@ func _haritaya_dokunuldu(dunya_konumu: Vector2) -> void:
 
 
 ## Bölgeyi haritada vurgular ve alt panelde gösterir. Boş id seçimi kaldırır.
-## Oyuncunun kendi tümenlerinin olduğu bir bölgeyse bölge paneli yerine birlik paneli açılır.
+##
+## Birlik kartı açıkken (bkz. _secili_birlik_bolgesi) başka bir bölgeye dokunmak, oradaki
+## tümenleri dokunulan bölgeye yürütme emri olarak yorumlanır; emir kabul edilmezse
+## (ör. düşman toprağı) dokunulan bölge normal şekilde gösterilir. Aksi hâlde, oyuncunun
+## kendi tümenlerinin olduğu bir bölgeyse bölge paneli yerine birlik paneli açılır.
 func _bolgeyi_sec(bolge_id: String) -> void:
+	if _secili_birlik_bolgesi != "" and bolge_id != "" and bolge_id != _secili_birlik_bolgesi:
+		if _oyun.birlikleri_yurut(_secili_birlik_bolgesi, bolge_id, Zaman.toplam_saat):
+			_secili_birlik_bolgesi = ""
+			_harita.secimi_ayarla("")
+			_arayuz.bolgeyi_goster(null, false)
+			return
+
 	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
 	_harita.secimi_ayarla(bolge_id)
 	if bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi:
 		var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge_id)
 		if not birlikler.is_empty():
 			_arayuz.birligi_goster(bolge, birlikler, _oyun.dunya.ulkeler[_oyun.oyuncu_ulkesi])
+			_secili_birlik_bolgesi = bolge_id
 			return
+	_secili_birlik_bolgesi = ""
 	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi())
+
+
+## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.
+func _birlikler_degisti() -> void:
+	_harita.birlikleri_yenile()
 
 
 ## Oyuncu ülkesini seçti: ülke işaretlenir, kamera oraya kayar, zaman düğmeleri açılır.
