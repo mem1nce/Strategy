@@ -3,7 +3,7 @@ extends RefCounted
 ## Ülkelerin başlangıç ordusunu (tümen sayısı ve yerleşimi) üretir.
 ##
 ## Tümen sayısı nüfus ve GSYH'den basit bir formülle çıkar (data/balance.json → "ordu").
-## Dengesi ileride uzun koşu sınamasıyla ayarlanacak (bkz. TASARIM.md 9. Yol haritası, H).
+## Dengesi ileride uzun koşu sınamasıyla ayarlanacak (bkz. TASARIM.md 10. Yol haritası, H).
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 

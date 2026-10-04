@@ -38,6 +38,7 @@ func _ready() -> void:
 	_harita.name = "Harita"
 	add_child(_harita)
 	_harita.kur(dunya, _oyun)
+	_oyun.bolge_sahipligi_degisti.connect(_harita.yenile)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -53,6 +54,7 @@ func _ready() -> void:
 	_arayuz.oyna_istendi.connect(_oyun.oyuncuyu_sec)
 	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
+	_arayuz.savas_istendi.connect(_savas_istendi)
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
@@ -98,12 +100,22 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 			_secili_birlikler = birlikler
 			return
 	_secili_birlikler = []
-	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi())
+	var savas_dugmesi_gorunur: bool = bolge != null and _oyun.oyuncu_secildi_mi() \
+			and bolge.sahip != _oyun.oyuncu_ulkesi \
+			and not _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip) \
+			and _oyun.dunya.ulkeler_komsu_mu(_oyun.oyuncu_ulkesi, bolge.sahip)
+	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur)
 
 
 ## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.
 func _birlikler_degisti() -> void:
 	_harita.birlikleri_yenile()
+
+
+## Bölge panelinde "Savaş ilan et" onaylandığında çağrılır. Kabul edilirse seçim kaldırılır.
+func _savas_istendi(hedef_ulke_id: String) -> void:
+	if _oyun.savas_ilan_et(_oyun.oyuncu_ulkesi, hedef_ulke_id):
+		_bolgeyi_sec("")
 
 
 ## Birlik kartındaki "Yarısını ayır" düğmesine basıldığında çağrılır. Ayrılan yarı sonraki

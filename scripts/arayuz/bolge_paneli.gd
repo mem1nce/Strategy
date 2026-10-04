@@ -10,11 +10,15 @@ extends PanelContainer
 signal oyna_basildi(ulke_id: String)
 ## "Komşuları göster" düğmesi açılıp kapandığında yayılır.
 signal komsular_degisti(acik: bool)
+## "Savaş ilan et" onaylandığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
+signal savas_istendi(ulke_id: String)
 
 const KOMSU_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const OYNA_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
+const SAVAS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 
 var _ulke_id: String = ""
+var _ulke_adi: String = ""
 var _renk_kutusu: ColorRect = null
 var _ad: Label = null
 var _baskent: Label = null
@@ -24,6 +28,8 @@ var _kara_sayisi: Label = null
 var _deniz_sayisi: Label = null
 var _komsular: Button = null
 var _oyna: Button = null
+var _savas: Button = null
+var _savas_onayi: ConfirmationDialog = null
 
 
 func _ready() -> void:
@@ -82,18 +88,31 @@ func _ready() -> void:
 	_oyna.pressed.connect(func() -> void: oyna_basildi.emit(_ulke_id))
 	yatay.add_child(_oyna)
 
+	_savas = Button.new()
+	_savas.text = "Savaş ilan et"
+	_savas.custom_minimum_size = SAVAS_DUGMESI_BOYUTU
+	_savas.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_savas.focus_mode = Control.FOCUS_NONE
+	_savas.pressed.connect(_savas_basildi)
+	yatay.add_child(_savas)
+
+	_savas_onayi = ConfirmationDialog.new()
+	_savas_onayi.confirmed.connect(func() -> void: savas_istendi.emit(_ulke_id))
+	add_child(_savas_onayi)
+
 	_komsu_dugmesini_yenile()
 	hide()
 
 
 ## Bölgenin ve ülkesinin bilgilerini gösterir. Bölge null ise paneli gizler.
-func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool) -> void:
+func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool, savas_dugmesi_gorunur: bool = false) -> void:
 	if bolge == null:
 		_ulke_id = ""
 		hide()
 		return
 	var ulke: Ulke = dunya.bolgenin_sahibi(bolge.id)
 	_ulke_id = ulke.id
+	_ulke_adi = ulke.ad
 	_renk_kutusu.color = HaritaGorunumu.ulke_rengi(ulke)
 	_ad.text = bolge.ad
 	_baskent.visible = bolge.baskent
@@ -103,7 +122,13 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool) -> void:
 	_kara_sayisi.text = "Kara komşusu: %d" % bolge.kara_komsulari.size()
 	_deniz_sayisi.text = "Deniz geçişi: %d" % bolge.deniz_gecisleri.size()
 	_oyna.visible = oyna_dugmesi_gorunur
+	_savas.visible = savas_dugmesi_gorunur
 	show()
+
+
+func _savas_basildi() -> void:
+	_savas_onayi.dialog_text = "%s'a savaş ilan etmek istiyor musun?" % _ulke_adi
+	_savas_onayi.popup_centered()
 
 
 func _komsular_basildi(acik: bool) -> void:

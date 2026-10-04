@@ -299,12 +299,31 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
   tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
   sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
 - Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
-  değişir) (bkz. 9. Yol haritası, C).
+  değişir) (bkz. 10. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
 
-## 8. Kod mimarisi
+## 8. Savaş
+
+Herkes barışta başlar. Savaş çiftler hâlinde tutulur (`Oyun._savaslar`); iki ülke arasında
+savaş varsa her iki yönde de `savasta_mi()` doğru döner.
+
+- **İlan:** bölge panelinde, dokunulan bölgenin sahibi (a) oyuncunun ülkesi değilse,
+  (b) o ülkeyle savaşta değilse ve (c) o ülke oyuncunun ülkesine kara ya da deniz yoluyla
+  **doğrudan** komşuysa "Savaş ilan et" düğmesi görünür (`Dunya.ulkeler_komsu_mu()`; üçüncü
+  bir ülkenin toprağından geçerek ulaşmak sayılmaz). Düğme bir onay penceresi açar.
+- **Hareket:** `Oyun.birlikleri_yurut()`, hedef kendi toprağın değilse yalnızca hedefin
+  sahibiyle savaştaysan kabul eder (bkz. 7. Birlikler).
+- **Boş bölge işgali:** savaşta olunan ve içinde savunan (bölgenin o anki sahibine ait)
+  tümen kalmamış bir bölgeye varan tümen, bölgeyi hemen ele geçirir (`Oyun.saat_ilerledi()`
+  içinde); sahip, renk ve sınır çizgileri `HaritaGorunumu.yenile()` ile güncellenir.
+  Savunan varsa (muharebe henüz yok) işgal gerçekleşmez; tümen oraya "yürümüş" ama bölge
+  el değiştirmemiş olarak durur.
+- Henüz yok: muharebe (saatlik çarpışma, kayıp), teslim, barış teklifi (bkz. 10. Yol
+  haritası, C).
+
+## 9. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -346,12 +365,13 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `bolgenin_deniz_gecisleri(bolge_id)` | Dar sudan geçilerek ulaşılan bölgeler |
 | `bolgenin_komsulari(bolge_id)` | İkisinin birleşimi |
 | `noktadaki_cokgen(nokta)`, `en_yakin_cokgen(nokta, uzaklik)` | Dokunulan toprak parçası |
+| `ulkeler_komsu_mu(ulke_a, ulke_b)` | İki ülke kara/deniz yoluyla doğrudan komşu mu (savaş ilanı için) |
 
 Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini çağırır
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 9. Yol haritası
+## 10. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -370,7 +390,7 @@ istenen aşama yapılır.
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 10. Geçmiş
+## 11. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman

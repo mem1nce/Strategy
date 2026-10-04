@@ -118,6 +118,17 @@ func en_yakin_cokgen(nokta: Vector2, azami_uzaklik: float) -> Cokgen:
 	return en_iyi
 
 
+## İki ülkenin kara ya da deniz yoluyla doğrudan komşu olup olmadığını, o anki bölge
+## sahipliklerine bakarak söyler (savaş yalnızca doğrudan komşu ülkelere ilan edilebilir;
+## üçüncü bir ülkenin toprağından "geçerek" ulaşmak sayılmaz).
+func ulkeler_komsu_mu(ulke_a: String, ulke_b: String) -> bool:
+	for bolge: Bolge in ulkenin_bolgeleri(ulke_a):
+		for komsu: Bolge in bolgenin_komsulari(bolge.id):
+			if komsu.sahip == ulke_b:
+				return true
+	return false
+
+
 func _bolgelere_cevir(idler: PackedStringArray) -> Array[Bolge]:
 	var sonuc: Array[Bolge] = []
 	for bolge_id: String in idler:

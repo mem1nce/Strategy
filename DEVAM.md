@@ -126,16 +126,36 @@ B) BİRLİKLER VE HAREKET tamamlandı (TASARIM.md yol haritasında ✅):
   26/26 sınama geçiyor.
 - Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): düğme panelde doğru görünüyor.
 
+C) SAVAŞ — savaş ilanı ve boş bölge işgali tamamlandı:
+- `Dunya.ulkeler_komsu_mu(a, b)`: iki ülke o anki bölge sahipliklerine göre kara/deniz
+  yoluyla DOĞRUDAN komşu mu (üçüncü ülke toprağından "geçerek" ulaşmak sayılmaz — savaş
+  yalnızca gerçek komşulara ilan edilebilir, tam dünya bağlantısı değil; TASARIM.md'nin
+  "yalnızca ulaşabildiğin ülkelere" ifadesi böyle yorumlandı, bkz. Kararlar).
+- `Oyun._savaslar` (çift başına), `savasta_mi()`, `savas_ilan_et()` (komşu değilse ya da
+  zaten savaştaysa reddeder), `savas_ilan_edildi` sinyali.
+- `Oyun.birlikleri_yurut()`: hedef kendi toprağın değilse artık yalnızca o ülkeyle
+  savaştaysan kabul ediyor (önceki "yalnızca kendi toprağın" kısıtlaması gevşetildi).
+- `Oyun.saat_ilerledi()`: varan tümen, savaşta olunan ve savunanı kalmamış bir bölgeye
+  giriyorsa bölgeyi hemen ele geçirir (`bolge_sahipligi_degisti` sinyali →
+  `HaritaGorunumu.yenile()`). Savunan varsa (muharebe yok) işgal olmaz.
+- Arayüz: bölge panelinde (düşman + komşu + henüz savaşılmayan ülkenin bölgesi
+  gösterildiğinde) "Savaş ilan et" düğmesi + onay penceresi (ConfirmationDialog).
+  Henüz tam bir "ülke paneli" yok; mevcut bölge paneli (zaten ülke bilgisi gösteriyordu)
+  yeniden kullanıldı — G) ARAYÜZ aşamasında "bağlama göre değişen panel" ile resmîleşecek.
+- 6 yeni sınama (`tests/sim/savas_testi.gd`): komşu olmayana ilan edilemez, komşuya
+  edilebilir (iki yönde de), aynı savaş tekrar ilan edilemez, kendine ilan edilemez, boş
+  düşman bölgesi işgal edilir, savunması olan bölge işgal edilmez. Toplam 32/32 sınama
+  geçiyor. Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı).
+- Henüz yok: muharebe, teslim, barış teklifi.
+
 ## Sıradaki iş
 
-C) SAVAŞ — ilk alt adım: savaş ilanı ve boş bölge işgali.
-- Ülke panelinde onay soran "Savaş ilan et" düğmesi; yalnızca kara ya da deniz yoluyla
-  ulaşabildiğin ülkelere (YolBulucu zaten bunu hesaplayabiliyor).
-- Boş düşman bölgesine giren birlik orayı ele geçirir: sahibi, rengi ve sınır çizgileri
-  güncellenir (HaritaGorunumu.yenile() zaten bölge sahipliği değişince haritayı günceller).
-- Muharebe (dolu düşman bölgesine girme, saatlik çarpışma, kayıplar) bu alt adımda henüz
-  yok — yalnızca "savaş hâli" ve "boş bölge işgali" kurulacak; Oyun.birlikleri_yurut
-  içindeki "yalnızca kendi toprağın" kısıtlaması savaştaki ülkelere genişletilecek.
+C) SAVAŞ — sıradaki alt adım: muharebe.
+- Dolu düşman bölgesine giren birlik savaşır: saatlik çarpışma, kayıplar karşı tarafın
+  toplam gücüyle orantılı. Savunan %25 avantajlı, denizden gelen saldırgan %30 cezalı.
+  Kaybeden komşu dost bölgeye çekilir, yoksa yok olur. Haritada muharebe işareti.
+- Bu tamamlanınca: teslim (başkenti düşen ve bölgelerinin yarısını kaybeden ülke teslim
+  olur) ve barış teklifi (kaybeden ya da 180 gün bölge el değiştirmediyse).
 
 ## Kararlar
 
@@ -171,6 +191,16 @@ C) SAVAŞ — ilk alt adım: savaş ilanı ve boş bölge işgali.
 - 2026-10-04: Savaş henüz yokken hareket, yalnızca kaynak ve hedef bölge aynı ülkeye aitse
   kabul edilir (Oyun.birlikleri_yurut içinde). Savaş eklenince ("savaşta olduğun ülkenin
   toprağına girebilirsin") bu denetim gevşetilecek.
+- 2026-10-05: "Yalnızca kara ya da deniz yoluyla ulaşabildiğin ülkelere" savaş ilanı,
+  DOĞRUDAN komşuluk olarak yorumlandı (Dunya.ulkeler_komsu_mu), tam dünya bağlantısı
+  değil. Gerekçe: dünya zaten kara+deniz birleşimiyle tek parça (A aşamasında garanti
+  edildi), yani "ulaşabilirlik" her ülkeye her ülkeden teknik olarak doğru olurdu —
+  bu da kısıtlamayı anlamsızlaştırırdı. "Savaşta olmadığın toprağa giremezsin" kuralıyla
+  birlikte okununca, asıl kısıtın "üçüncü bir ülkeden geçmeden ulaşabildiğin" (yani
+  doğrudan komşu) ülkeler olduğu daha tutarlı.
+- 2026-10-05: Savaş ilanı arayüzü, ayrı bir "ülke paneli" yerine mevcut bölge paneline
+  eklendi (zaten ülke bilgisi gösteriyordu). G) ARAYÜZ aşamasında "bağlama göre değişen
+  panel" ile resmîleştirilecek; şimdilik gereksiz bir UI bileşeni tekrarından kaçınıldı.
 
 ## Bilinen sorunlar
 
