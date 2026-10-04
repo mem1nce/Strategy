@@ -318,10 +318,22 @@ savaş varsa her iki yönde de `savasta_mi()` doğru döner.
 - **Boş bölge işgali:** savaşta olunan ve içinde savunan (bölgenin o anki sahibine ait)
   tümen kalmamış bir bölgeye varan tümen, bölgeyi hemen ele geçirir (`Oyun.saat_ilerledi()`
   içinde); sahip, renk ve sınır çizgileri `HaritaGorunumu.yenile()` ile güncellenir.
-  Savunan varsa (muharebe henüz yok) işgal gerçekleşmez; tümen oraya "yürümüş" ama bölge
-  el değiştirmemiş olarak durur.
-- Henüz yok: muharebe (saatlik çarpışma, kayıp), teslim, barış teklifi (bkz. 10. Yol
-  haritası, C).
+- **Muharebe:** bir bölgede birden fazla ülkenin tümeni varsa (saldırgan dolu bir düşman
+  bölgesine girdiyse) her saat çarpışırlar (`Oyun._muharebeyi_coz()`, sabitler
+  data/balance.json → "savas"):
+  - Her taraf, karşı tarafın **etkin** toplam gücüyle orantılı saatlik kayıp alır
+    (`saatlik_kayip_orani`).
+  - **Savunan** `savunan_avantaji` (×1,25) kadar avantajlıdır: verdiği hasar bu oranda artar.
+  - Son adımı deniz yoluyla gelen **saldırgan** tümenler `deniz_cezasi` (×0,70) alır: güçleri
+    hasap edilirken bu oranda azalır.
+  - Gücü `ASGARI_GUC`'un altına düşen tümen yok sayılır (silinir).
+  - Bir taraf tükenirse ya da karşı tarafın gücünün `cekilme_esigi`'nin (×0,25) altına
+    düşerse **geri çekilir**: en yakın dost komşu (kara ya da deniz) bölgeye taşınır; öyle
+    bir komşu yoksa yok olur. Savunan tükenir ya da çekilirse bölgede artık savunan
+    kalmadığından bölge hemen saldırganın olur.
+  - Haritada, birden çok ülkenin tümeni bulunan bölgenin kutusunun yanında kırmızı bir
+    daire (muharebe işareti) görünür; kutudaki sayı iki tarafın toplam gücüdür.
+- Henüz yok: teslim, barış teklifi (bkz. 10. Yol haritası, C).
 
 ## 9. Kod mimarisi
 

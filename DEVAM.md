@@ -148,14 +148,39 @@ C) SAVAŞ — savaş ilanı ve boş bölge işgali tamamlandı:
   geçiyor. Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı).
 - Henüz yok: muharebe, teslim, barış teklifi.
 
+C) SAVAŞ — muharebe tamamlandı:
+- `Oyun._muharebeleri_isle()`: her saat, birden çok ülkenin tümeni bulunan her bölgede
+  `_muharebeyi_coz()` çağrılır. Her taraf, karşı tarafın etkin (bonus/ceza uygulanmış)
+  toplam gücüyle orantılı kayıp alır (`saatlik_kayip_orani`); savunan `savunan_avantaji`
+  (×1,25) avantajlı, son adımı deniz yoluyla gelen saldırgan `deniz_cezasi` (×0,70) cezalı.
+  Sabitler data/balance.json → "savas".
+- Güç `ASGARI_GUC` (1.0) altına düşen tümen silinir. Bir taraf tükenirse ya da karşı
+  tarafın `cekilme_esigi`'nin (×0,25) altına düşerse geri çekilir (`_geri_cek`): en yakın
+  dost komşuya taşınır, yoksa yok olur.
+  - **Bulunup düzeltilen hata:** savunan geri çekildiğinde bölge sahipliği değişmiyordu
+    (savunan fiilen terk etmiş olsa da bölge hâlâ eski sahibindeydi, saldırgan asla
+    ele geçiremiyordu — "yarı boş" bir durumda kalıyordu). Savunan tükenince ya da
+    çekilince (ikisinde de bölgede artık savunan kalmaz) bölge hemen saldırganın olacak
+    şekilde düzeltildi. Sınamalarla (2000 saate kadar ilerleterek) yakalandı.
+- Harita: birlik kutusunun yanında, birden çok ülkenin tümeni olan bölgede kırmızı bir
+  daire (muharebe işareti); kutu iki tarafın toplam gücünü gösterir. Ekran görüntüsüyle
+  doğrulandı.
+- `Birlik.son_adim_deniz_mi`: `Oyun.birlikleri_yurut()` içinde, YolBulucu'nun bulduğu
+  yolun son adımı deniz yoluysa işaretlenir; muharebede saldırgan deniz cezası için kullanılır.
+- 4 yeni sınama (`tests/sim/muharebe_testi.gd`): ezici saldırgan bölgeyi alır, savunan
+  avantajıyla eşit güçte saldırganı yener (geri çekilir/tükenir), deniz cezası saldırganı
+  gerçekten zayıflatır (karşılaştırmalı sınama), gerçek başlangıç ordusuyla (savaş yokken)
+  200 saat hatasız ilerliyor (performans/çökme regresyon sınaması). Toplam 36/36 sınama
+  geçiyor.
+
 ## Sıradaki iş
 
-C) SAVAŞ — sıradaki alt adım: muharebe.
-- Dolu düşman bölgesine giren birlik savaşır: saatlik çarpışma, kayıplar karşı tarafın
-  toplam gücüyle orantılı. Savunan %25 avantajlı, denizden gelen saldırgan %30 cezalı.
-  Kaybeden komşu dost bölgeye çekilir, yoksa yok olur. Haritada muharebe işareti.
-- Bu tamamlanınca: teslim (başkenti düşen ve bölgelerinin yarısını kaybeden ülke teslim
-  olur) ve barış teklifi (kaybeden ya da 180 gün bölge el değiştirmediyse).
+C) SAVAŞ — sıradaki (ve son) alt adım: teslim ve barış teklifi.
+- Teslim: başkenti düşen ve bölgelerinin yarısını kaybeden ülke teslim olur; kalan
+  bölgeleri başkenti alan ülkeye geçer, birlikleri silinir.
+- Barış teklifi: karşı taraf kaybediyorsa ya da 180 gündür hiç bölge el değiştirmediyse
+  kabul eder; herkes elindekini tutar.
+- Bu tamamlanınca C) SAVAŞ TASARIM.md'de ✅ işaretlenecek ve D) EKONOMİ'ye geçilecek.
 
 ## Kararlar
 

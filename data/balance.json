@@ -15,5 +15,11 @@
 		"kara_saat": 24,
 		"deniz_taban_saat": 48,
 		"deniz_saat_birim_basi": 1.5
+	},
+	"savas": {
+		"savunan_avantaji": 1.25,
+		"deniz_cezasi": 0.70,
+		"saatlik_kayip_orani": 0.05,
+		"cekilme_esigi": 0.25
 	}
 }

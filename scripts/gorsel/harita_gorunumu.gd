@@ -87,6 +87,9 @@ const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
 ## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu. Yakınlıktan bağımsız her zaman görünür.
 const YOL_CIZGISI_RENGI: Color = Color(1.0, 0.95, 0.42, 0.85)
 const YOL_CIZGISI_KALINLIGI: float = 4.0
+## Birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen daire.
+const MUHAREBE_ISARETI_YARICAPI: float = 16.0
+const MUHAREBE_ISARETI_RENGI: Color = Color("#e03b3b")
 ## Ekranın biraz dışındaki adlar da çizilir ki kaydırırken kenarda birden belirmesinler (piksel).
 const GORUNUM_PAYI: float = 260.0
 
@@ -627,8 +630,12 @@ func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
 	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
 		return
 	var toplam_guc: Dictionary[String, float] = {}
+	var sahipler: Dictionary[String, Dictionary] = {}
 	for birlik: Birlik in _oyun.birlikler:
 		toplam_guc[birlik.bolge_id] = toplam_guc.get(birlik.bolge_id, 0.0) + birlik.guc
+		var kume: Dictionary = sahipler.get(birlik.bolge_id, {})
+		kume[birlik.sahip] = true
+		sahipler[birlik.bolge_id] = kume
 
 	for bolge_id: String in toplam_guc:
 		var bolge: Bolge = _dunya.bolgeler.get(bolge_id)
@@ -638,6 +645,8 @@ func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
 		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
 		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id])
+		if sahipler[bolge_id].size() > 1:
+			_muharebe_isareti_ciz()
 
 
 ## `konum` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
@@ -657,6 +666,14 @@ func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
 	var metin: String = str(roundi(guc))
 	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
 	_yazi_ciz(metin, merkez + Vector2(-genislik * 0.5, BIRLIK_YAZI_BOYUTU * 0.35), BIRLIK_YAZI_BOYUTU, 1.0)
+
+
+## Tümen kutusunun sağına, birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen
+## kırmızı bir daire çizer. `_birlik_kutusu_ciz` ile aynı ölçeklenmiş yerel çerçevede çalışır.
+func _muharebe_isareti_ciz() -> void:
+	var merkez: Vector2 = BIRLIK_KONUM_PAYI + Vector2(BIRLIK_KUTU_BOYUTU.x * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
+	_ust_katman.draw_circle(merkez, MUHAREBE_ISARETI_YARICAPI, MUHAREBE_ISARETI_RENGI)
+	_ust_katman.draw_arc(merkez, MUHAREBE_ISARETI_YARICAPI, 0.0, TAU, 24, Color.WHITE, 2.0)
 
 
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.
