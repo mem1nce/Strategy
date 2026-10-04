@@ -12,10 +12,13 @@ signal oyna_basildi(ulke_id: String)
 signal komsular_degisti(acik: bool)
 ## "Savaş ilan et" onaylandığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
 signal savas_istendi(ulke_id: String)
+## "Barış teklif et" düğmesine basıldığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
+signal baris_istendi(ulke_id: String)
 
 const KOMSU_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const OYNA_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const SAVAS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
+const BARIS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 
 var _ulke_id: String = ""
 var _ulke_adi: String = ""
@@ -30,6 +33,7 @@ var _komsular: Button = null
 var _oyna: Button = null
 var _savas: Button = null
 var _savas_onayi: ConfirmationDialog = null
+var _baris: Button = null
 
 
 func _ready() -> void:
@@ -100,12 +104,21 @@ func _ready() -> void:
 	_savas_onayi.confirmed.connect(func() -> void: savas_istendi.emit(_ulke_id))
 	add_child(_savas_onayi)
 
+	_baris = Button.new()
+	_baris.text = "Barış teklif et"
+	_baris.custom_minimum_size = BARIS_DUGMESI_BOYUTU
+	_baris.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_baris.focus_mode = Control.FOCUS_NONE
+	_baris.pressed.connect(func() -> void: baris_istendi.emit(_ulke_id))
+	yatay.add_child(_baris)
+
 	_komsu_dugmesini_yenile()
 	hide()
 
 
 ## Bölgenin ve ülkesinin bilgilerini gösterir. Bölge null ise paneli gizler.
-func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool, savas_dugmesi_gorunur: bool = false) -> void:
+func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
+		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false) -> void:
 	if bolge == null:
 		_ulke_id = ""
 		hide()
@@ -123,6 +136,7 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool, savas_dugmes
 	_deniz_sayisi.text = "Deniz geçişi: %d" % bolge.deniz_gecisleri.size()
 	_oyna.visible = oyna_dugmesi_gorunur
 	_savas.visible = savas_dugmesi_gorunur
+	_baris.visible = baris_dugmesi_gorunur
 	show()
 
 

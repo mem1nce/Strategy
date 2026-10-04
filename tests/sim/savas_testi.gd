@@ -24,7 +24,7 @@ func sina_komsu_olmayan_ulkeye_ilan_edilemez() -> String:
 	var uzak: String = _komsu_olmayan_ulke(dunya)
 	if uzak == "":
 		return "Komşu olmayan bir ülke bulunamadı, sınama kurulamadı."
-	if oyun.savas_ilan_et("TUR", uzak):
+	if oyun.savas_ilan_et("TUR", uzak, 0):
 		return "Komşu olmayan ülkeye savaş ilanı kabul edilmemeliydi."
 	if oyun.savasta_mi("TUR", uzak):
 		return "Reddedilen ilandan sonra savaşta görünmemeli."
@@ -37,7 +37,7 @@ func sina_komsu_ulkeye_ilan_edilebilir() -> String:
 	var komsu: String = _komsu_ulke(dunya)
 	if komsu == "":
 		return "TUR'un komşusu bulunamadı, sınama kurulamadı."
-	if not oyun.savas_ilan_et("TUR", komsu):
+	if not oyun.savas_ilan_et("TUR", komsu, 0):
 		return "Komşu ülkeye savaş ilanı kabul edilmeliydi."
 	if not oyun.savasta_mi("TUR", komsu) or not oyun.savasta_mi(komsu, "TUR"):
 		return "İlandan sonra iki yönde de savaşta olmalı."
@@ -48,9 +48,9 @@ func sina_ayni_savas_tekrar_ilan_edilemez() -> String:
 	var dunya: Dunya = Dunya.yukle()
 	var oyun: Oyun = Oyun.new(dunya)
 	var komsu: String = _komsu_ulke(dunya)
-	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu):
+	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu, 0):
 		return "Sınama kurulamadı (komşu yok ya da ilk ilan başarısız)."
-	if oyun.savas_ilan_et(komsu, "TUR"):
+	if oyun.savas_ilan_et(komsu, "TUR", 0):
 		return "Zaten savaşta olan iki ülke arasında tekrar ilan kabul edilmemeliydi."
 	return ""
 
@@ -58,7 +58,7 @@ func sina_ayni_savas_tekrar_ilan_edilemez() -> String:
 func sina_kendine_ilan_edilemez() -> String:
 	var dunya: Dunya = Dunya.yukle()
 	var oyun: Oyun = Oyun.new(dunya)
-	if oyun.savas_ilan_et("TUR", "TUR"):
+	if oyun.savas_ilan_et("TUR", "TUR", 0):
 		return "Bir ülke kendine savaş ilan edemez."
 	return ""
 
@@ -67,7 +67,7 @@ func sina_bos_dusman_bolgesi_isgal_edilir() -> String:
 	var dunya: Dunya = Dunya.yukle()
 	var oyun: Oyun = Oyun.new(dunya)
 	var komsu: String = _komsu_ulke(dunya)
-	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu):
+	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu, 0):
 		return "Sınama kurulamadı (komşu yok ya da ilan başarısız)."
 
 	# Komşu ülkenin TUR'a değen (kara ya da deniz) bir bölgesini bul ve boşalt.
@@ -102,7 +102,7 @@ func sina_dolu_dusman_bolgesi_isgal_edilmez() -> String:
 	var dunya: Dunya = Dunya.yukle()
 	var oyun: Oyun = Oyun.new(dunya)
 	var komsu: String = _komsu_ulke(dunya)
-	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu):
+	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu, 0):
 		return "Sınama kurulamadı (komşu yok ya da ilan başarısız)."
 
 	var hedef: Bolge = null

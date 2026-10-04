@@ -12,6 +12,8 @@ signal komsular_degisti(acik: bool)
 signal yarisini_ayir_istendi
 ## Oyuncu "Savaş ilan et" düğmesini onayladığında, hedef ülkenin id'siyle yayılır.
 signal savas_istendi(ulke_id: String)
+## Oyuncu "Barış teklif et" düğmesine bastığında, hedef ülkenin id'siyle yayılır.
+signal baris_istendi(ulke_id: String)
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
@@ -55,6 +57,7 @@ func kur(dunya: Dunya) -> void:
 	_bolge_paneli.oyna_basildi.connect(func(ulke_id: String) -> void: oyna_istendi.emit(ulke_id))
 	_bolge_paneli.komsular_degisti.connect(func(acik: bool) -> void: komsular_degisti.emit(acik))
 	_bolge_paneli.savas_istendi.connect(func(ulke_id: String) -> void: savas_istendi.emit(ulke_id))
+	_bolge_paneli.baris_istendi.connect(func(ulke_id: String) -> void: baris_istendi.emit(ulke_id))
 
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
@@ -65,9 +68,10 @@ func kur(dunya: Dunya) -> void:
 
 
 ## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.
-func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool, savas_dugmesi_gorunur: bool = false) -> void:
+func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
+		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false) -> void:
 	_birlik_paneli.hide()
-	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur)
+	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur)
 
 
 ## Alt panelde, verilen bölgedeki oyuncu tümenlerini gösterir (bölge paneli yerine).

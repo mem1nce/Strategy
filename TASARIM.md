@@ -333,7 +333,18 @@ savaş varsa her iki yönde de `savasta_mi()` doğru döner.
     kalmadığından bölge hemen saldırganın olur.
   - Haritada, birden çok ülkenin tümeni bulunan bölgenin kutusunun yanında kırmızı bir
     daire (muharebe işareti) görünür; kutudaki sayı iki tarafın toplam gücüdür.
-- Henüz yok: teslim, barış teklifi (bkz. 10. Yol haritası, C).
+- **Teslim:** bir bölgenin sahibi değiştiğinde (işgal ya da muharebe sonucu), eski sahibi
+  için denetlenir: başkenti düşmüş VE oyun başındaki bölge sayısının yarısından fazlasını
+  kaybetmişse teslim olur. Kalan bölgeleri başkentini alan ülkeye geçer, bütün tümenleri
+  silinir (`Oyun.ulke_teslim_oldu` sinyali yayılır).
+- **Barış teklifi:** bölge panelinde, savaşta olunan bir ülkenin bölgesi gösterildiğinde
+  "Savaş ilan et" yerine "Barış teklif et" düğmesi görünür (onaysız, tek dokunuş). Hedef
+  kabul eder: kendi toplam askeri gücü teklif edenden azsa ("kaybediyorsa") ya da savaş
+  180 günden (`Oyun.BARIS_ESIGI_SAAT`) uzun sürdüyse. Kabul edilirse savaş biter, herkes
+  elindekini tutar (`Oyun.baris_yapildi` sinyali).
+- Henüz: ülke paneli yok (bkz. Kararlar), bildirim/UI geri bildirimi yok (F) OYUN AKIŞI'nda
+  gelecek), yapay zekâ henüz yok — barış kabulü basit bir kurala (kaybetme/süre) dayanıyor,
+  gerçek bir karar değil.
 
 ## 9. Kod mimarisi
 
@@ -393,7 +404,7 @@ istenen aşama yapılır.
 | 1 | ✅ | **Dünya haritası temeli** | Harita verisi ve dönüştürücü, harita görünümü, kamera, ülke seçimi, zaman |
 | 2 | ✅ | **Ülkeleri bölgelere ayırma** | Şehir verisi, Voronoi bölme, bölge komşulukları ve deniz geçişleri, bölge seçimi ve paneli |
 | 3 | ✅ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
-| 4 | ⬜ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
+| 4 | ✅ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
 | 5 | ⬜ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
 | 6 | ⬜ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ⬜ | **Kayıt** | Oyunu kaydetme ve yükleme |

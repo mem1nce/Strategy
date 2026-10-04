@@ -14,7 +14,7 @@ func _carpismayi_kur(oyun: Oyun, savunan_guc: float, saldiran_guc: float, saldir
 	var bolge_id: String = "TUR_1"
 	var savunan_sahibi: String = oyun.dunya.bolgeler[bolge_id].sahip
 	var saldiran_sahibi: String = "FRA" if savunan_sahibi != "FRA" else "DEU"
-	oyun.savas_ilan_et(savunan_sahibi, saldiran_sahibi)
+	oyun.savas_ilan_et(savunan_sahibi, saldiran_sahibi, 0)
 	for birlik: Birlik in oyun.bolgedeki_birlikler(bolge_id):
 		birlik.guc = savunan_guc
 	var saldiran: Birlik = Birlik.new()

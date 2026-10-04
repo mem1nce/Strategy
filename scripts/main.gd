@@ -55,6 +55,7 @@ func _ready() -> void:
 	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
 	_arayuz.savas_istendi.connect(_savas_istendi)
+	_arayuz.baris_istendi.connect(_baris_istendi)
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
@@ -100,11 +101,11 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 			_secili_birlikler = birlikler
 			return
 	_secili_birlikler = []
-	var savas_dugmesi_gorunur: bool = bolge != null and _oyun.oyuncu_secildi_mi() \
-			and bolge.sahip != _oyun.oyuncu_ulkesi \
-			and not _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip) \
+	var yabanci_bolge: bool = bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip != _oyun.oyuncu_ulkesi
+	var savasta: bool = yabanci_bolge and _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip)
+	var savas_dugmesi_gorunur: bool = yabanci_bolge and not savasta \
 			and _oyun.dunya.ulkeler_komsu_mu(_oyun.oyuncu_ulkesi, bolge.sahip)
-	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur)
+	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta)
 
 
 ## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.
@@ -114,7 +115,14 @@ func _birlikler_degisti() -> void:
 
 ## Bölge panelinde "Savaş ilan et" onaylandığında çağrılır. Kabul edilirse seçim kaldırılır.
 func _savas_istendi(hedef_ulke_id: String) -> void:
-	if _oyun.savas_ilan_et(_oyun.oyuncu_ulkesi, hedef_ulke_id):
+	if _oyun.savas_ilan_et(_oyun.oyuncu_ulkesi, hedef_ulke_id, Zaman.toplam_saat):
+		_bolgeyi_sec("")
+
+
+## Bölge panelinde "Barış teklif et" düğmesine basıldığında çağrılır. Kabul edilirse (karşı
+## taraf kaybediyorsa ya da savaş 180 günden uzun sürdüyse) seçim kaldırılır.
+func _baris_istendi(hedef_ulke_id: String) -> void:
+	if _oyun.baris_teklif_et(_oyun.oyuncu_ulkesi, hedef_ulke_id, Zaman.toplam_saat):
 		_bolgeyi_sec("")
 
 

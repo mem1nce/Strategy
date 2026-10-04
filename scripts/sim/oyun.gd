@@ -12,18 +12,26 @@ signal birlikler_degisti
 signal savas_ilan_edildi(ulke_a: String, ulke_b: String)
 ## Bir bölgenin sahibi değiştiğinde (ör. boş düşman bölgesi ele geçirilince) yayılır.
 signal bolge_sahipligi_degisti
+## Bir ülke teslim olduğunda yayılır (başkent düşer ve bölgelerinin yarısından fazlasını
+## kaybedince): kalan bölgeleri galibe geçer, birlikleri silinir.
+signal ulke_teslim_oldu(ulke_id: String, galip_id: String)
+## İki ülke barış yaptığında yayılır.
+signal baris_yapildi(ulke_a: String, ulke_b: String)
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
 const ASGARI_GUC: float = 1.0
+## Barış teklifinin otomatik kabul edilmesi için bir savaşın en az bu kadar sürmesi gerekir.
+const BARIS_ESIGI_SAAT: int = 180 * 24
 
 var dunya: Dunya = null
 ## Oyuncunun yönettiği ülkenin id'si. Seçim yapılmadıysa boştur.
 var oyuncu_ulkesi: String = ""
 ## Dünyadaki bütün tümenler.
 var birlikler: Array[Birlik] = []
-## Savaştaki ülke çiftleri. Anahtar iki ülke id'sinin sıralı birleşimidir (bkz. _savas_anahtari).
-var _savaslar: Dictionary[String, bool] = {}
+## Savaştaki ülke çiftleri. Anahtar iki ülke id'sinin sıralı birleşimi (bkz. _savas_anahtari),
+## değer savaşın ilan edildiği saat (Zaman.toplam_saat) — barış teklifinde süreyi ölçmek için.
+var _savaslar: Dictionary[String, int] = {}
 
 # Muharebe sabitleri (data/balance.json -> "savas"); varsayılanlar dosya okunamazsa kullanılır.
 var _savunan_avantaji: float = 1.25
@@ -118,8 +126,7 @@ func saat_ilerledi(su_anki_saat: int) -> void:
 			birlik.hedef_bolge_id = ""
 			birlik.varis_saati = -1
 			tasima_oldu = true
-			if _bos_dusman_bolgesini_isgal_et(birlik):
-				bolge_sahipligi_degisti.emit()
+			_bos_dusman_bolgesini_isgal_et(birlik)
 	if tasima_oldu:
 		birlikler_degisti.emit()
 	_muharebeleri_isle()
@@ -128,15 +135,14 @@ func saat_ilerledi(su_anki_saat: int) -> void:
 ## Gelen tümen, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait) tümen
 ## kalmamış bir düşman bölgesine girdiyse orayı ele geçirir. Savunan varsa (muharebe
 ## sürüyorsa) işgal gerçekleşmez.
-func _bos_dusman_bolgesini_isgal_et(gelen: Birlik) -> bool:
+func _bos_dusman_bolgesini_isgal_et(gelen: Birlik) -> void:
 	var bolge: Bolge = dunya.bolgeler.get(gelen.bolge_id)
 	if bolge == null or bolge.sahip == gelen.sahip or not savasta_mi(bolge.sahip, gelen.sahip):
-		return false
+		return
 	for digeri: Birlik in bolgedeki_birlikler(gelen.bolge_id):
 		if digeri.sahip == bolge.sahip:
-			return false
-	bolge.sahip = gelen.sahip
-	return true
+			return
+	_bolgeyi_devret(bolge, gelen.sahip)
 
 
 ## Birden çok ülkenin tümeni bulunan (dolayısıyla savaşan) her bölgede muharebeyi bir saat
@@ -191,8 +197,7 @@ func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik]) -> void:
 	if saldiranlar.is_empty():
 		return  # Saldırgan tükendi; savunan (varsa) bölgede kalır.
 	if savunanlar.is_empty():
-		bolge.sahip = saldiranlar[0].sahip
-		bolge_sahipligi_degisti.emit()
+		_bolgeyi_devret(bolge, saldiranlar[0].sahip)
 		return
 
 	# Taraflardan biri belirgin şekilde geride kaldıysa geri çekilir. Savunan çekilirse
@@ -201,10 +206,48 @@ func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik]) -> void:
 	var yeni_saldiran_guc: float = _toplam_guc(saldiranlar)
 	if yeni_savunan_guc < _cekilme_esigi * yeni_saldiran_guc:
 		_geri_cek(savunanlar, bolge.id)
-		bolge.sahip = saldiranlar[0].sahip
-		bolge_sahipligi_degisti.emit()
+		_bolgeyi_devret(bolge, saldiranlar[0].sahip)
 	elif yeni_saldiran_guc < _cekilme_esigi * yeni_savunan_guc:
 		_geri_cek(saldiranlar, bolge.id)
+
+
+## Bir bölgenin sahibini değiştirir, haritanın güncellenmesi için sinyal yayar ve eski
+## sahibinin teslim olup olmadığını denetler.
+func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String) -> void:
+	var eski_sahip: String = bolge.sahip
+	bolge.sahip = yeni_sahip
+	bolge_sahipligi_degisti.emit()
+	_teslimi_kontrol_et(eski_sahip)
+
+
+## Başkenti düşmüş ve oyun başındaki bölgelerinin yarısından fazlasını kaybetmiş bir ülke
+## teslim olur: kalan bölgeleri başkentini alan ülkeye geçer, bütün tümenleri silinir.
+func _teslimi_kontrol_et(ulke_id: String) -> void:
+	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
+	if ulke == null:
+		return
+	var su_anki_bolgeler: Array[Bolge] = dunya.ulkenin_bolgeleri(ulke_id)
+	if su_anki_bolgeler.is_empty():
+		return
+	var baskent_sahibi: Ulke = dunya.bolgenin_sahibi(ulke.baskent_bolgesi)
+	if baskent_sahibi == null or baskent_sahibi.id == ulke_id:
+		return
+	@warning_ignore("integer_division")
+	if su_anki_bolgeler.size() > ulke.baslangic_bolgeleri.size() / 2:
+		return
+
+	var galip_id: String = baskent_sahibi.id
+	for bolge: Bolge in su_anki_bolgeler:
+		bolge.sahip = galip_id
+	var kalanlar: Array[Birlik] = []
+	for birlik: Birlik in birlikler:
+		if birlik.sahip != ulke_id:
+			kalanlar.append(birlik)
+	birlikler = kalanlar
+
+	bolge_sahipligi_degisti.emit()
+	birlikler_degisti.emit()
+	ulke_teslim_oldu.emit(ulke_id, galip_id)
 
 
 func _toplam_guc(liste: Array[Birlik]) -> float:
@@ -255,15 +298,39 @@ func savasta_mi(ulke_a: String, ulke_b: String) -> bool:
 
 
 ## Savaş ilan eder. Yalnızca doğrudan (kara ya da deniz yoluyla) komşu, henüz savaşılmayan,
-## var olan iki farklı ülke arasında kabul edilir. Kabul edilirse true döner.
-func savas_ilan_et(ilan_eden: String, hedef: String) -> bool:
+## var olan iki farklı ülke arasında kabul edilir. `su_anki_saat`, barış teklifinde savaşın
+## ne kadar sürdüğünü ölçmek için saklanır. Kabul edilirse true döner.
+func savas_ilan_et(ilan_eden: String, hedef: String, su_anki_saat: int) -> bool:
 	if ilan_eden == hedef or not dunya.ulkeler.has(ilan_eden) or not dunya.ulkeler.has(hedef):
 		return false
 	if savasta_mi(ilan_eden, hedef) or not dunya.ulkeler_komsu_mu(ilan_eden, hedef):
 		return false
-	_savaslar[_savas_anahtari(ilan_eden, hedef)] = true
+	_savaslar[_savas_anahtari(ilan_eden, hedef)] = su_anki_saat
 	savas_ilan_edildi.emit(ilan_eden, hedef)
 	return true
+
+
+## Barış teklif eder. Hedef, kendisi kaybediyorsa (toplam askeri gücü teklif edenden azsa)
+## ya da savaş BARIS_ESIGI_SAAT'ten (180 gün) uzun sürdüyse kabul eder: ikisi de savaştan
+## çıkar, herkes elindekini tutar. Savaşta değillerse ya da teklif reddedilirse false döner.
+func baris_teklif_et(teklif_eden: String, hedef: String, su_anki_saat: int) -> bool:
+	var anahtar: String = _savas_anahtari(teklif_eden, hedef)
+	if not _savaslar.has(anahtar):
+		return false
+	var uzun_surdu: bool = su_anki_saat - _savaslar[anahtar] >= BARIS_ESIGI_SAAT
+	if not uzun_surdu and _ulkenin_toplam_gucu(hedef) >= _ulkenin_toplam_gucu(teklif_eden):
+		return false
+	_savaslar.erase(anahtar)
+	baris_yapildi.emit(teklif_eden, hedef)
+	return true
+
+
+func _ulkenin_toplam_gucu(ulke_id: String) -> float:
+	var toplam: float = 0.0
+	for birlik: Birlik in birlikler:
+		if birlik.sahip == ulke_id:
+			toplam += birlik.guc
+	return toplam
 
 
 func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:

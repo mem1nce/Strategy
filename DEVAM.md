@@ -173,14 +173,40 @@ C) SAVAŞ — muharebe tamamlandı:
   200 saat hatasız ilerliyor (performans/çökme regresyon sınaması). Toplam 36/36 sınama
   geçiyor.
 
+C) SAVAŞ tamamlandı (TASARIM.md yol haritasında ✅):
+- `Oyun._bolgeyi_devret(bolge, yeni_sahip)`: bölge sahipliği değiştiren TEK yer (işgal ve
+  muharebe artık bunu çağırıyor); sinyal yayar ve eski sahibin teslim olup olmadığını
+  denetler (`_teslimi_kontrol_et`). Başkenti düşmüş VE oyun başındaki bölge sayısının
+  yarısından fazlasını kaybetmiş ülke teslim olur: kalan bölgeleri galibe geçer, bütün
+  tümenleri silinir (`ulke_teslim_oldu` sinyali). `Ulke.baslangic_bolgeleri` (zaten A
+  aşamasından vardı) bu yüzden ilk kez kullanıldı.
+- `Oyun.savas_ilan_et()` artık savaşın başladığı saati de saklıyor (`_savaslar` artık
+  `Dictionary[String, int]`, değer = ilan saati); `Oyun.baris_teklif_et()`: hedef, kendi
+  toplam askeri gücü teklif edenden azsa ya da savaş 180 günden (`BARIS_ESIGI_SAAT`) uzun
+  sürdüyse kabul eder.
+- Bölge panelinde savaşta olunan ülkenin bölgesi gösterilince "Savaş ilan et" yerine
+  "Barış teklif et" düğmesi görünür (onaysız, tek dokunuş).
+- 6 yeni sınama (`tests/sim/teslim_ve_baris_testi.gd`): başkent+yarı kaybıyla teslim,
+  zayıf taraf barışı kabul eder, kazanan erken teklifi reddeder, 180 günden uzun savaşta
+  barış kabul edilir, savaşta olmayanlar arasında teklif reddedilir. Toplam 41/41 sınama
+  geçiyor.
+  - **Test yazarken bulunan GDScript gotcha'sı (üretim kodu değil):** lambda'lar yerel
+    değişkenleri değer olarak yakalar; sinyal geri çağrımı içinde `bool`/`String`
+    değişkenine atama yapmak dışarıdaki değişkeni GÜNCELLEMEZ. Çözüm: değiştirilebilir
+    bir konteyner (`Array`) kullanmak. Gelecekte sinyal dinleyen sınamalar yazılırken
+    hatırlanmalı.
+- Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): "Barış teklif et" düğmesi
+  savaş sırasında "Savaş ilan et" yerine doğru görünüyor.
+
 ## Sıradaki iş
 
-C) SAVAŞ — sıradaki (ve son) alt adım: teslim ve barış teklifi.
-- Teslim: başkenti düşen ve bölgelerinin yarısını kaybeden ülke teslim olur; kalan
-  bölgeleri başkenti alan ülkeye geçer, birlikleri silinir.
-- Barış teklifi: karşı taraf kaybediyorsa ya da 180 gündür hiç bölge el değiştirmediyse
-  kabul eder; herkes elindekini tutar.
-- Bu tamamlanınca C) SAVAŞ TASARIM.md'de ✅ işaretlenecek ve D) EKONOMİ'ye geçilecek.
+D) EKONOMİ — ilk alt adım: üretim ve gelir.
+- Tek kaynak: üretim. Günlük gelir, sahip olunan bölgelerin sanayisinden gelir. Sanayi
+  GSYH'den türetilsin ama yumuşatılsın, küçük ülkeler çaresiz kalmasın.
+- Harcama: tümen kur (başkentte ya da seçilen bölgede doğar) ve fabrika kur (bölgenin
+  sanayisini artırır, pahalı ve uzun). Tek kuyruk, en fazla 5 iş.
+- Bakım: her tümen günlük üretim yer. Gelir eksiye düşerse tümenler güç kaybeder.
+- İşgal edilen bölge ilk 60 gün yarım gelir verir.
 
 ## Kararlar
 
