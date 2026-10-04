@@ -38,11 +38,11 @@ func sina_baskenti_dusen_ve_yarisi_kaybedilen_ulke_teslim_olur() -> String:
 			func(b: Bolge) -> bool: return b.id != baskent.id)
 	var devredilecek: int = mini(kaybedilecek, digerleri.size())
 	for i: int in devredilecek:
-		oyun._bolgeyi_devret(digerleri[i], galip)
+		oyun._bolgeyi_devret(digerleri[i], galip, 0)
 	if sinyal[0]:
 		return "Başkent düşmeden teslim olmamalı (henüz %d/%d bölge kaybedildi)." % [devredilecek, baslangic_sayisi]
 
-	oyun._bolgeyi_devret(baskent, galip)
+	oyun._bolgeyi_devret(baskent, galip, 0)
 	if not sinyal[0]:
 		return "Başkent düşüp yarıdan fazlası kaybedilince teslim sinyali gelmeliydi."
 	if sinyal[1] != galip:

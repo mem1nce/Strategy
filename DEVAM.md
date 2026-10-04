@@ -198,15 +198,37 @@ C) SAVAŞ tamamlandı (TASARIM.md yol haritasında ✅):
 - Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): "Barış teklif et" düğmesi
   savaş sırasında "Savaş ilan et" yerine doğru görünüyor.
 
+D) EKONOMİ — üretim ve gelir tamamlandı:
+- `Bolge.isgal_saati`: son ele geçirilme saati (-1 = hiç); `Oyun._bolgeyi_devret()` ve
+  `_teslimi_kontrol_et()` içinde kaydediliyor (iki yerde de su_anki_saat parametresi
+  eklendi — bu, `_bos_dusman_bolgesini_isgal_et`, `_muharebeleri_isle`, `_muharebeyi_coz`
+  zincirine de yayıldı).
+- `Oyun.bolge_sanayisi(bolge, saat)`: bölgenin "ev sahibi" ülkesinin (id önekinden, ör.
+  "TUR_1"→"TUR") GSYH'sinden `sqrt` ile yumuşatılıp nüfus payına göre dağıtılır — kimin
+  elinde olduğundan bağımsız (toprağın kendi niteliği); işgal altındaysa (ele geçirileli
+  `isgal_cezasi_gun` (60) günden az olmuş VE hâlâ ev sahibinde değilse) `isgal_cezasi_orani`
+  (×0,5) uygulanır.
+- `Oyun.ulkenin_geliri()`: o an sahip olunan bölgelerin sanayileri toplamı.
+- `Oyun.gun_basladi(saat)`: her ülkenin günlük geliri hazinesine eklenir
+  (`Oyun.hazineler`, `hazine_degisti` sinyali). `Zaman.gun_basladi` main.gd'de saate
+  çevrilip (`gun*24`) çağrılıyor — Oyun yine Zaman autoload'ına bağlı değil.
+- Üst çubukta oyuncunun hazinesi yazılı ("Hazine: N").
+- 6 yeni sınama (`tests/sim/ekonomi_testi.gd`): sanayi pozitif ve cezasız başlar, işgal
+  altında yarı üretir, 60 günden sonra ceza kalkar, ev sahibi geri alınca ceza olmaz,
+  ülke geliri bölge toplamına eşit, gün başlayınca hazine artıyor (iki kez, sinyal
+  sayısıyla doğrulandı). Toplam 47/47 sınama geçiyor.
+- Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): "Hazine: 12" üst çubukta
+  doğru görünüyor.
+- Henüz yok: harcama (tümen kur, fabrika kur — tek kuyruk, en fazla 5 iş), bakım (her
+  tümen günlük üretim yer; gelir eksiye düşerse tümenler güç kaybeder).
+
 ## Sıradaki iş
 
-D) EKONOMİ — ilk alt adım: üretim ve gelir.
-- Tek kaynak: üretim. Günlük gelir, sahip olunan bölgelerin sanayisinden gelir. Sanayi
-  GSYH'den türetilsin ama yumuşatılsın, küçük ülkeler çaresiz kalmasın.
-- Harcama: tümen kur (başkentte ya da seçilen bölgede doğar) ve fabrika kur (bölgenin
-  sanayisini artırır, pahalı ve uzun). Tek kuyruk, en fazla 5 iş.
+D) EKONOMİ — sıradaki alt adım: harcama ve bakım.
+- Tümen kur (başkentte ya da seçilen bölgede doğar) ve fabrika kur (bölgenin sanayisini
+  artırır, pahalı ve uzun). Tek kuyruk, en fazla 5 iş.
 - Bakım: her tümen günlük üretim yer. Gelir eksiye düşerse tümenler güç kaybeder.
-- İşgal edilen bölge ilk 60 gün yarım gelir verir.
+- Bu tamamlanınca D) EKONOMİ TASARIM.md'de ✅ işaretlenecek ve E) YAPAY ZEKÂ'ya geçilecek.
 
 ## Kararlar
 

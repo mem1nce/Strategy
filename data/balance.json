@@ -21,5 +21,10 @@
 		"deniz_cezasi": 0.70,
 		"saatlik_kayip_orani": 0.05,
 		"cekilme_esigi": 0.25
+	},
+	"ekonomi": {
+		"sanayi_gsyh_bolen": 5000,
+		"isgal_cezasi_gun": 60,
+		"isgal_cezasi_orani": 0.5
 	}
 }

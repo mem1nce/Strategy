@@ -10,9 +10,9 @@ Android, yatay ekran. Godot 4.7, GDScript, 2D, Mobile renderer.
 Oyuncu haritadan bir ülke seçer ve onu yönetir. Zaman 1 Ocak 2026'da başlar,
 durdurulabilir ve üç hızda akar; bitiş tarihi yoktur.
 
-Şu an harita temeli ve bölgeler vardır: dünya haritası, bölgelere ayrılmış ülkeler,
-kamera, ülke seçimi ve zaman. Birlik, savaş, ekonomi ve yapay zekâ henüz yoktur
-(bkz. 8. bölüm).
+Dünya haritası, bölgeler, birlikler, savaş ve ekonominin üretim/gelir kısmı vardır; yapay
+zekâ, kayıt, Android dışa aktarma ve ekonominin harcama/bakım kısmı henüz yoktur
+(bkz. 11. Yol haritası).
 
 "Yerküre" geçici bir çalışma adıdır; kalıcı ad sonra seçilecek.
 
@@ -299,7 +299,7 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
   tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
   sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
 - Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
-  değişir) (bkz. 10. Yol haritası, C).
+  değişir) (bkz. 11. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
@@ -346,7 +346,32 @@ savaş varsa her iki yönde de `savasta_mi()` doğru döner.
   gelecek), yapay zekâ henüz yok — barış kabulü basit bir kurala (kaybetme/süre) dayanıyor,
   gerçek bir karar değil.
 
-## 9. Kod mimarisi
+## 9. Ekonomi
+
+Tek kaynak: **üretim** (gelir, hazineye işlenir).
+
+- **Sanayi:** her bölgenin bir sanayi değeri vardır; bölgenin "ev sahibi" ülkesinin (bölge
+  id'sinin öneki, ör. "TUR_1" → "TUR") GSYH'sinden türer ve o ülke içindeki nüfus payıyla
+  bölgelere dağıtılır: `ulke_sanayisi = sqrt(gsyh_milyon_dolar / sanayi_gsyh_bolen)`,
+  `bolge_sanayisi = ulke_sanayisi * (bolge.nufus / ev_ulkesinin_nufusu)`. `sqrt` GSYH'yi
+  yumuşatır, küçük ülkeler çaresiz kalmaz (bkz. TASARIM.md 7. Birlikler'deki tümen
+  formülüyle aynı mantık). Sabit data/balance.json → "ekonomi".
+- **Gelir:** bir ülkenin günlük geliri, o an sahip olduğu bölgelerin sanayilerinin
+  toplamıdır (`Oyun.ulkenin_geliri`); el değiştiren bölgenin geliri de otomatik olarak yeni
+  sahibine gider.
+- **İşgal cezası:** bir bölge ele geçirildikten sonraki `isgal_cezasi_gun` (60) gün boyunca,
+  ev sahibi ülkesinde değilse `isgal_cezasi_orani` (×0,5) kadar üretir. `Bolge.isgal_saati`
+  (`Oyun._bolgeyi_devret()` içinde kaydedilir) bunun için kullanılır.
+  Ev sahibi kendi bölgesini geri alınca ceza hemen kalkar.
+  Bu alan, tümen hareketindeki `son_adim_deniz_mi` gibi, Bölge'nin coğrafyası dışındaki
+  tek dinamik ekonomi alanıdır.
+- **Hazine:** `Oyun.hazineler` (ülke id'si → birikmiş üretim), her oyun günü başında
+  (`Oyun.gun_basladi()`, `Zaman.gun_basladi`'den main.gd aracılığıyla çağrılır) o günün
+  geliri eklenerek güncellenir. Üst çubukta oyuncunun hazinesi yazılı.
+- Henüz yok: harcama (tümen/fabrika kurma), bakım (tümen bakım masrafı) (bkz. 11. Yol
+  haritası, D).
+
+## 10. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -366,7 +391,7 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/cokgen.gd` | Bir toprak parçası: noktalar ve ait olduğu bölge |
 | `sim/sinir.gd` | İki bölge (ya da bölge ile deniz) arasındaki sınır çizgisi |
 | `sim/dunya.gd` | Ülkeleri, bölgeleri ve sınırları yükler, doğrular, sorguları yanıtlar |
-| `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler |
+| `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler, savaş, hazineler |
 | `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
 | `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
@@ -394,7 +419,7 @@ Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini 
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 10. Yol haritası
+## 11. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -413,7 +438,7 @@ istenen aşama yapılır.
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 11. Geçmiş
+## 12. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman

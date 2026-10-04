@@ -17,6 +17,8 @@ signal bolge_sahipligi_degisti
 signal ulke_teslim_oldu(ulke_id: String, galip_id: String)
 ## İki ülke barış yaptığında yayılır.
 signal baris_yapildi(ulke_a: String, ulke_b: String)
+## Bir ülkenin hazinesi değiştiğinde (her oyun günü başında gelir eklenince) yayılır.
+signal hazine_degisti
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
@@ -39,6 +41,13 @@ var _deniz_cezasi: float = 0.70
 var _saatlik_kayip_orani: float = 0.05
 var _cekilme_esigi: float = 0.25
 
+# Ekonomi sabitleri (data/balance.json -> "ekonomi").
+var _sanayi_gsyh_bolen: float = 5000.0
+var _isgal_cezasi_gun: int = 60
+var _isgal_cezasi_orani: float = 0.5
+## Ülke id'si -> birikmiş üretim. Her oyun günü başında gelir eklenir (bkz. gun_basladi).
+var hazineler: Dictionary[String, float] = {}
+
 
 func _init(yeni_dunya: Dunya) -> void:
 	dunya = yeni_dunya
@@ -49,6 +58,11 @@ func _init(yeni_dunya: Dunya) -> void:
 	_deniz_cezasi = float(ayarlar.get("deniz_cezasi", _deniz_cezasi))
 	_saatlik_kayip_orani = float(ayarlar.get("saatlik_kayip_orani", _saatlik_kayip_orani))
 	_cekilme_esigi = float(ayarlar.get("cekilme_esigi", _cekilme_esigi))
+
+	var ekonomi_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("ekonomi", {})
+	_sanayi_gsyh_bolen = float(ekonomi_ayarlari.get("sanayi_gsyh_bolen", _sanayi_gsyh_bolen))
+	_isgal_cezasi_gun = int(ekonomi_ayarlari.get("isgal_cezasi_gun", _isgal_cezasi_gun))
+	_isgal_cezasi_orani = float(ekonomi_ayarlari.get("isgal_cezasi_orani", _isgal_cezasi_orani))
 
 
 ## Verilen bölgedeki tümenler.
@@ -126,28 +140,28 @@ func saat_ilerledi(su_anki_saat: int) -> void:
 			birlik.hedef_bolge_id = ""
 			birlik.varis_saati = -1
 			tasima_oldu = true
-			_bos_dusman_bolgesini_isgal_et(birlik)
+			_bos_dusman_bolgesini_isgal_et(birlik, su_anki_saat)
 	if tasima_oldu:
 		birlikler_degisti.emit()
-	_muharebeleri_isle()
+	_muharebeleri_isle(su_anki_saat)
 
 
 ## Gelen tümen, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait) tümen
 ## kalmamış bir düşman bölgesine girdiyse orayı ele geçirir. Savunan varsa (muharebe
 ## sürüyorsa) işgal gerçekleşmez.
-func _bos_dusman_bolgesini_isgal_et(gelen: Birlik) -> void:
+func _bos_dusman_bolgesini_isgal_et(gelen: Birlik, su_anki_saat: int) -> void:
 	var bolge: Bolge = dunya.bolgeler.get(gelen.bolge_id)
 	if bolge == null or bolge.sahip == gelen.sahip or not savasta_mi(bolge.sahip, gelen.sahip):
 		return
 	for digeri: Birlik in bolgedeki_birlikler(gelen.bolge_id):
 		if digeri.sahip == bolge.sahip:
 			return
-	_bolgeyi_devret(bolge, gelen.sahip)
+	_bolgeyi_devret(bolge, gelen.sahip, su_anki_saat)
 
 
 ## Birden çok ülkenin tümeni bulunan (dolayısıyla savaşan) her bölgede muharebeyi bir saat
 ## ilerletir.
-func _muharebeleri_isle() -> void:
+func _muharebeleri_isle(su_anki_saat: int) -> void:
 	var bolge_gruplari: Dictionary[String, Array] = {}
 	for birlik: Birlik in birlikler:
 		if birlik.yuruyor_mu():
@@ -162,7 +176,7 @@ func _muharebeleri_isle() -> void:
 		for birlik: Birlik in katilanlar:
 			sahipler[birlik.sahip] = true
 		if sahipler.size() > 1:
-			_muharebeyi_coz(dunya.bolgeler[bolge_id], katilanlar)
+			_muharebeyi_coz(dunya.bolgeler[bolge_id], katilanlar, su_anki_saat)
 
 
 ## Bir bölgedeki muharebeyi bir saat ilerletir: her iki taraf, karşı tarafın etkin (bonus/
@@ -171,7 +185,7 @@ func _muharebeleri_isle() -> void:
 ## yok sayılır. Bir taraf tükenirse ya da belirgin biçimde geride kalırsa (CEKILME_ESIGI)
 ## geri çekilir: en yakın dost komşu bölgeye taşınır, yoksa yok olur. Savunan tükenir ya da
 ## çekilirse (ikisinde de bölgede artık savunan kalmaz) bölge hemen saldırganın olur.
-func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik]) -> void:
+func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik], su_anki_saat: int) -> void:
 	var savunanlar: Array[Birlik] = []
 	var saldiranlar: Array[Birlik] = []
 	for birlik: Birlik in katilanlar:
@@ -197,7 +211,7 @@ func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik]) -> void:
 	if saldiranlar.is_empty():
 		return  # Saldırgan tükendi; savunan (varsa) bölgede kalır.
 	if savunanlar.is_empty():
-		_bolgeyi_devret(bolge, saldiranlar[0].sahip)
+		_bolgeyi_devret(bolge, saldiranlar[0].sahip, su_anki_saat)
 		return
 
 	# Taraflardan biri belirgin şekilde geride kaldıysa geri çekilir. Savunan çekilirse
@@ -206,23 +220,25 @@ func _muharebeyi_coz(bolge: Bolge, katilanlar: Array[Birlik]) -> void:
 	var yeni_saldiran_guc: float = _toplam_guc(saldiranlar)
 	if yeni_savunan_guc < _cekilme_esigi * yeni_saldiran_guc:
 		_geri_cek(savunanlar, bolge.id)
-		_bolgeyi_devret(bolge, saldiranlar[0].sahip)
+		_bolgeyi_devret(bolge, saldiranlar[0].sahip, su_anki_saat)
 	elif yeni_saldiran_guc < _cekilme_esigi * yeni_savunan_guc:
 		_geri_cek(saldiranlar, bolge.id)
 
 
-## Bir bölgenin sahibini değiştirir, haritanın güncellenmesi için sinyal yayar ve eski
-## sahibinin teslim olup olmadığını denetler.
-func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String) -> void:
+## Bir bölgenin sahibini değiştirir, ele geçirilme saatini (ekonomide işgal cezası için)
+## kaydeder, haritanın güncellenmesi için sinyal yayar ve eski sahibinin teslim olup
+## olmadığını denetler.
+func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> void:
 	var eski_sahip: String = bolge.sahip
 	bolge.sahip = yeni_sahip
+	bolge.isgal_saati = su_anki_saat
 	bolge_sahipligi_degisti.emit()
-	_teslimi_kontrol_et(eski_sahip)
+	_teslimi_kontrol_et(eski_sahip, su_anki_saat)
 
 
 ## Başkenti düşmüş ve oyun başındaki bölgelerinin yarısından fazlasını kaybetmiş bir ülke
 ## teslim olur: kalan bölgeleri başkentini alan ülkeye geçer, bütün tümenleri silinir.
-func _teslimi_kontrol_et(ulke_id: String) -> void:
+func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
 	if ulke == null:
 		return
@@ -239,6 +255,7 @@ func _teslimi_kontrol_et(ulke_id: String) -> void:
 	var galip_id: String = baskent_sahibi.id
 	for bolge: Bolge in su_anki_bolgeler:
 		bolge.sahip = galip_id
+		bolge.isgal_saati = su_anki_saat
 	var kalanlar: Array[Birlik] = []
 	for birlik: Birlik in birlikler:
 		if birlik.sahip != ulke_id:
@@ -335,6 +352,46 @@ func _ulkenin_toplam_gucu(ulke_id: String) -> float:
 
 func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:
 	return "%s|%s" % [ulke_a, ulke_b] if ulke_a < ulke_b else "%s|%s" % [ulke_b, ulke_a]
+
+
+## Her oyun günü başında (Zaman.gun_basladi) çağrılır: her ülkenin o günkü geliri
+## hazinesine eklenir. `su_anki_saat`, gün başındaki Zaman.toplam_saat değeridir.
+func gun_basladi(su_anki_saat: int) -> void:
+	for ulke: Ulke in dunya.ulke_listesi:
+		var gelir: float = ulkenin_geliri(ulke.id, su_anki_saat)
+		hazineler[ulke.id] = hazineler.get(ulke.id, 0.0) + gelir
+	hazine_degisti.emit()
+
+
+## Bir ülkenin günlük geliri: o an sahip olduğu bölgelerin sanayilerinin toplamı.
+func ulkenin_geliri(ulke_id: String, su_anki_saat: int) -> float:
+	var toplam: float = 0.0
+	for bolge: Bolge in dunya.ulkenin_bolgeleri(ulke_id):
+		toplam += bolge_sanayisi(bolge, su_anki_saat)
+	return toplam
+
+
+## Bir bölgenin günlük ürettiği sanayi. Bölgenin "ev sahibi" ülkesinin (bölge id'sinin
+## öneki, ör. "TUR_1" -> "TUR") GSYH'sinden ve o ülke içindeki nüfus payından türer; kimin
+## elinde olduğundan bağımsızdır (toprağın kendi ekonomik niteliğini yansıtır). Son
+## `isgal_cezasi_gun` gün içinde ele geçirilmiş ve hâlâ ev sahibinde olmayan bölge
+## `isgal_cezasi_orani` kadar üretir.
+func bolge_sanayisi(bolge: Bolge, su_anki_saat: int) -> float:
+	var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
+	if ev_ulke == null or ev_ulke.nufus <= 0:
+		return 0.0
+	var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
+	var pay: float = float(bolge.nufus) / float(ev_ulke.nufus)
+	var sanayi: float = ulke_sanayisi * pay
+	var isgal_altinda: bool = bolge.isgal_saati >= 0 and bolge.sahip != ev_ulke.id \
+			and su_anki_saat - bolge.isgal_saati < _isgal_cezasi_gun * 24
+	if isgal_altinda:
+		sanayi *= _isgal_cezasi_orani
+	return sanayi
+
+
+func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:
+	return dunya.ulkeler.get(bolge.id.split("_")[0])
 
 
 func oyuncu_secildi_mi() -> bool:

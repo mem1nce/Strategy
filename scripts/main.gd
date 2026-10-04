@@ -32,7 +32,9 @@ func _ready() -> void:
 	_oyun = Oyun.new(dunya)
 	_oyun.oyuncu_secildi.connect(_oyuncu_secildi)
 	_oyun.birlikler_degisti.connect(_birlikler_degisti)
+	_oyun.hazine_degisti.connect(_hazine_degisti)
 	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
+	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
 
 	_harita = HaritaGorunumu.new()
 	_harita.name = "Harita"
@@ -113,6 +115,13 @@ func _birlikler_degisti() -> void:
 	_harita.birlikleri_yenile()
 
 
+## Her oyun günü başında (bir ülkenin hazinesi değiştiğinde) oyuncunun hazinesini üst
+## çubuğa yazar. Oyuncu henüz seçilmediyse bir şey yapmaz.
+func _hazine_degisti() -> void:
+	if _oyun.oyuncu_secildi_mi():
+		_arayuz.hazineyi_goster(_oyun.hazineler.get(_oyun.oyuncu_ulkesi, 0.0))
+
+
 ## Bölge panelinde "Savaş ilan et" onaylandığında çağrılır. Kabul edilirse seçim kaldırılır.
 func _savas_istendi(hedef_ulke_id: String) -> void:
 	if _oyun.savas_ilan_et(_oyun.oyuncu_ulkesi, hedef_ulke_id, Zaman.toplam_saat):
@@ -146,6 +155,7 @@ func _oyuncu_secildi(ulke_id: String) -> void:
 	_bolgeyi_sec("")
 	_harita.oyuncuyu_ayarla(ulke_id)
 	_arayuz.oyuncuyu_goster(ulke)
+	_arayuz.hazineyi_goster(_oyun.hazineler.get(ulke_id, 0.0))
 	_kamera.odaklan(ulke.anakara_kutusu)
 	Zaman.kilidi_ac()
 

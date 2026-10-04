@@ -85,6 +85,11 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_ust_cubuk.oyuncuyu_goster(ulke)
 
 
+## Oyuncunun hazinesini üst çubuğa yazar.
+func hazineyi_goster(miktar: float) -> void:
+	_ust_cubuk.hazineyi_goster(miktar)
+
+
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.
 func _guvenli_alani_uygula() -> void:
 	var sol: float = 0.0

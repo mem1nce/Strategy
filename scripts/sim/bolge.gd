@@ -10,6 +10,9 @@ var sahip: String = ""
 ## Bu bölge, başlangıçtaki sahibinin başkenti mi?
 var baskent: bool = false
 var nufus: int = 0
+## Son ele geçirildiği saat (Zaman.toplam_saat); hiç el değiştirmediyse -1. Ekonomide
+## işgal cezası için kullanılır (bkz. Oyun.bolge_sanayisi).
+var isgal_saati: int = -1
 ## Bölge, en az bir kıyı (deniz) sınırına değiyor mu?
 var kiyi: bool = false
 ## Bölge adının ve işaretlerinin çizileceği nokta (en büyük çokgenin içinde).

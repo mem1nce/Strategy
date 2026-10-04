@@ -10,6 +10,7 @@ var _ulke_sirasi: HBoxContainer = null
 var _ulke_rengi: ColorRect = null
 var _ulke_adi: Label = null
 var _tarih: Label = null
+var _hazine: Label = null
 var _secim_yazisi: PanelContainer = null
 var _durdur: Button = null
 var _hiz_dugmeleri: Array[Button] = []
@@ -33,6 +34,12 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_ulke_adi.text = ulke.ad
 	_ulke_sirasi.show()
 	_secim_yazisi.hide()
+	_hazine.show()
+
+
+## Oyuncunun hazinesini üst çubuğa yazar.
+func hazineyi_goster(miktar: float) -> void:
+	_hazine.text = "Hazine: %d" % roundi(miktar)
 
 
 func _sol_paneli_kur() -> void:
@@ -63,6 +70,11 @@ func _sol_paneli_kur() -> void:
 
 	_tarih = Label.new()
 	dikey.add_child(_tarih)
+
+	_hazine = Label.new()
+	_hazine.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
+	dikey.add_child(_hazine)
+	_hazine.hide()
 
 
 ## Ortadaki boşluğu doldurur. Dokunuşu haritaya geçirir.
