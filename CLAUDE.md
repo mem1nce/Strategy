@@ -70,14 +70,29 @@ sonra kod.
 
 ## Sınama
 
-- Godot PATH'te değil; `%USERPROFILE%\Downloads\Godot_v4.7.2-stable_win64.exe\` klasöründeki
-  `Godot_v4.7.2-stable_win64.exe` kullanılır (`_console.exe` sürümü yoldaki boşluk
-  yüzünden çalışmıyor; çıktı için `Start-Process -RedirectStandardOutput` kullan).
+- Windows'ta Godot PATH'te değil; `%USERPROFILE%\Downloads\Godot_v4.7.2-stable_win64.exe\`
+  klasöründeki `Godot_v4.7.2-stable_win64.exe` kullanılır (`_console.exe` sürümü yoldaki
+  boşluk yüzünden çalışmıyor; çıktı için `Start-Process -RedirectStandardOutput` kullan).
+- macOS'ta Godot PATH'te değil; `~/Downloads/Godot.app/Contents/MacOS/Godot` kullanılır.
 - Hata denetimi: `--headless --path . --import`, ardından `--headless --path . --quit-after 120`.
 - Yeni `class_name` eklendiyse önce `--import` çalıştırılmalıdır.
+- **Simülasyon sınamaları:** `tests/calistirici.gd`, `tests/sim/` altındaki sınıflardaki
+  `sina_` ile başlayan işlevleri çalıştırır (boş metin = geçti, metin = hata açıklaması).
+  Çalıştırmak için: `Godot --headless --path . --script res://tests/calistirici.gd`.
+  Yeni bir simülasyon özelliği eklenince (yol bulma, muharebe, işgal, teslim, kayıt/yükleme…)
+  `tests/sim/` altına yeni bir sınama dosyası eklenir ve `tests/calistirici.gd`'deki
+  `SINAMA_SINIFLARI` listesine eklenir.
+- **Uzun koşu sınaması:** şimdilik `tests/sim/zaman_testi.gd`'deki `sina_bes_yil_hatasiz_ilerler`
+  5 oyun yılını (43800 saat) `Zaman.bir_saat_ilerle()` ile doğrudan, çerçeveye bağlı olmadan
+  ilerletir ve özet yazdırır. Yapay zekâ, savaş ve ekonomi eklendikçe bu sınama, yalnızca
+  yapay zekâ ülkeleriyle gerçek bir oyun döngüsü ilerletecek şekilde büyütülmeli.
+- **Ekran görüntüsü:** oyun `-- --ekran-goruntusu <dosya yolu>` ile (headless OLMADAN)
+  açılırsa 2 saniye bekleyip ekranı PNG olarak kaydeder ve kapanır:
+  `Godot --path . -- --ekran-goruntusu /tam/yol/goruntu.png`. Dosya yolunun klasörü önceden
+  var olmalı. Her görsel değişiklikten sonra çalıştırıp görüntüye bakılır.
 - Girdi taklit ederken `Input.parse_input_event` konumları **pencere pikseli** ister,
   1920 × 1080 birimini değil.
-- Python ve Node bu bilgisayarda kuruludur; `tools/` altındaki betikler Python'la yazılır.
+- Python bu bilgisayarda kuruludur; `tools/` altındaki betikler Python'la yazılır.
   Dönüştürücü `shapely` kullanır (`python -m pip install -r tools/requirements.txt`).
   `tools/.gdignore` sayesinde Godot bu klasörü görmez.
 - Açılışta konsola "Dünya yüklendi: … ülke, … bölge, … çokgen, üçgenlenemeyen …" yazılır.

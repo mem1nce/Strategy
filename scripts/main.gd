@@ -9,6 +9,12 @@ const ALT_BOSLUK: float = 340.0
 ## Dokunulan noktada bölge yoksa bu yarıçap içindeki en yakın bölge seçilir (ekran pikseli).
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
 
+## "--ekran-goruntusu <dosya>" komut satırı argümanı; harita yerleşsin diye biraz beklenir,
+## sonra ekran PNG olarak kaydedilip oyun kapanır. Çağırmak için (proje klasöründen):
+##   Godot --path . -- --ekran-goruntusu /tam/yol/goruntu.png
+const EKRAN_GORUNTUSU_BAYRAGI: String = "--ekran-goruntusu"
+const EKRAN_GORUNTUSU_BEKLEME_SANIYE: float = 2.0
+
 var _oyun: Oyun = null
 var _harita: HaritaGorunumu = null
 var _kamera: HaritaKamerasi = null
@@ -46,6 +52,8 @@ func _ready() -> void:
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
 		_harita.ucgenlenemeyenler.size()])
 
+	_ekran_goruntusu_istendiyse_kaydet()
+
 
 ## Kamera her kaydığında ya da yakınlaştığında haritaya yeni görünümü bildirir.
 func _gorunum_degisti() -> void:
@@ -76,3 +84,21 @@ func _oyuncu_secildi(ulke_id: String) -> void:
 	_arayuz.oyuncuyu_goster(ulke)
 	_kamera.odaklan(ulke.anakara_kutusu)
 	Zaman.kilidi_ac()
+
+
+## Komut satırında "--ekran-goruntusu <dosya>" verildiyse harita yerleştikten sonra
+## ekranı PNG olarak kaydeder ve oyunu kapatır. Görsel değişikliklerden sonra sınamak içindir.
+func _ekran_goruntusu_istendiyse_kaydet() -> void:
+	var argumanlar: PackedStringArray = OS.get_cmdline_user_args()
+	var sira: int = argumanlar.find(EKRAN_GORUNTUSU_BAYRAGI)
+	if sira == -1:
+		return
+	var yol: String = argumanlar[sira + 1] if sira + 1 < argumanlar.size() else "user://ekran_goruntusu.png"
+	await get_tree().create_timer(EKRAN_GORUNTUSU_BEKLEME_SANIYE).timeout
+	var goruntu: Image = get_viewport().get_texture().get_image()
+	var hata: Error = goruntu.save_png(yol)
+	if hata == OK:
+		print("Ekran görüntüsü kaydedildi: %s" % yol)
+	else:
+		push_error("Ekran görüntüsü kaydedilemedi (hata %d): %s" % [hata, yol])
+	get_tree().quit()

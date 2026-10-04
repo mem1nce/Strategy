@@ -33,6 +33,19 @@ bu dosyayı okuyarak devam edebilmeli.
 - Headless import: `Godot --headless --path . --import`
 - Headless çalıştırma: `Godot --headless --path . --quit-after <tick>`
 
+## Kendi kendini test etme
+
+Altyapı bu oturumda kuruldu:
+- `tests/calistirici.gd`: `tests/sim/` altındaki `sina_` işlevlerini çalıştıran headless
+  sınama çalıştırıcısı. `Godot --headless --path . --script res://tests/calistirici.gd`.
+  Şu an 13 sınama var (Dünya yükleme/sorgular, Takvim, Zaman) — hepsi geçiyor.
+- Uzun koşu sınaması (`tests/sim/zaman_testi.gd`): 5 oyun yılını (43800 saat) anında,
+  çerçeveye bağlı olmadan ilerletiyor; hata/sonsuz döngü yok. Yapay zekâ/savaş/ekonomi
+  eklendikçe gerçek bir oyun döngüsünü kapsayacak şekilde büyütülmeli.
+- Ekran görüntüsü aracı (`scripts/main.gd`): `Godot --path . -- --ekran-goruntusu <dosya>`
+  (headless OLMADAN) 2 saniye bekleyip PNG kaydediyor, denendi ve çalıştı.
+- CLAUDE.md'nin Sınama bölümü bu makineye göre güncellendi (macOS Godot yolu, yeni komutlar).
+
 ## Sıradaki iş
 
 B) BİRLİKLER VE HAREKET — ilk alt adım: birlik verisi + haritada gösterim.
