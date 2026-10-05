@@ -475,14 +475,31 @@ G) ARAYÜZ VE GÖRSEL CİLA — devam ediyor, ilk üç alt adım tamamlandı:
     komşu ülkede doğru görünüyor; turuncu çerçeve, oyuncunun beyaz çerçevesiyle
     çakışmayan bağımsız bir örnekte (Atina, Bulgaristan'a "verilip") net görüldü.
 
+G) ARAYÜZ VE GÖRSEL CİLA — üç alt adım daha, kod değişikliği olmadan, gözden geçirilip
+zaten karşılandığı doğrulanarak kapatıldı:
+- **Bağlama göre değişen alt panel:** `BolgePaneli.goster(bolge, dunya, oyna_dugmesi_gorunur,
+  savas_dugmesi_gorunur, baris_dugmesi_gorunur)` zaten bağlama göre düğmeleri gösterip
+  gizliyor; oyuncunun kendi tümenli bölgesine dokununca `BirlikPaneli` onun yerine açılıyor
+  (`Arayuz.bolgeyi_goster`/`birligi_goster` birbirini dışlıyor). Zaten "bağlama göre
+  değişen" — ek koda gerek görülmedi.
+- **Yumuşak kamera:** `HaritaKamerasi.odaklan()` zaten her programatik odaklanmada
+  (ülke seçimi, bildirime dokunma) `Tween` ile yumuşak geçiş yapıyor (0,6 sn, sinüs
+  giriş-çıkış, yakınlık logaritmik aradeğerlenerek). Elle kaydırma/yakınlaştırma kasıtlı
+  olarak 1:1 anlık (dokunmatik haritalarda beklenen davranış). Ek koda gerek görülmedi.
+- **Kısa öğretici:** ana menüdeki "Nasıl oynanır" paneli (bkz. F) bu ihtiyacı zaten
+  karşılıyor. Ek bir oyun-içi öğretici akışı eklenmedi.
+- **Ertelendi — tek çeviri dosyası:** dağınık arayüz metinlerini (yaklaşık 10-15 dosyaya
+  yayılmış) tek bir kaynağa toplamak kapsamlı ve riskli bir değişiklik; oyun kalıcı olarak
+  tek dilli (Türkçe) olduğundan (CLAUDE.md, kapsam dışı listesinde çeviri/yerelleştirme
+  yok) pratik faydası düşük, regresyon riski göreceli yüksek (çoğu arayüz dosyasına
+  dokunmak gerekir). H) ve I)'nin oyun kalitesine daha doğrudan katkısı olduğu için önce
+  onlara geçiliyor; bu madde atlanmadı, ertelendi — zaman kalırsa J) cila döngüsünde ele
+  alınacak.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. G) ARAYÜZ VE GÖRSEL CİLA'nın geri kalanı: bağlama göre değişen alt panel (muhtemelen
-   zaten büyük ölçüde sağlanıyor, gözden geçirilecek), yumuşak kamera (muhtemelen zaten
-   `HaritaKamerasi.odaklan()` ile sağlanıyor, gözden geçirilecek), kısa öğretici
-   (muhtemelen "Nasıl oynanır" paneliyle zaten karşılanıyor), tek çeviri dosyası (dağınık
-   arayüz metinlerini tek bir yerde toplama — en büyük/riskli kalan alt adım).
+1. G)'den ertelenen: tek çeviri dosyası (yukarıya bkz.).
 2. H) DENGE: uzun koşu testiyle sayıları ayarlama.
 3. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
 F) OYUN AKIŞI tamamen bitti (ana menü + kayıt/yükleme + zafer/kaybetme + güç sıralaması +
