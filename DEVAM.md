@@ -282,19 +282,41 @@ E) YAPAY ZEKÂ — ilk alt adım (barış davranışı) tamamlandı:
   edilmedi — I) PERFORMANS VE ANDROID aşamasının işi (TASARIM.md'de zaten "uzun koşu
   testi 2 dakikadan kısa sürsün" hedefi var); şimdilik dokunulmadı.
 
+E) YAPAY ZEKÂ tamamlandı (TASARIM.md yol haritasında ✅; kalan tek parça "ordumu yapay
+zekâ yönetsin" anahtarı, bkz. Sıradaki iş):
+- `Oyun._savastaki_ulke_dusun()`: her sınır bölgesinde (başkent HARİÇ — başkent hiç
+  saldırmaz, böylece hep korunur) kendi gücünü savaştaki komşu bölgenin gücüyle kıyaslar;
+  `yz_saldiri_esigi` (×1,3) katıysa `birlikleri_yurut()` ile saldırır.
+- `Oyun._savas_ilanini_degerlendir()`: yaklaşık ayda bir (gün % 30 == 0) değerlendirilir;
+  azami savaş sayısına (2) ulaşmışsa ya da zar (%10) tutmazsa hiçbir şey yapmaz. Tutarsa,
+  doğrudan komşu ve kendisinden 2 kat güçsüz ilk ülkeye ilan eder. Oyuncu, ilk 90 gün aday
+  sayılmaz — bu kısıtlama yalnızca YZ'nin kendi kararında (Oyun.savas_ilan_et API'si
+  kendisi serbest bırakır, oyuncu da istediği an herhangi bir komşuya ilan edebilir).
+- 9 yeni sınama (`tests/sim/yz_savas_testi.gd`): güçlü sınır bölgesi saldırır, zayıf
+  saldırmaz, başkent ezici üstünlükte bile saldırmaz, gün uyumsuzsa/zar tutmazsa/komşu
+  değilse/güç farkı yetersizse/azami savaşa ulaşılmışsa ilan edilmez, ilk 90 gün oyuncuya
+  ilan edilmez, 90 günden sonra edilebilir. Toplam 73/73 sınama geçiyor.
+  - **Testte bulunan kurulum hatası (üretim kodu değil):** oyuncu dokunulmazlığı
+    sınamalarında ilan EDEN ülkenin değil, HEDEFİN (TUR/oyuncu) güçlü bırakılmıştı — bu
+    yüzden güç eşiği hiç sağlanmıyor, sınama yanlış sebeple "geçiyordu" (dokunulmazlık
+    hiç sınanmamış oluyordu). İlan edeni güçlü, hedefi zayıf bırakacak şekilde düzeltildi.
+- Ekran görüntüsü bu adımda alınmadı (saf sim mantığı, UI yok); 9 hedefli sınama ve
+  temiz headless çalıştırma ile doğrulandı.
+
 ## Sıradaki iş
 
-E) YAPAY ZEKÂ — sıradaki alt adım: savaş davranışı ve savaş ilanı.
-- Savaşta: yerel gücü (kendi bölgesindeki/konumundaki birliklerin gücü, karşı tarafın
-  gücüyle kıyaslanarak) 1,3 kat üstünse saldırır, başkentini korur.
-- Savaş ilanı: ayda bir, ulaşabildiği (doğrudan komşu) bir ülkeden en az 2 kat güçlüyse
-  küçük bir olasılıkla. Aynı anda en fazla 2 savaş. İlk 90 gün oyuncuya saldırmaz
-  (Oyun.savas_ilan_et zaten bunu reddetmiyor; bu kısıtlama yalnızca YZ'nin kendi karar
-  mantığında uygulanacak, API'de değil). Hile yapmaz (yalnızca gerçekten bildiği/
-  görebildiği bilgiyi kullanır — ama haritada "sis" yok, o yüzden bu daha çok "oyuncuya
-  tanınmayan bir avantaj kullanmaz" anlamına geliyor).
-- Bu tamamlanınca "Ordumu yapay zekâ yönetsin" anahtarı (oyuncunun birliklerini de aynı
-  YZ'nin yönetmesi) eklenebilir; E) YAPAY ZEKÂ TASARIM.md'de ✅ işaretlenecek.
+İki seçenek var:
+1. E) YAPAY ZEKÂ'nın kalan parçası: "Ordumu yapay zekâ yönetsin" anahtarı (açılınca
+   oyuncunun birliklerini de aynı YZ fonksiyonları yönetir — muhtemelen
+   `_savastaki_ulke_dusun`/`_baristaki_ulke_dusun`'u oyuncu için de çağırmak, bir
+   `oyun.yz_yonetsin: bool` bayrağıyla).
+2. F) OYUN AKIŞI'na geçmek (TASARIM.md yol haritasında sıradaki aşama): ana menü, otomatik
+   kayıt, kaybetme/zafer koşulları, güç sıralaması, bildirimler. Oyunu gerçek anlamda
+   "baştan sona oynanabilir" hâle getirir (şu an kayıt yok — oyunu kapatınca her şey
+   kayboluyor).
+Seçim: F) OYUN AKIŞI'na geçilecek — kayıt/yükleme olmadan oyun gerçekten "bitmiyor" ve
+test edilemiyor (her oturum sıfırdan başlıyor); "ordumu YZ yönetsin" küçük ve bağımsız bir
+anahtar, F'den sonra tek başına eklenebilir.
 
 ## Kararlar
 

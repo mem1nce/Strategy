@@ -396,9 +396,17 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   (`yapay_zeka.fabrika_olasiligi`, ×0,2) fabrika, yoksa tümen; başkente ya da rastgele bir
   sınır bölgesine (`OrduKurucu.yerlesim_bolgeleri`, başlangıç ordusuyla aynı yerleşim
   mantığı) kurar.
-- Henüz yok: savaş davranışı (saldırma/savunma), savaş ilanı, "ordumu yapay zekâ
-  yönetsin" anahtarı; savaştaki bir ülke şimdilik hiçbir şey yapmaz (bkz. 12. Yol
-  haritası, E).
+- **Savaşta:** her sınır bölgesinde (başkent hariç — başkent hiç saldırıya katılmaz, böylece
+  hep korunur) kendi gücünü savaşta olduğu bir komşu bölgedeki düşman gücüyle kıyaslar;
+  en az `yapay_zeka.saldiri_esigi` (×1,3) katıysa oraya saldırır (`Oyun._savastaki_ulke_dusun`).
+- **Savaş ilanı:** yaklaşık ayda bir (`yapay_zeka.savas_ilani_gun_araligi`, 30 gün)
+  değerlendirilir. Zaten `yapay_zeka.azami_eszamanli_savas` (2) savaştaysa ya da zar
+  (`yapay_zeka.savas_ilani_olasiligi`, ×0,1 — "küçük bir olasılık") tutmazsa hiçbir şey
+  yapmaz. Tutarsa, doğrudan komşu olup kendisinden `yapay_zeka.savas_ilani_esigi` (×2) kat
+  güçsüz, henüz savaşılmayan ilk ülkeye ilan eder. Oyuncu, oyunun ilk
+  `yapay_zeka.oyuncuya_dokunulmazlik_gun` (90) günü boyunca aday sayılmaz
+  (`Oyun._savas_ilanini_degerlendir`).
+- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 12. Yol haritası, E).
 
 ## 11. Kod mimarisi
 
@@ -461,7 +469,7 @@ istenen aşama yapılır.
 | 3 | ✅ | **Birlikler ve hareket** | Birlik verisi, haritada gösterim, seçme, bölgeden bölgeye yürütme |
 | 4 | ✅ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
 | 5 | ✅ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
-| 6 | ⬜ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
+| 6 | ✅ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ⬜ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 8 | ⬜ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 

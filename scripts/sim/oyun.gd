@@ -60,6 +60,17 @@ var _bakim_birim_maliyeti: float = 0.5
 var _baslangic_gucu: float = 100.0
 ## Yapay zekânın, kurabileceği bir tümen yerine fabrika kurmayı seçme olasılığı.
 var _yz_fabrika_olasiligi: float = 0.2
+## Savaştaki yapay zekâ, bir sınır bölgesindeki gücü karşı bölgedekinin bu katıysa saldırır.
+var _yz_saldiri_esigi: float = 1.3
+## Savaş ilanını kaç günde bir değerlendireceği (yaklaşık "ayda bir").
+var _yz_savas_ilani_gun_araligi: int = 30
+## Savaş ilan edebilmesi için hedeften en az bu kat güçlü olması gerekir.
+var _yz_savas_ilani_esigi: float = 2.0
+## Koşullar sağlansa bile savaş ilan etme olasılığı ("küçük bir olasılıkla").
+var _yz_savas_ilani_olasiligi: float = 0.1
+var _yz_azami_eszamanli_savas: int = 2
+## Oyun başından bu kadar gün geçmeden yapay zekâ oyuncuya savaş ilan etmez.
+var _yz_oyuncuya_dokunulmazlik_gun: int = 90
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 ## Ülke id'si -> birikmiş üretim. Her oyun günü başında gelir eklenir (bkz. gun_basladi).
@@ -95,6 +106,12 @@ func _init(yeni_dunya: Dunya) -> void:
 
 	var yz_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("yapay_zeka", {})
 	_yz_fabrika_olasiligi = float(yz_ayarlari.get("fabrika_olasiligi", _yz_fabrika_olasiligi))
+	_yz_saldiri_esigi = float(yz_ayarlari.get("saldiri_esigi", _yz_saldiri_esigi))
+	_yz_savas_ilani_gun_araligi = int(yz_ayarlari.get("savas_ilani_gun_araligi", _yz_savas_ilani_gun_araligi))
+	_yz_savas_ilani_esigi = float(yz_ayarlari.get("savas_ilani_esigi", _yz_savas_ilani_esigi))
+	_yz_savas_ilani_olasiligi = float(yz_ayarlari.get("savas_ilani_olasiligi", _yz_savas_ilani_olasiligi))
+	_yz_azami_eszamanli_savas = int(yz_ayarlari.get("azami_eszamanli_savas", _yz_azami_eszamanli_savas))
+	_yz_oyuncuya_dokunulmazlik_gun = int(yz_ayarlari.get("oyuncuya_dokunulmazlik_gun", _yz_oyuncuya_dokunulmazlik_gun))
 
 
 ## Verilen bölgedeki tümenler.
@@ -534,12 +551,38 @@ func _ulkenin_dusunme_saati(ulke_id: String) -> int:
 	return absi(ulke_id.hash()) % 24
 
 
-## Bir ülkenin günlük kararı. Savaşta olan ülkelerin savaş davranışı henüz yok (bkz.
-## DEVAM.md, sıradaki iş); şimdilik yalnızca barıştaki ülkeler tümen/fabrika kurar.
+## Bir ülkenin günlük kararı: önce (savaşta olsun olmasın) savaş ilanını değerlendirir,
+## sonra savaştaysa saldırır, barıştaysa tümen/fabrika kurar.
 func _ulke_dusun(ulke_id: String, su_anki_saat: int) -> void:
+	_savas_ilanini_degerlendir(ulke_id, su_anki_saat)
 	if _ulkenin_savasta_mi(ulke_id):
+		_savastaki_ulke_dusun(ulke_id, su_anki_saat)
+	else:
+		_baristaki_ulke_dusun(ulke_id, su_anki_saat)
+
+
+## Savaştaki ülke, başkenti HARİÇ her bölgesinde (başkent hiç saldırıya katılmaz, böylece
+## her zaman korunur) kendi gücünü savaşta olduğu bir komşu bölgedeki düşman gücüyle
+## kıyaslar; kendi gücü düşmanın yz_saldiri_esigi (×1,3) katı ya da daha fazlaysa oraya
+## saldırır (bölge başına en fazla bir hedef).
+func _savastaki_ulke_dusun(ulke_id: String, su_anki_saat: int) -> void:
+	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
+	if ulke == null:
 		return
-	_baristaki_ulke_dusun(ulke_id, su_anki_saat)
+	for bolge: Bolge in dunya.ulkenin_bolgeleri(ulke_id):
+		if bolge.id == ulke.baskent_bolgesi:
+			continue
+		var buradakiler: Array[Birlik] = bolgedeki_birlikler(bolge.id)
+		if buradakiler.is_empty():
+			continue
+		var buradaki_guc: float = _toplam_guc(buradakiler)
+		for komsu: Bolge in dunya.bolgenin_komsulari(bolge.id):
+			if not savasta_mi(ulke_id, komsu.sahip):
+				continue
+			var dusman_guc: float = _toplam_guc(bolgedeki_birlikler(komsu.id))
+			if buradaki_guc >= _yz_saldiri_esigi * dusman_guc:
+				birlikleri_yurut(buradakiler, komsu.id, su_anki_saat)
+				break
 
 
 ## Barıştaki ülke, gelirinin elverdiği ve kuyruğunda yer olduğu sürece tümen kurar;
@@ -562,6 +605,47 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 		fabrika_sirala(ulke_id, hedef_bolge_id)
 	elif hazine >= _tumen_maliyeti:
 		tumen_sirala(ulke_id, hedef_bolge_id)
+
+
+## Yaklaşık ayda bir (yz_savas_ilani_gun_araligi) değerlendirilir: zaten azami sayıda
+## savaştaysa ya da zar (küçük bir olasılık) tutmazsa hiçbir şey yapmaz. Tutarsa, doğrudan
+## komşu olup kendisinden en az yz_savas_ilani_esigi (×2) kat güçsüz, henüz savaşılmayan
+## bir ülke arar (oyuncu, ilk yz_oyuncuya_dokunulmazlik_gun gün boyunca aday sayılmaz) ve
+## bulduğu ilk adaya savaş ilan eder.
+func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
+	@warning_ignore("integer_division")
+	var gun: int = su_anki_saat / 24
+	if gun % _yz_savas_ilani_gun_araligi != 0:
+		return
+	if _ulkenin_savas_sayisi(ulke_id) >= _yz_azami_eszamanli_savas:
+		return
+	if _rng.randf() >= _yz_savas_ilani_olasiligi:
+		return
+
+	var kendi_guc: float = _ulkenin_toplam_gucu(ulke_id)
+	if kendi_guc <= 0.0:
+		return
+	var dokunulmazlik_saati: int = _yz_oyuncuya_dokunulmazlik_gun * 24
+	for diger: Ulke in dunya.ulke_listesi:
+		if diger.id == ulke_id or savasta_mi(ulke_id, diger.id):
+			continue
+		if diger.id == oyuncu_ulkesi and su_anki_saat < dokunulmazlik_saati:
+			continue
+		if not dunya.ulkeler_komsu_mu(ulke_id, diger.id):
+			continue
+		var diger_guc: float = _ulkenin_toplam_gucu(diger.id)
+		if diger_guc <= 0.0 or kendi_guc < _yz_savas_ilani_esigi * diger_guc:
+			continue
+		savas_ilan_et(ulke_id, diger.id, su_anki_saat)
+		return
+
+
+func _ulkenin_savas_sayisi(ulke_id: String) -> int:
+	var sayi: int = 0
+	for anahtar: String in _savaslar:
+		if anahtar.split("|").has(ulke_id):
+			sayi += 1
+	return sayi
 
 
 ## Ülke herhangi bir savaştaysa true döner.

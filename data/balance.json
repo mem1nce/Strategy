@@ -34,6 +34,12 @@
 		"bakim_birim_maliyeti": 0.5
 	},
 	"yapay_zeka": {
-		"fabrika_olasiligi": 0.2
+		"fabrika_olasiligi": 0.2,
+		"saldiri_esigi": 1.3,
+		"savas_ilani_gun_araligi": 30,
+		"savas_ilani_esigi": 2.0,
+		"savas_ilani_olasiligi": 0.1,
+		"azami_eszamanli_savas": 2,
+		"oyuncuya_dokunulmazlik_gun": 90
 	}
 }
