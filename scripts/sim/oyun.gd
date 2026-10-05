@@ -58,6 +58,9 @@ var _bakim_birim_maliyeti: float = 0.5
 ## Yeni kurulan tümenin başlangıç gücü (OrduKurucu'nun kullandığı değerle aynı; bkz.
 ## data/balance.json -> "ordu").
 var _baslangic_gucu: float = 100.0
+## Yapay zekânın, kurabileceği bir tümen yerine fabrika kurmayı seçme olasılığı.
+var _yz_fabrika_olasiligi: float = 0.2
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 ## Ülke id'si -> birikmiş üretim. Her oyun günü başında gelir eklenir (bkz. gun_basladi).
 var hazineler: Dictionary[String, float] = {}
@@ -89,6 +92,9 @@ func _init(yeni_dunya: Dunya) -> void:
 
 	var ordu_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("ordu", {})
 	_baslangic_gucu = float(ordu_ayarlari.get("baslangic_gucu", _baslangic_gucu))
+
+	var yz_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("yapay_zeka", {})
+	_yz_fabrika_olasiligi = float(yz_ayarlari.get("fabrika_olasiligi", _yz_fabrika_olasiligi))
 
 
 ## Verilen bölgedeki tümenler.
@@ -171,6 +177,7 @@ func saat_ilerledi(su_anki_saat: int) -> void:
 		birlikler_degisti.emit()
 	_muharebeleri_isle(su_anki_saat)
 	_insa_islerini_isle()
+	_yapay_zekayi_isle(su_anki_saat)
 
 
 ## Gelen tümen, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait) tümen
@@ -508,6 +515,62 @@ func bolge_sanayisi(bolge: Bolge, su_anki_saat: int) -> float:
 
 func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:
 	return dunya.ulkeler.get(bolge.id.split("_")[0])
+
+
+## Her saat çağrılır; o saat "düşünme sırası" gelen (oyuncu olmayan, elenmemiş) her ülke
+## bir karar verir. Ülkeler saatlere yayılmıştır (bkz. _ulkenin_dusunme_saati) ki hepsi
+## aynı karede düşünmeye çalışıp yığılma yapmasın; her ülke günde tam bir kez düşünür.
+func _yapay_zekayi_isle(su_anki_saat: int) -> void:
+	var saat_dilimi: int = su_anki_saat % 24
+	for ulke: Ulke in dunya.ulke_listesi:
+		if ulke.id == oyuncu_ulkesi or _ulkenin_dusunme_saati(ulke.id) != saat_dilimi:
+			continue
+		if dunya.ulkenin_bolgeleri(ulke.id).is_empty():
+			continue  # Teslim olmuş; artık yok.
+		_ulke_dusun(ulke.id, su_anki_saat)
+
+
+func _ulkenin_dusunme_saati(ulke_id: String) -> int:
+	return absi(ulke_id.hash()) % 24
+
+
+## Bir ülkenin günlük kararı. Savaşta olan ülkelerin savaş davranışı henüz yok (bkz.
+## DEVAM.md, sıradaki iş); şimdilik yalnızca barıştaki ülkeler tümen/fabrika kurar.
+func _ulke_dusun(ulke_id: String, su_anki_saat: int) -> void:
+	if _ulkenin_savasta_mi(ulke_id):
+		return
+	_baristaki_ulke_dusun(ulke_id, su_anki_saat)
+
+
+## Barıştaki ülke, gelirinin elverdiği ve kuyruğunda yer olduğu sürece tümen kurar;
+## ara sıra (yz_fabrika_olasiligi) bunun yerine fabrika kurar. Hangisi olursa olsun,
+## başkente ya da bir sınır bölgesine (rastgele) kurulur.
+func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
+	var kuyruk: Array = insa_kuyruklari.get(ulke_id, [])
+	if kuyruk.size() >= AZAMI_KUYRUK_UZUNLUGU:
+		return
+	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
+	if ulke == null:
+		return
+	var secenekler: Array[String] = OrduKurucu.yerlesim_bolgeleri(dunya, ulke)
+	if secenekler.is_empty():
+		return
+	var hedef_bolge_id: String = secenekler[_rng.randi() % secenekler.size()]
+	var hazine: float = hazineler.get(ulke_id, 0.0)
+
+	if _rng.randf() < _yz_fabrika_olasiligi and hazine >= _fabrika_maliyeti:
+		fabrika_sirala(ulke_id, hedef_bolge_id)
+	elif hazine >= _tumen_maliyeti:
+		tumen_sirala(ulke_id, hedef_bolge_id)
+
+
+## Ülke herhangi bir savaştaysa true döner.
+func _ulkenin_savasta_mi(ulke_id: String) -> bool:
+	for anahtar: String in _savaslar:
+		var taraflar: PackedStringArray = anahtar.split("|")
+		if taraflar.has(ulke_id):
+			return true
+	return false
 
 
 func oyuncu_secildi_mi() -> bool:

@@ -10,9 +10,9 @@ Android, yatay ekran. Godot 4.7, GDScript, 2D, Mobile renderer.
 Oyuncu haritadan bir ülke seçer ve onu yönetir. Zaman 1 Ocak 2026'da başlar,
 durdurulabilir ve üç hızda akar; bitiş tarihi yoktur.
 
-Dünya haritası, bölgeler, birlikler, savaş ve ekonominin üretim/gelir kısmı vardır; yapay
-zekâ, kayıt, Android dışa aktarma ve ekonominin harcama/bakım kısmı henüz yoktur
-(bkz. 11. Yol haritası).
+Dünya haritası, bölgeler, birlikler, savaş, ekonomi ve yapay zekânın barış davranışı
+vardır; yapay zekânın savaş davranışı, kayıt ve Android dışa aktarma henüz yoktur
+(bkz. 12. Yol haritası).
 
 "Yerküre" geçici bir çalışma adıdır; kalıcı ad sonra seçilecek.
 
@@ -299,7 +299,7 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
   tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
   sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
 - Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
-  değişir) (bkz. 11. Yol haritası, C).
+  değişir) (bkz. 12. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
@@ -383,7 +383,24 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
 - Arayüz: şimdilik yok — tümen/fabrika sıralama yalnızca sim katmanında (`Oyun`) var;
   düğmeler G) ARAYÜZ aşamasında (ya da öncesinde küçük bir ek adımda) eklenecek.
 
-## 10. Kod mimarisi
+## 10. Yapay zekâ
+
+Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
+
+- **Düşünme zamanlaması:** her ülkenin sabit bir "düşünme saati" vardır
+  (`absi(ulke_id.hash()) % 24`, 0-23) ve günde tam bir kez, o saat gelince düşünür
+  (`Oyun._yapay_zekayi_isle()`, her saat çağrılır). Ülkeler böylece 24 saate yayılır;
+  hepsi aynı karede düşünüp yığılma yapmaz. Oyuncunun ülkesi ve hiç bölgesi kalmamış
+  (teslim olmuş) ülkeler düşünmez.
+- **Barışta:** kuyruğunda yer ve hazinesi yeterliyse bir iş sıralar — küçük bir olasılıkla
+  (`yapay_zeka.fabrika_olasiligi`, ×0,2) fabrika, yoksa tümen; başkente ya da rastgele bir
+  sınır bölgesine (`OrduKurucu.yerlesim_bolgeleri`, başlangıç ordusuyla aynı yerleşim
+  mantığı) kurar.
+- Henüz yok: savaş davranışı (saldırma/savunma), savaş ilanı, "ordumu yapay zekâ
+  yönetsin" anahtarı; savaştaki bir ülke şimdilik hiçbir şey yapmaz (bkz. 12. Yol
+  haritası, E).
+
+## 11. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -403,7 +420,7 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/cokgen.gd` | Bir toprak parçası: noktalar ve ait olduğu bölge |
 | `sim/sinir.gd` | İki bölge (ya da bölge ile deniz) arasındaki sınır çizgisi |
 | `sim/dunya.gd` | Ülkeleri, bölgeleri ve sınırları yükler, doğrular, sorguları yanıtlar |
-| `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler, savaş, hazineler |
+| `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler, savaş, hazineler, yapay zekâ |
 | `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
 | `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
 | `sim/insa_isi.gd` | İnşa kuyruğundaki tek bir iş: tümen ya da fabrika |
@@ -432,7 +449,7 @@ Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini 
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 11. Yol haritası
+## 12. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -451,7 +468,7 @@ istenen aşama yapılır.
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 12. Geçmiş
+## 13. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman

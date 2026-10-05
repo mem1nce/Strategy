@@ -2,9 +2,15 @@ extends RefCounted
 ## Oyun.tumen_sirala()/fabrika_sirala() (inşa kuyruğu) ve _bakimi_uygula()'yı sınar.
 
 
+## TUR oyuncu olarak seçilir ki saat_ilerledi() döngülerinde yapay zekâ TUR için de karar
+## vermeye çalışıp (hazine yüksek ayarlandığında) sınamaların beklediği kuyruk durumunu
+## bozmasın (bkz. tests/sim/yapay_zeka_testi.gd; bu dosyanın sınamaları yalnızca doğrudan
+## tumen_sirala()/fabrika_sirala() çağrılarını sınar).
 func _kurulu_oyun() -> Oyun:
 	var dunya: Dunya = Dunya.yukle()
-	return Oyun.new(dunya)
+	var oyun: Oyun = Oyun.new(dunya)
+	oyun.oyuncuyu_sec("TUR")
+	return oyun
 
 
 func sina_baskasinin_bolgesine_siralanamaz() -> String:

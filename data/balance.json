@@ -32,5 +32,8 @@
 		"fabrika_suresi_saat": 720,
 		"fabrika_sanayi_artisi": 2.0,
 		"bakim_birim_maliyeti": 0.5
+	},
+	"yapay_zeka": {
+		"fabrika_olasiligi": 0.2
 	}
 }

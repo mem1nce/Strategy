@@ -250,18 +250,51 @@ D) EKONOMİ tamamlandı (TASARIM.md yol haritasında ✅):
   yalnızca `tumen_sirala(ulke_id, bolge_id)` çağrısı herhangi bir kendi bölgeni kabul
   ediyor, main.gd'den henüz çağrılmıyor).
 
+E) YAPAY ZEKÂ — ilk alt adım (barış davranışı) tamamlandı:
+- `OrduKurucu._yerlesim_bolgeleri` → `yerlesim_bolgeleri` (artık public): başlangıç
+  ordusu VE yapay zekânın yeni tümenleri aynı "başkent + sınır bölgeleri" mantığını
+  paylaşıyor; kod tekrarı yerine yeniden kullanıldı.
+- `Oyun._yapay_zekayi_isle(saat)`: her saat çağrılır (saat_ilerledi içinden). Her ülkenin
+  sabit bir "düşünme saati" vardır (`absi(ulke_id.hash()) % 24`), günde tam bir kez o
+  saat gelince düşünür — 176 ülke 24 saate yayılır, tek karede yığılma olmaz. Oyuncunun
+  ülkesi ve bölgesi kalmamış (teslim olmuş) ülkeler düşünmez.
+- `Oyun._baristaki_ulke_dusun()`: kuyrukta yer ve hazine varsa iş sıralar — %20
+  olasılıkla (yapay_zeka.fabrika_olasiligi) fabrika, yoksa tümen; başkente ya da rastgele
+  bir sınır bölgesine. Savaştaki ülkeler şimdilik hiçbir şey yapmaz (sıradaki alt adım).
+  `Oyun._rng: RandomNumberGenerator` rastgelelik için (GDScript'in `randf()`'i değil,
+  ileride sınamalarda tohumlanabilsin diye örnek değişkeni).
+- 7 yeni sınama (`tests/sim/yapay_zeka_testi.gd`): düşünme saatleri 0-23 ve deterministik,
+  oyuncu düşünmez, sırası gelmeyen ülke düşünmez, zengin ülke sırası gelince kurar, fakir
+  ülke kurmaz, savaştaki ülke şimdilik kurmaz, teslim olmuş ülke düşünmez. Toplam 63/63
+  sınama geçiyor.
+  - **Testlerde bulunan izolasyon hatası (üretim kodu değil):** `insa_testi.gd`'deki
+    (`tests/sim/insa_testi.gd`) üç sınama, hazine yüksek ayarlayıp `saat_ilerledi()`'yi
+    uzun döngüde çağırıyordu; oyuncu hiç seçilmediği için (oyuncu_ulkesi == "") yapay
+    zekâ TUR için de çalışıp kuyruğa beklenmedik işler ekleyebiliyordu. `_kurulu_oyun()`
+    yardımcısına `oyuncuyu_sec("TUR")` eklenerek düzeltildi (gerçek oyunda zaman zaten
+    oyuncu seçilene kadar kilitli, bu senaryo hiç oluşmaz — yalnızca testin saat_ilerledi'yi
+    doğrudan çağırması bunu ortaya çıkardı).
+- Diyagnostik betikle (geçici, silindi) doğrulandı: GEO'ya yüksek hazine verilip 360 saat
+  ilerletilince tümen sayısı 1'den 3'e çıktı, hazine doğru düştü.
+- **Performans gözlemi:** tam sınama takımı artık ~20 saniye sürüyor (önceki ~birkaç
+  saniyeye göre belirgin artış); muharebe_testi.gd'nin 2000 saatlik döngüsü ve her saat
+  176 ülke üzerinde gezinen yapay zekâ kontrolü muhtemel nedenler. Henüz optimize
+  edilmedi — I) PERFORMANS VE ANDROID aşamasının işi (TASARIM.md'de zaten "uzun koşu
+  testi 2 dakikadan kısa sürsün" hedefi var); şimdilik dokunulmadı.
+
 ## Sıradaki iş
 
-İki seçenek var:
-1. D) EKONOMİ'nin arayüz eksiğini kapatmak: üst çubuğa (ya da birlik paneline) "Tümen
-   kur" / "Fabrika kur" düğmeleri eklemek.
-2. E) YAPAY ZEKÂ'ya geçmek (TASARIM.md yol haritasında sıradaki aşama): her ülke günde
-   bir kez düşünür, barışta tümen kurar ve sınırlara dağıtır, savaşta saldırır/savunur,
-   ara sıra savaş ilan eder. Bu, oyunu ilk kez "tek başına oynanabilir" hâle getirir
-   (şu an diğer bütün ülkeler tamamen hareketsiz).
-Seçim: E) YAPAY ZEKÂ'ya geçilecek — çünkü yapay zekâ olmadan oyun gerçekten
-"oynanamıyor" (diğer ülkeler hiçbir şey yapmıyor); arayüz cilası (1) G) ARAYÜZ
-aşamasında toplu olarak ele alınacak.
+E) YAPAY ZEKÂ — sıradaki alt adım: savaş davranışı ve savaş ilanı.
+- Savaşta: yerel gücü (kendi bölgesindeki/konumundaki birliklerin gücü, karşı tarafın
+  gücüyle kıyaslanarak) 1,3 kat üstünse saldırır, başkentini korur.
+- Savaş ilanı: ayda bir, ulaşabildiği (doğrudan komşu) bir ülkeden en az 2 kat güçlüyse
+  küçük bir olasılıkla. Aynı anda en fazla 2 savaş. İlk 90 gün oyuncuya saldırmaz
+  (Oyun.savas_ilan_et zaten bunu reddetmiyor; bu kısıtlama yalnızca YZ'nin kendi karar
+  mantığında uygulanacak, API'de değil). Hile yapmaz (yalnızca gerçekten bildiği/
+  görebildiği bilgiyi kullanır — ama haritada "sis" yok, o yüzden bu daha çok "oyuncuya
+  tanınmayan bir avantaj kullanmaz" anlamına geliyor).
+- Bu tamamlanınca "Ordumu yapay zekâ yönetsin" anahtarı (oyuncunun birliklerini de aynı
+  YZ'nin yönetmesi) eklenebilir; E) YAPAY ZEKÂ TASARIM.md'de ✅ işaretlenecek.
 
 ## Kararlar
 

@@ -19,7 +19,7 @@ static func baslangic_birliklerini_olustur(dunya: Dunya) -> Array[Birlik]:
 	var birlikler: Array[Birlik] = []
 	for ulke: Ulke in dunya.ulke_listesi:
 		var sayi: int = _tumen_sayisi(ulke, nufus_bolen, gsyh_bolen, asgari, azami)
-		var yerlesim: Array[String] = _yerlesim_bolgeleri(dunya, ulke)
+		var yerlesim: Array[String] = yerlesim_bolgeleri(dunya, ulke)
 		for i: int in sayi:
 			var birlik: Birlik = Birlik.new()
 			birlik.sahip = ulke.id
@@ -37,8 +37,9 @@ static func _tumen_sayisi(ulke: Ulke, nufus_bolen: float, gsyh_bolen: float, asg
 
 
 ## Başkent ve kara sınırı olan (başka ülkeye komşu) bölgeler. Sınır bölgesi yoksa
-## (ör. ada ülkesi) yalnızca başkent döner.
-static func _yerlesim_bolgeleri(dunya: Dunya, ulke: Ulke) -> Array[String]:
+## (ör. ada ülkesi) yalnızca başkent döner. Başlangıç ordusu dağıtımı dışında, yapay
+## zekânın yeni kurduğu tümenleri de nereye yerleştireceğine karar vermek için kullanılır.
+static func yerlesim_bolgeleri(dunya: Dunya, ulke: Ulke) -> Array[String]:
 	var sonuc: Array[String] = [ulke.baskent_bolgesi]
 	for bolge: Bolge in dunya.ulkenin_bolgeleri(ulke.id):
 		if bolge.id == ulke.baskent_bolgesi:
