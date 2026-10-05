@@ -19,6 +19,7 @@ var _ulke_adi: Label = null
 var _tarih: Label = null
 var _hazine: Label = null
 var _secim_yazisi: PanelContainer = null
+var _uretim: Label = null
 var _durdur: Button = null
 var _hiz_dugmeleri: Array[Button] = []
 var _yz_yonetimi: Button = null
@@ -49,6 +50,20 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 ## Oyuncunun hazinesini üst çubuğa yazar.
 func hazineyi_goster(miktar: float) -> void:
 	_hazine.text = "Hazine: %d" % roundi(miktar)
+
+
+## Oyuncunun inşa kuyruğunun önündeki işi üst çubukta gösterir. `is_` null ise (kuyruk
+## boş) gösterge kalkar. `kuyrukta_baska`, öndeki dahil kuyruktaki toplam iş sayısıdır.
+func uretimi_goster(is_: InsaIsi, kuyrukta_baska: int) -> void:
+	if is_ == null:
+		_uretim.hide()
+		return
+	var tur_adi: String = "Tümen" if is_.tur == InsaIsi.Tur.TUMEN else "Fabrika"
+	var metin: String = "İnşa: %s (%d sa)" % [tur_adi, is_.kalan_saat]
+	if kuyrukta_baska > 1:
+		metin += " +%d" % (kuyrukta_baska - 1)
+	_uretim.text = metin
+	_uretim.show()
 
 
 func _sol_paneli_kur() -> void:
@@ -84,6 +99,10 @@ func _sol_paneli_kur() -> void:
 	_hazine.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
 	dikey.add_child(_hazine)
 	_hazine.hide()
+
+	_uretim = Label.new()
+	dikey.add_child(_uretim)
+	_uretim.hide()
 
 
 ## Ortadaki boşluğu doldurur. Dokunuşu haritaya geçirir.

@@ -516,6 +516,18 @@ func fabrika_sirala(ulke_id: String, bolge_id: String) -> bool:
 	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.FABRIKA, _fabrika_maliyeti, _fabrika_suresi_saat)
 
 
+## Verilen ülkenin kuyruğunun önündeki (o an yürümekte olan) iş; kuyruk boşsa null.
+## Üst çubuktaki üretim göstergesi için (bkz. Arayuz.uretimi_goster).
+func onde_ki_is(ulke_id: String) -> InsaIsi:
+	var kuyruk: Array = insa_kuyruklari.get(ulke_id, [])
+	return kuyruk[0] if not kuyruk.is_empty() else null
+
+
+## Verilen ülkenin kuyruğunda bekleyen iş sayısı (öndeki dahil).
+func kuyruktaki_is_sayisi(ulke_id: String) -> int:
+	return (insa_kuyruklari.get(ulke_id, []) as Array).size()
+
+
 func _ise_sirala(ulke_id: String, bolge_id: String, tur: InsaIsi.Tur, maliyet: float, sure_saat: int) -> bool:
 	var bolge: Bolge = dunya.bolgeler.get(bolge_id)
 	if bolge == null or bolge.sahip != ulke_id:
@@ -592,11 +604,18 @@ func bolge_sanayisi(bolge: Bolge, su_anki_saat: int) -> float:
 		var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
 		taban = ulke_sanayisi * (float(bolge.nufus) / float(ev_ulke.nufus))
 	var sanayi: float = taban + bolge.fabrika_sanayisi
-	var isgal_altinda: bool = ev_ulke != null and bolge.isgal_saati >= 0 and bolge.sahip != ev_ulke.id \
-			and su_anki_saat - bolge.isgal_saati < _isgal_cezasi_gun * 24
-	if isgal_altinda:
+	if bolge_isgal_altinda_mi(bolge, su_anki_saat):
 		sanayi *= _isgal_cezasi_orani
 	return sanayi
+
+
+## Bölge, son isgal_cezasi_gun (60) gün içinde ele geçirilmiş ve hâlâ ev sahibine
+## dönmemiş mi (bkz. bolge_sanayisi'ndeki üretim cezası, harita_gorunumu.gd'deki turuncu
+## çerçeve).
+func bolge_isgal_altinda_mi(bolge: Bolge, su_anki_saat: int) -> bool:
+	var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
+	return ev_ulke != null and bolge.isgal_saati >= 0 and bolge.sahip != ev_ulke.id \
+			and su_anki_saat - bolge.isgal_saati < _isgal_cezasi_gun * 24
 
 
 func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:

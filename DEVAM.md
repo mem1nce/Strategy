@@ -442,12 +442,47 @@ F) OYUN AKIŞI — bildirimler tamamlandı (TASARIM.md'de F artık tamamen bitti
     ofsetler `BildirimKutusu.KART_BOYUTU`'na göre elle, sabit hesaplandı. Ayrıca metin
     480 px kart genişliğini taşıyordu (480→620 px, yazı boyutu 36→32).
 
+G) ARAYÜZ VE GÖRSEL CİLA — devam ediyor, ilk üç alt adım tamamlandı:
+- **Tek tema kaynağı:** `ArayuzTemasi.olustur()` artık bir `static var _tema` içinde
+  önbelleğe alınıyor; ilk çağrıda kurulur, sonraki her çağrı (Arayuz, AnaMenu, ileride
+  başka her kök Control) AYNI Theme nesnesini paylaşır. Önceden her `kur()` çağrısı
+  kendi Theme'ini yeniden inşa ediyordu — işlevsel fark yoktu (hepsi aynı değerleri
+  üretiyordu) ama "tek kaynak" talimatına uyması ve gereksiz tekrar kurmayı önlemesi için
+  önbelleğe alındı.
+- **Üst çubukta üretim göstergesi:** `Oyun.onde_ki_is(ulke_id)`/`kuyruktaki_is_sayisi()`
+  eklendi; `UstCubuk` hazinenin altında "İnşa: Tümen (45 sa)" (birden fazla iş kuyrukta
+  beklerse "+N" eklenir) gösteriyor, kuyruk boşsa gizleniyor. Hem her saat
+  (`Zaman.saat_gecti`, canlı geri sayım için) hem kuyruk her değiştiğinde
+  (`Oyun.insa_kuyrugu_degisti`, anlık tepki için — ör. "Durdur"dayken kurunca beklemeden
+  görünsün) güncelleniyor.
+- **Savaştaki ülkeler kırmızı çerçeve, yeni işgal turuncu çerçeve:**
+  `HaritaGorunumu.savaslari_yenile()` (savaş ilanı/barışta çağrılır) oyuncuyla savaştaki
+  ülkelerin dış sınırını kırmızı; `isgalleri_yenile(su_anki_saat)` (her oyun günü başında
+  çağrılır) son `isgal_cezasi_gun` içinde el değiştirmiş, hâlâ ev sahibine dönmemiş
+  bölgelerin TAM çevresini turuncu çizer — ikisi de mevcut `_cerceve_ciz()` yardımcısı
+  yeniden kullanılarak (bkz. 7. Birlikler/8. Savaş'taki seçim/oyuncu çerçeveleri ile aynı
+  desen). `Oyun.bolge_isgal_altinda_mi(bolge, saat)` eklendi; `bolge_sanayisi()`'nin zaten
+  sahip olduğu aynı mantık (kod tekrarı yerine) oraya taşındı, böylece hem ekonomi hem
+  harita aynı tek kaynağı kullanıyor.
+  - **Ekran görüntüsünde bulunan sıralama hatası (üretim kodu, commit edilmeden):**
+    "Devam et" akışında `_oyuncu_secildi()` (yeni eklenen `isgalleri_yenile(Zaman.
+    toplam_saat)` çağrısıyla) `Zaman.durumu_uygula()`'dan ÖNCE çalışıyordu — kayıttan
+    dönen gerçek saat yerine henüz sıfırlanmamış/taze `Zaman.toplam_saat` (0) kullanılmış
+    olurdu. main.gd._devam_secildi()'de iki satırın sırası değiştirildi (önce
+    `Zaman.durumu_uygula()`, sonra `_oyuncu_secildi()`) — ikisi arasında başka bir
+    bağımlılık olmadığı kontrol edildi.
+  - Ekran görüntüleriyle doğrulandı (geçici debug, geri alındı): kırmızı çerçeve iki
+    komşu ülkede doğru görünüyor; turuncu çerçeve, oyuncunun beyaz çerçevesiyle
+    çakışmayan bağımsız bir örnekte (Atina, Bulgaristan'a "verilip") net görüldü.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
-   göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
-   kamera, kısa öğretici, tek çeviri dosyası.
+1. G) ARAYÜZ VE GÖRSEL CİLA'nın geri kalanı: bağlama göre değişen alt panel (muhtemelen
+   zaten büyük ölçüde sağlanıyor, gözden geçirilecek), yumuşak kamera (muhtemelen zaten
+   `HaritaKamerasi.odaklan()` ile sağlanıyor, gözden geçirilecek), kısa öğretici
+   (muhtemelen "Nasıl oynanır" paneliyle zaten karşılanıyor), tek çeviri dosyası (dağınık
+   arayüz metinlerini tek bir yerde toplama — en büyük/riskli kalan alt adım).
 2. H) DENGE: uzun koşu testiyle sayıları ayarlama.
 3. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
 F) OYUN AKIŞI tamamen bitti (ana menü + kayıt/yükleme + zafer/kaybetme + güç sıralaması +

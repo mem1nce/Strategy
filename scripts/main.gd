@@ -40,14 +40,21 @@ func _ready() -> void:
 	_oyun.oyun_kazanildi.connect(_oyun_kazanildi)
 	_oyun.oyun_kaybedildi.connect(_oyun_kaybedildi)
 	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
+	Zaman.saat_gecti.connect(func(_saat: int) -> void: _uretimi_guncelle())
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
+	Zaman.gun_basladi.connect(func(gun: int) -> void: _harita.isgalleri_yenile(gun * 24))
 	Zaman.gun_basladi.connect(func(_gun: int) -> void: _otomatik_kaydet())
+	_oyun.insa_kuyrugu_degisti.connect(func(ulke_id: String) -> void:
+		if ulke_id == _oyun.oyuncu_ulkesi:
+			_uretimi_guncelle())
 
 	_harita = HaritaGorunumu.new()
 	_harita.name = "Harita"
 	add_child(_harita)
 	_harita.kur(dunya, _oyun)
 	_oyun.bolge_sahipligi_degisti.connect(_harita.yenile)
+	_oyun.savas_ilan_edildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
+	_oyun.baris_yapildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -108,8 +115,8 @@ func _yeni_oyun_secildi() -> void:
 ## Ana menüde "Devam et" seçildi: açılışta okunan kaydı şimdi uygular.
 func _devam_secildi() -> void:
 	_oyun.kayittan_yukle(_bekleyen_kayit["oyun_verisi"])
-	_oyuncu_secildi(_oyun.oyuncu_ulkesi)
 	Zaman.durumu_uygula(_bekleyen_kayit["zaman_durumu"])
+	_oyuncu_secildi(_oyun.oyuncu_ulkesi)
 	_arayuz.yz_yonetimini_goster(_oyun.yz_oyuncuyu_yonetsin)
 
 
@@ -224,8 +231,19 @@ func _oyuncu_secildi(ulke_id: String) -> void:
 	_harita.oyuncuyu_ayarla(ulke_id)
 	_arayuz.oyuncuyu_goster(ulke)
 	_arayuz.hazineyi_goster(_oyun.hazineler.get(ulke_id, 0.0))
+	_uretimi_guncelle()
+	_harita.isgalleri_yenile(Zaman.toplam_saat)
 	_kamera.odaklan(ulke.anakara_kutusu)
 	Zaman.kilidi_ac()
+
+
+## Üst çubuktaki üretim göstergesini oyuncunun inşa kuyruğunun önündeki işle günceller
+## (her saat ve kuyruk her değiştiğinde çağrılır; bkz. _ready()'deki bağlamalar).
+func _uretimi_guncelle() -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	_arayuz.uretimi_goster(_oyun.onde_ki_is(_oyun.oyuncu_ulkesi),
+			_oyun.kuyruktaki_is_sayisi(_oyun.oyuncu_ulkesi))
 
 
 ## Komut satırında "--ekran-goruntusu <dosya>" verildiyse harita yerleştikten sonra

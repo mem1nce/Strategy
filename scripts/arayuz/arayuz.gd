@@ -150,6 +150,11 @@ func hazineyi_goster(miktar: float) -> void:
 	_ust_cubuk.hazineyi_goster(miktar)
 
 
+## Oyuncunun inşa kuyruğunun önündeki işi üst çubukta gösterir (bkz. UstCubuk.uretimi_goster).
+func uretimi_goster(is_: InsaIsi, kuyrukta_baska: int) -> void:
+	_ust_cubuk.uretimi_goster(is_, kuyrukta_baska)
+
+
 ## "Ordu: YZ" düğmesinin durumunu, sinyal yaymadan ayarlar (kayıttan yüklerken kullanılır).
 func yz_yonetimini_goster(acik: bool) -> void:
 	_ust_cubuk.yz_yonetimini_goster(acik)

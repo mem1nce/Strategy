@@ -18,8 +18,14 @@ const YAZI_RENGI: Color = Color(0.96, 0.96, 0.96)
 const KOYU_YAZI_RENGI: Color = Color(0.1, 0.1, 0.1)
 const SOLUK_YAZI_RENGI: Color = Color(0.5, 0.52, 0.55)
 
+## Tek paylaşılan Theme kaynağı; ilk çağrıda kurulur, sonrasında aynı nesne döner
+## (Arayuz ve AnaMenu gibi birden çok kök Control aynı temayı kullanır).
+static var _tema: Theme = null
+
 
 static func olustur() -> Theme:
+	if _tema != null:
+		return _tema
 	var tema: Theme = Theme.new()
 	tema.default_font_size = YAZI_BOYUTU
 
@@ -55,6 +61,7 @@ static func olustur() -> Theme:
 	for renk_adi: String in ["font_color", "font_hover_color", "font_focus_color",
 			"font_pressed_color", "font_hover_pressed_color"]:
 		tema.set_color(renk_adi, VURGULU_DUGME, KOYU_YAZI_RENGI)
+	_tema = tema
 	return tema
 
 

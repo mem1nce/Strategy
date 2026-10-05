@@ -195,6 +195,14 @@ Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik
   üste binmez; çakışmada büyük ülkenin, bölgelerde başkentin ve kalabalık bölgenin adı kalır.
 - Seçili bölge parlak sarı, ülkesi daha hafif bir çerçeveyle; oyuncunun ülkesi kalın beyaz
   çerçeveyle işaretlenir.
+- **Savaştaki ülkeler** (yalnızca oyuncuyla savaşta olanlar) kırmızı bir dış çerçeveyle
+  işaretlenir (`HaritaGorunumu.savaslari_yenile()`, savaş ilan edilince/barış yapılınca
+  çağrılır).
+- **Yeni işgal edilen bölgeler** (son `isgal_cezasi_gun` (60) gün içinde el değiştirmiş,
+  hâlâ ev sahibine dönmemiş — bkz. 9. Ekonomi'deki üretim cezası) turuncu bir çerçeveyle
+  işaretlenir (`HaritaGorunumu.isgalleri_yenile()`, her oyun günü başında çağrılır).
+  Çerçeveler öncelik sırasıyla üst üste çizilir: savaş/işgal en altta, oyuncu çerçevesi
+  üstte — aynı kenar birden fazla çerçeveye girerse üsttekinin rengi görünür.
 - Açılışta her çokgen üçgenlere bölünür. Bölünemeyen çokgen oyunu durdurmaz: konsola bölge
   ve ülke adıyla uyarı yazılır, dolgusu atlanır, sınırı yine çizilir.
 
@@ -264,8 +272,11 @@ Menü kapanınca (Yeni oyun ya da Devam et) aşağıdaki ülke seçimi akışı 
   deniz geçişleri turuncu boyanır; tekrar basınca kapanır. Açıkken başka bölge seçilirse
   vurgu yeni bölgeye geçer.
 
-**Üst çubuk:** solda oyuncunun ülkesi ve tarih-saat; sağda durdur/devam düğmesi ve üç hız
-düğmesi. Etkin hız ve durdurulmuş hâl sarı renkle vurgulanır.
+**Üst çubuk:** solda oyuncunun ülkesi, tarih-saat, hazine ve (varsa) **üretim göstergesi**
+("İnşa: Tümen (45 sa)", birden fazla iş kuyrukta beklerse "+N" eklenir — bkz.
+`Oyun.onde_ki_is()`/`kuyruktaki_is_sayisi()`, her saat ve kuyruk değiştiğinde güncellenir);
+sağda durdur/devam düğmesi ve üç hız düğmesi. Etkin hız ve durdurulmuş hâl sarı renkle
+vurgulanır.
 
 - Dokunulabilir her öğe en az **96 × 96 px**. Düğmeler şu an 132 × 104 px ve daha büyüktür.
 - Arayüz yazıları en az 36 px, harita yazıları en az 24 px.

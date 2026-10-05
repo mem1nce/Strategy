@@ -43,6 +43,13 @@ const SECILI_ULKE_RENGI: Color = Color(1.0, 0.95, 0.42, 0.6)
 const SECILI_ULKE_KALINLIGI: float = 2.5
 const OYUNCU_RENGI: Color = Color.WHITE
 const OYUNCU_KALINLIGI: float = 5.0
+## Oyuncuyla savaştaki ülkeleri işaretler (muharebe işaretiyle aynı kırmızı).
+const SAVAS_RENGI: Color = Color("#e03b3b")
+const SAVAS_KALINLIGI: float = 4.0
+## Son "işgal cezası" günü içinde ele geçirilmiş, hâlâ ev sahibine dönmemiş bölgeleri
+## işaretler (bkz. Oyun.bolge_isgal_altinda_mi).
+const ISGAL_RENGI: Color = Color("#e0943b")
+const ISGAL_KALINLIGI: float = 3.0
 const CERCEVE_ALT_RENGI: Color = Color(0.0, 0.0, 0.0, 0.7)
 ## Çerçevelerin altındaki koyu şeridin, çerçeveden ne kadar taştığı.
 const CERCEVE_ALT_PAYI: float = 4.0
@@ -135,6 +142,8 @@ var _bolge_adi_genisligi: PackedFloat32Array = PackedFloat32Array()
 var _secili_bolge_sinirlari: PackedInt32Array = PackedInt32Array()
 var _secili_ulke_sinirlari: PackedInt32Array = PackedInt32Array()
 var _oyuncu_sinirlari: PackedInt32Array = PackedInt32Array()
+var _savastaki_ulke_sinirlari: PackedInt32Array = PackedInt32Array()
+var _isgalli_bolge_sinirlari: PackedInt32Array = PackedInt32Array()
 
 
 ## Ülkenin haritadaki rengi.
@@ -198,6 +207,30 @@ func komsulari_goster(acik: bool) -> void:
 
 ## Tümenler hareket edince ya da güçleri değişince çağrılır.
 func birlikleri_yenile() -> void:
+	_ust_katmani_yenile()
+
+
+## Savaş ilan edilince ya da barış yapılınca çağrılır; savaştaki ülkelerin kırmızı
+## çerçevesini günceller.
+func savaslari_yenile() -> void:
+	_cerceveleri_guncelle()
+	_ust_katmani_yenile()
+
+
+## Her oyun günü başında çağrılır: son işgal cezası günü içinde ele geçirilmiş, hâlâ ev
+## sahibine dönmemiş bölgeleri turuncu bir çerçeveyle işaretler (bkz. Oyun.bolge_isgal_altinda_mi).
+func isgalleri_yenile(su_anki_saat: int) -> void:
+	var isgalliler: Dictionary[String, bool] = {}
+	for bolge: Bolge in _dunya.bolge_listesi:
+		if _oyun.bolge_isgal_altinda_mi(bolge, su_anki_saat):
+			isgalliler[bolge.id] = true
+
+	_isgalli_bolge_sinirlari = PackedInt32Array()
+	if not isgalliler.is_empty():
+		for i: int in _dunya.sinirlar.size():
+			var sinir: Sinir = _dunya.sinirlar[i]
+			if isgalliler.has(sinir.a) or isgalliler.has(sinir.b):
+				_isgalli_bolge_sinirlari.append(i)
 	_ust_katmani_yenile()
 
 
@@ -432,9 +465,15 @@ func _cerceveleri_guncelle() -> void:
 	_secili_bolge_sinirlari = PackedInt32Array()
 	_secili_ulke_sinirlari = PackedInt32Array()
 	_oyuncu_sinirlari = PackedInt32Array()
+	_savastaki_ulke_sinirlari = PackedInt32Array()
 	var secili_ulke: String = ""
 	if _dunya.bolgeler.has(_secili_bolge):
 		secili_ulke = _dunya.bolgeler[_secili_bolge].sahip
+	var savastakiler: Dictionary[String, bool] = {}
+	if _oyuncu != "":
+		for ulke: Ulke in _dunya.ulke_listesi:
+			if ulke.id != _oyuncu and _oyun.savasta_mi(_oyuncu, ulke.id):
+				savastakiler[ulke.id] = true
 
 	for i: int in _dunya.sinirlar.size():
 		var sinir: Sinir = _dunya.sinirlar[i]
@@ -447,6 +486,8 @@ func _cerceveleri_guncelle() -> void:
 			_secili_ulke_sinirlari.append(i)
 		if _oyuncu != "" and (sahip_a == _oyuncu) != (sahip_b == _oyuncu):
 			_oyuncu_sinirlari.append(i)
+		if not savastakiler.is_empty() and savastakiler.has(sahip_a) != savastakiler.has(sahip_b):
+			_savastaki_ulke_sinirlari.append(i)
 
 
 func _cerceve_ciz(sinir_siralari: PackedInt32Array, renk: Color, kalinlik: float, olcek: float) -> void:
@@ -467,6 +508,8 @@ func _ust_katmani_ciz() -> void:
 
 	if _vurgu_agi != null:
 		_ust_katman.draw_mesh(_vurgu_agi, null)
+	_cerceve_ciz(_savastaki_ulke_sinirlari, SAVAS_RENGI, SAVAS_KALINLIGI, olcek)
+	_cerceve_ciz(_isgalli_bolge_sinirlari, ISGAL_RENGI, ISGAL_KALINLIGI, olcek)
 	_cerceve_ciz(_oyuncu_sinirlari, OYUNCU_RENGI, OYUNCU_KALINLIGI, olcek)
 	_cerceve_ciz(_secili_ulke_sinirlari, SECILI_ULKE_RENGI, SECILI_ULKE_KALINLIGI, olcek)
 	_cerceve_ciz(_secili_bolge_sinirlari, SECIM_RENGI, SECIM_KALINLIGI, olcek)
