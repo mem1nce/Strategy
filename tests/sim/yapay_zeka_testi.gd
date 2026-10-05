@@ -30,6 +30,19 @@ func sina_oyuncu_dusunmez() -> String:
 	return ""
 
 
+func sina_yz_oyuncuyu_yonetsin_aciksa_oyuncu_da_dusunur() -> String:
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.oyuncuyu_sec("TUR")
+	oyun.yz_oyuncuyu_yonetsin = true
+	oyun.hazineler["TUR"] = 100000.0
+	var dusunme_saati: int = oyun._ulkenin_dusunme_saati("TUR")
+
+	oyun._yapay_zekayi_isle(dusunme_saati)
+	if (oyun.insa_kuyruklari.get("TUR", []) as Array).is_empty():
+		return "'Ordumu yapay zekâ yönetsin' açıkken oyuncu için de karar verilmeli."
+	return ""
+
+
 func sina_sirasi_gelmeyen_ulke_dusunmez() -> String:
 	var oyun: Oyun = _kurulu_oyun()
 	var ulke: Ulke = oyun.dunya.ulke_listesi[0]

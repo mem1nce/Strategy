@@ -148,6 +148,21 @@ func sina_kaydedip_yuklemek_insa_kuyrugunu_korur() -> String:
 	return ""
 
 
+func sina_kaydedip_yuklemek_yz_yonetimini_korur() -> String:
+	_kayit_dosyasini_sil()
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.yz_oyuncuyu_yonetsin = true
+	KayitYoneticisi.kaydet(oyun, {})
+
+	var kayit: Dictionary = KayitYoneticisi.yukle()
+	_kayit_dosyasini_sil()
+	var yeni_oyun: Oyun = _kurulu_oyun()
+	yeni_oyun.kayittan_yukle(kayit["oyun_verisi"])
+	if not yeni_oyun.yz_oyuncuyu_yonetsin:
+		return "'Ordumu yapay zekâ yönetsin' tercihi yüklendikten sonra korunmalı."
+	return ""
+
+
 func sina_surum_uyusmazsa_yukle_bos_sozluk_doner() -> String:
 	_kayit_dosyasini_sil()
 	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.KAYIT_DOSYASI, FileAccess.WRITE)

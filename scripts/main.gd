@@ -64,10 +64,12 @@ func _ready() -> void:
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
+	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
 
 	if not kayit.is_empty() and _oyun.oyuncu_secildi_mi():
 		_oyuncu_secildi(_oyun.oyuncu_ulkesi)
 		Zaman.durumu_uygula(kayit["zaman_durumu"])
+		_arayuz.yz_yonetimini_goster(_oyun.yz_oyuncuyu_yonetsin)
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),

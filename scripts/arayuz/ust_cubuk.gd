@@ -1,10 +1,14 @@
 class_name UstCubuk
 extends HBoxContainer
 ## Üst çubuk: solda oyuncunun ülkesi ve tarih, ortada "Ülkeni seç" yazısı (seçim
-## yapılana kadar), sağda durdur/devam ve hız düğmeleri.
+## yapılana kadar), sağda durdur/devam, hız ve "Ordu: YZ" düğmeleri.
 ## Zaman yöneticisini (Zaman) okur ve düğmelerle ona emir verir.
 
+## "Ordu: YZ" açılıp kapandığında yayılır.
+signal yz_yonetimi_degisti(acik: bool)
+
 const SOL_PANEL_GENISLIGI: float = 560.0
+const YZ_DUGMESI_BOYUTU: Vector2 = Vector2(170.0, 104.0)
 
 var _ulke_sirasi: HBoxContainer = null
 var _ulke_rengi: ColorRect = null
@@ -14,6 +18,7 @@ var _hazine: Label = null
 var _secim_yazisi: PanelContainer = null
 var _durdur: Button = null
 var _hiz_dugmeleri: Array[Button] = []
+var _yz_yonetimi: Button = null
 
 
 func _ready() -> void:
@@ -115,6 +120,10 @@ func _dugme_panelini_kur() -> void:
 		sira.add_child(dugme)
 		_hiz_dugmeleri.append(dugme)
 
+	_yz_yonetimi = _dugme_olustur("Ordu: YZ", YZ_DUGMESI_BOYUTU)
+	_yz_yonetimi.pressed.connect(_yz_yonetimi_basildi)
+	sira.add_child(_yz_yonetimi)
+
 
 func _dugme_olustur(metin: String, boyut: Vector2) -> Button:
 	var dugme: Button = Button.new()
@@ -135,6 +144,15 @@ func _hiz_basildi(hiz: int) -> void:
 	_yenile()
 
 
+func _yz_yonetimi_basildi() -> void:
+	yz_yonetimi_degisti.emit(_yz_yonetimi.button_pressed)
+
+
+## "Ordu: YZ" düğmesinin durumunu, sinyal yaymadan ayarlar (kayıttan yüklerken kullanılır).
+func yz_yonetimini_goster(acik: bool) -> void:
+	_yz_yonetimi.set_pressed_no_signal(acik)
+
+
 func _saat_gecti(_toplam_saat: int) -> void:
 	_tarih.text = Zaman.tarih_metni()
 
@@ -149,3 +167,4 @@ func _yenile() -> void:
 	for i: int in _hiz_dugmeleri.size():
 		_hiz_dugmeleri[i].set_pressed_no_signal(Zaman.hiz == i + 1 and not Zaman.kilitli)
 		_hiz_dugmeleri[i].disabled = Zaman.kilitli
+	_yz_yonetimi.disabled = Zaman.kilitli

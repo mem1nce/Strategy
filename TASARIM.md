@@ -406,7 +406,9 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   güçsüz, henüz savaşılmayan ilk ülkeye ilan eder. Oyuncu, oyunun ilk
   `yapay_zeka.oyuncuya_dokunulmazlik_gun` (90) günü boyunca aday sayılmaz
   (`Oyun._savas_ilanini_degerlendir`).
-- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 14. Yol haritası, E).
+- **"Ordumu yapay zekâ yönetsin":** üst çubuktaki "Ordu: YZ" düğmesi (`Oyun.yz_oyuncuyu_yonetsin`)
+  açılınca, oyuncunun ülkesi de `_yapay_zekayi_isle()`'nin atladığı istisnadan çıkar ve aynı
+  barış/savaş davranışıyla yönetilir. Tercih kayıtta saklanır.
 
 ## 11. Kayıt
 

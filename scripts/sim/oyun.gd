@@ -87,6 +87,9 @@ var hazineler: Dictionary[String, float] = {}
 var insa_kuyruklari: Dictionary[String, Array] = {}
 ## oyun_kazanildi tekrar tekrar yayılmasın diye.
 var _zafer_kazanildi: bool = false
+## Açıksa, oyuncunun ülkesi de (barışta kurma, savaşta saldırma, savaş ilanı) aynı yapay
+## zekâ tarafından yönetilir.
+var yz_oyuncuyu_yonetsin: bool = false
 
 
 func _init(yeni_dunya: Dunya) -> void:
@@ -570,13 +573,16 @@ func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:
 	return dunya.ulkeler.get(bolge.id.split("_")[0])
 
 
-## Her saat çağrılır; o saat "düşünme sırası" gelen (oyuncu olmayan, elenmemiş) her ülke
-## bir karar verir. Ülkeler saatlere yayılmıştır (bkz. _ulkenin_dusunme_saati) ki hepsi
-## aynı karede düşünmeye çalışıp yığılma yapmasın; her ülke günde tam bir kez düşünür.
+## Her saat çağrılır; o saat "düşünme sırası" gelen (elenmemiş) her ülke bir karar verir.
+## Ülkeler saatlere yayılmıştır (bkz. _ulkenin_dusunme_saati) ki hepsi aynı karede
+## düşünmeye çalışıp yığılma yapmasın; her ülke günde tam bir kez düşünür. Oyuncunun ülkesi,
+## "ordumu yapay zekâ yönetsin" (yz_oyuncuyu_yonetsin) açık değilse atlanır.
 func _yapay_zekayi_isle(su_anki_saat: int) -> void:
 	var saat_dilimi: int = su_anki_saat % 24
 	for ulke: Ulke in dunya.ulke_listesi:
-		if ulke.id == oyuncu_ulkesi or _ulkenin_dusunme_saati(ulke.id) != saat_dilimi:
+		if ulke.id == oyuncu_ulkesi and not yz_oyuncuyu_yonetsin:
+			continue
+		if _ulkenin_dusunme_saati(ulke.id) != saat_dilimi:
 			continue
 		if dunya.ulkenin_bolgeleri(ulke.id).is_empty():
 			continue  # Teslim olmuş; artık yok.
@@ -749,6 +755,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"hazineler": hazineler,
 		"insa_kuyruklari": kuyruk_verisi,
 		"zafer_kazanildi": _zafer_kazanildi,
+		"yz_oyuncuyu_yonetsin": yz_oyuncuyu_yonetsin,
 	}
 
 
@@ -799,3 +806,4 @@ func kayittan_yukle(veri: Dictionary) -> void:
 		insa_kuyruklari[ulke_id] = liste
 
 	_zafer_kazanildi = bool(veri.get("zafer_kazanildi", false))
+	yz_oyuncuyu_yonetsin = bool(veri.get("yz_oyuncuyu_yonetsin", false))

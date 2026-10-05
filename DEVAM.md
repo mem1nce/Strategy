@@ -350,21 +350,30 @@ F) OYUN AKIŞI — kaybetme/zafer koşulları tamamlandı:
   sonra geldi); yeni satırlar eklemek yerine bu dosya (DEVAM.md) F-J'nin ayrıntılı takibini
   sürdürüyor.
 
+E) YAPAY ZEKÂ artık tam anlamıyla tamamlandı: "Ordumu yapay zekâ yönetsin" anahtarı
+eklendi.
+- `Oyun.yz_oyuncuyu_yonetsin: bool`: açıkken `_yapay_zekayi_isle()` oyuncunun ülkesini
+  atlamaz; aynı barış/savaş karar fonksiyonları oyuncu için de çalışır. Kayıtta saklanır.
+- Üst çubukta "Ordu: YZ" aç/kapa düğmesi (`UstCubuk` → `Arayuz` → main.gd →
+  `_oyun.yz_oyuncuyu_yonetsin`); kayıttan yüklenirken düğme durumu da senkronlanır.
+- 3 yeni sınama: anahtar açıkken oyuncu için de karar veriliyor
+  (`tests/sim/yapay_zeka_testi.gd`), kayıtta korunuyor (`tests/sim/kayit_testi.gd`).
+  Toplam 88/88 sınama geçiyor. Ekran görüntüsüyle doğrulandı.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
 1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar), güç
    sıralaması paneli (ilk 10 ülke + oyuncu), diğer bildirimler (savaş ilanı, bölge kaybı/
    kazancı, üretim bitti — dokununca kamera oraya gitsin).
-2. E) YAPAY ZEKÂ'nın kalan parçası: "Ordumu yapay zekâ yönetsin" anahtarı.
-3. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
+2. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
    göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
    kamera, kısa öğretici, tek çeviri dosyası.
-4. H) DENGE: uzun koşu testiyle sayıları ayarlama.
-5. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
-Kayıt/yükleme ve zafer/kaybetme ile oyun artık baştan sona (seçim → savaş/ekonomi/YZ →
-zafer ya da kaybetme → kapat-aç sürdür) oynanabilir; bundan sonraki iş büyük ölçüde
-tamamlama ve cila.
+3. H) DENGE: uzun koşu testiyle sayıları ayarlama.
+4. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
+E) YAPAY ZEKÂ tamamen bitti. Kayıt/yükleme ve zafer/kaybetme ile oyun artık baştan sona
+(seçim → savaş/ekonomi/YZ → zafer ya da kaybetme → kapat-aç sürdür) oynanabilir; bundan
+sonraki iş büyük ölçüde tamamlama ve cila.
 
 ## Kararlar
 

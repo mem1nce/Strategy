@@ -16,6 +16,8 @@ signal savas_istendi(ulke_id: String)
 signal baris_istendi(ulke_id: String)
 ## Oyuncu zafer/kaybetme bildirimini kapattığında yayılır.
 signal sonuc_kapatildi
+## Oyuncu "Ordu: YZ" düğmesini açıp kapadığında yayılır.
+signal yz_yonetimi_degisti(acik: bool)
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
@@ -52,6 +54,7 @@ func kur(dunya: Dunya) -> void:
 
 	_ust_cubuk = UstCubuk.new()
 	dikey.add_child(_ust_cubuk)
+	_ust_cubuk.yz_yonetimi_degisti.connect(func(acik: bool) -> void: yz_yonetimi_degisti.emit(acik))
 
 	var bosluk: Control = Control.new()
 	bosluk.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -114,6 +117,11 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 ## Oyuncunun hazinesini üst çubuğa yazar.
 func hazineyi_goster(miktar: float) -> void:
 	_ust_cubuk.hazineyi_goster(miktar)
+
+
+## "Ordu: YZ" düğmesinin durumunu, sinyal yaymadan ayarlar (kayıttan yüklerken kullanılır).
+func yz_yonetimini_goster(acik: bool) -> void:
+	_ust_cubuk.yz_yonetimini_goster(acik)
 
 
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.
