@@ -440,6 +440,19 @@ func _ulkenin_toplam_gucu(ulke_id: String) -> float:
 	return toplam
 
 
+## Hâlâ var olan (en az bir bölgesi kalan) her ülkeyi toplam askeri gücüne göre büyükten
+## küçüğe sıralar. Her öge `{"ulke_id": String, "guc": float}`. Arayüzdeki güç sıralaması
+## paneli için.
+func guc_siralamasi() -> Array[Dictionary]:
+	var sonuc: Array[Dictionary] = []
+	for ulke: Ulke in dunya.ulke_listesi:
+		if dunya.ulkenin_bolgeleri(ulke.id).is_empty():
+			continue
+		sonuc.append({"ulke_id": ulke.id, "guc": _ulkenin_toplam_gucu(ulke.id)})
+	sonuc.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["guc"] > b["guc"])
+	return sonuc
+
+
 func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:
 	return "%s|%s" % [ulke_a, ulke_b] if ulke_a < ulke_b else "%s|%s" % [ulke_b, ulke_a]
 

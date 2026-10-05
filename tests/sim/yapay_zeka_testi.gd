@@ -35,6 +35,9 @@ func sina_yz_oyuncuyu_yonetsin_aciksa_oyuncu_da_dusunur() -> String:
 	oyun.oyuncuyu_sec("TUR")
 	oyun.yz_oyuncuyu_yonetsin = true
 	oyun.hazineler["TUR"] = 100000.0
+	# Savaş ilanı rastgeleliği bu sınamayla alakasız; kapatılmazsa TUR şans eseri savaş
+	# ilan edip inşa yerine saldırı dalına girebilir (kırılgan sınama).
+	oyun._yz_savas_ilani_olasiligi = 0.0
 	var dusunme_saati: int = oyun._ulkenin_dusunme_saati("TUR")
 
 	oyun._yapay_zekayi_isle(dusunme_saati)
@@ -64,6 +67,9 @@ func sina_zengin_ulke_sirasi_gelince_tumen_veya_fabrika_kurar() -> String:
 	if ulke.id == "TUR":
 		ulke = oyun.dunya.ulke_listesi[1]
 	oyun.hazineler[ulke.id] = 100000.0
+	# Savaş ilanı rastgeleliği bu sınamayla alakasız; kapatılmazsa ülke şans eseri savaş
+	# ilan edip inşa yerine saldırı dalına girebilir (kırılgan sınama).
+	oyun._yz_savas_ilani_olasiligi = 0.0
 	var dusunme_saati: int = oyun._ulkenin_dusunme_saati(ulke.id)
 
 	oyun._yapay_zekayi_isle(dusunme_saati)

@@ -360,12 +360,32 @@ eklendi.
   (`tests/sim/yapay_zeka_testi.gd`), kayıtta korunuyor (`tests/sim/kayit_testi.gd`).
   Toplam 88/88 sınama geçiyor. Ekran görüntüsüyle doğrulandı.
 
+F) OYUN AKIŞI — güç sıralaması paneli tamamlandı:
+- `Oyun.guc_siralamasi()`: hâlâ var olan (en az bir bölgesi kalan) her ülkeyi toplam askeri
+  gücüne göre büyükten küçüğe sıralar.
+- `arayuz/siralama_paneli.gd` (`SiralamaPaneli`): ilk 10 ülkeyi ve oyuncu ilk 10'da değilse
+  ayraçla ayrılmış kendi sırasını gösterir (oyuncunun satırı vurgu renginde). `UstCubuk`'a
+  "Sıralama" aç/kapa düğmesi eklendi; `Arayuz.siralama_istendi` sinyaliyle main.gd güncel
+  veriyi isteyip paneli besliyor (diğer panellerle aynı, sinyal-çağırma deseni).
+- 3 yeni sınama (`tests/sim/siralama_testi.gd`): büyükten küçüğe sıralı, her yaşayan ülke
+  tam bir kez var, teslim olmuş ülke sıralamada yok. Toplam 91/91 sınama geçiyor. Ekran
+  görüntüsüyle doğrulandı (geçici debug, geri alındı): panel ilk 10 + "23. Türkiye" satırını
+  doğru gösteriyor.
+  - **Bulunup düzeltilen kırılgan (flaky) sınama (üretim kodu değil):** bu artış sırasında
+    `yapay_zeka_testi.gd.sina_zengin_ulke_sirasi_gelince_tumen_veya_fabrika_kurar` ara sıra
+    başarısız oluyordu — ilgisiz bir sebeple: `Oyun._rng` hem savaş ilanı zarına hem inşa
+    kararına ortak kullanılıyor, ve `_savas_ilanini_degerlendir`'deki "ayda bir" kapısı
+    `gun = saat/24` sıfırsa (sınamadaki `dusunme_saati` her zaman < 24 olduğundan hep
+    sıfırdır) hiç engellemiyor. Şans eseri savaş ilan eden bir ülke, aynı düşünme turunda
+    inşa dalına hiç girmiyordu. Düzeltme: bu sınamalarda (ve "YZ oyuncuyu yönetsin" sınamasında)
+    `oyun._yz_savas_ilani_olasiligi = 0.0` ayarlanarak sınamayla alakasız rastgelelik
+    kapatıldı. 5 ardışık tam koşuyla (91/91) doğrulandı.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar), güç
-   sıralaması paneli (ilk 10 ülke + oyuncu), diğer bildirimler (savaş ilanı, bölge kaybı/
-   kazancı, üretim bitti — dokununca kamera oraya gitsin).
+1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar), diğer
+   bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti — dokununca kamera oraya gitsin).
 2. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
    göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
    kamera, kısa öğretici, tek çeviri dosyası.

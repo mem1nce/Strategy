@@ -444,8 +444,13 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
 - Her ikisinde de ekranın ortasında kapatılabilir bir bildirim gösterilir
   (`Arayuz.zaferi_goster()`/`kaybi_goster()`, `SonucPaneli`) ve zaman durur (önemli bir
   olay olduğu için); oyuncu "Kapat"tan sonra "Devam"a basarak sürdürebilir.
-- Henüz yok: ana menü, güç sıralaması paneli, diğer bildirimler (bölge kaybı/kazancı,
-  üretim bitti vb.) (bkz. 14. Yol haritası, F).
+- **Güç sıralaması:** üst çubuktaki "Sıralama" düğmesi, hâlâ var olan (en az bir bölgesi
+  kalan) her ülkeyi toplam askeri güce göre büyükten küçüğe sıralayan paneli açar
+  (`Oyun.guc_siralamasi()`, `SiralamaPaneli`). İlk 10 ülke ve altında, oyuncu ilk 10'da
+  değilse ayraçla ayrılmış kendi sırası gösterilir; oyuncunun satırı vurgu rengiyle
+  işaretlenir. Zamanı durdurmaz, bilgi amaçlıdır.
+- Henüz yok: ana menü, diğer bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti
+  vb.) (bkz. 14. Yol haritası, F).
 
 ## 13. Kod mimarisi
 

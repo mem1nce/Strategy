@@ -65,6 +65,7 @@ func _ready() -> void:
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
+	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
 
 	if not kayit.is_empty() and _oyun.oyuncu_secildi_mi():
 		_oyuncu_secildi(_oyun.oyuncu_ulkesi)

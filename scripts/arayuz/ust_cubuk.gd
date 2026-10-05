@@ -6,9 +6,12 @@ extends HBoxContainer
 
 ## "Ordu: YZ" açılıp kapandığında yayılır.
 signal yz_yonetimi_degisti(acik: bool)
+## "Sıralama" düğmesi açılıp kapandığında yayılır.
+signal siralama_degisti(acik: bool)
 
 const SOL_PANEL_GENISLIGI: float = 560.0
 const YZ_DUGMESI_BOYUTU: Vector2 = Vector2(170.0, 104.0)
+const SIRALAMA_DUGMESI_BOYUTU: Vector2 = Vector2(190.0, 104.0)
 
 var _ulke_sirasi: HBoxContainer = null
 var _ulke_rengi: ColorRect = null
@@ -19,6 +22,7 @@ var _secim_yazisi: PanelContainer = null
 var _durdur: Button = null
 var _hiz_dugmeleri: Array[Button] = []
 var _yz_yonetimi: Button = null
+var _siralama: Button = null
 
 
 func _ready() -> void:
@@ -124,6 +128,10 @@ func _dugme_panelini_kur() -> void:
 	_yz_yonetimi.pressed.connect(_yz_yonetimi_basildi)
 	sira.add_child(_yz_yonetimi)
 
+	_siralama = _dugme_olustur("Sıralama", SIRALAMA_DUGMESI_BOYUTU)
+	_siralama.pressed.connect(_siralama_basildi)
+	sira.add_child(_siralama)
+
 
 func _dugme_olustur(metin: String, boyut: Vector2) -> Button:
 	var dugme: Button = Button.new()
@@ -153,6 +161,10 @@ func yz_yonetimini_goster(acik: bool) -> void:
 	_yz_yonetimi.set_pressed_no_signal(acik)
 
 
+func _siralama_basildi() -> void:
+	siralama_degisti.emit(_siralama.button_pressed)
+
+
 func _saat_gecti(_toplam_saat: int) -> void:
 	_tarih.text = Zaman.tarih_metni()
 
@@ -168,3 +180,4 @@ func _yenile() -> void:
 		_hiz_dugmeleri[i].set_pressed_no_signal(Zaman.hiz == i + 1 and not Zaman.kilitli)
 		_hiz_dugmeleri[i].disabled = Zaman.kilitli
 	_yz_yonetimi.disabled = Zaman.kilitli
+	_siralama.disabled = Zaman.kilitli

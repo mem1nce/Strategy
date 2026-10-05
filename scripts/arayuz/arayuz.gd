@@ -18,6 +18,8 @@ signal baris_istendi(ulke_id: String)
 signal sonuc_kapatildi
 ## Oyuncu "Ordu: YZ" düğmesini açıp kapadığında yayılır.
 signal yz_yonetimi_degisti(acik: bool)
+## Oyuncu "Sıralama" düğmesini açtığında yayılır (güncel veri main.gd'den istenir).
+signal siralama_istendi
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
@@ -31,6 +33,7 @@ var _ust_cubuk: UstCubuk = null
 var _bolge_paneli: BolgePaneli = null
 var _birlik_paneli: BirlikPaneli = null
 var _sonuc_paneli: SonucPaneli = null
+var _siralama_paneli: SiralamaPaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -55,6 +58,7 @@ func kur(dunya: Dunya) -> void:
 	_ust_cubuk = UstCubuk.new()
 	dikey.add_child(_ust_cubuk)
 	_ust_cubuk.yz_yonetimi_degisti.connect(func(acik: bool) -> void: yz_yonetimi_degisti.emit(acik))
+	_ust_cubuk.siralama_degisti.connect(_siralama_degisti)
 
 	var bosluk: Control = Control.new()
 	bosluk.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -79,6 +83,13 @@ func kur(dunya: Dunya) -> void:
 	_sonuc_paneli = SonucPaneli.new()
 	sonuc_ortalayici.add_child(_sonuc_paneli)
 	_sonuc_paneli.kapat_basildi.connect(func() -> void: sonuc_kapatildi.emit())
+
+	var siralama_ortalayici: CenterContainer = CenterContainer.new()
+	siralama_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	siralama_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	kok.add_child(siralama_ortalayici)
+	_siralama_paneli = SiralamaPaneli.new()
+	siralama_ortalayici.add_child(_siralama_paneli)
 
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
@@ -122,6 +133,18 @@ func hazineyi_goster(miktar: float) -> void:
 ## "Ordu: YZ" düğmesinin durumunu, sinyal yaymadan ayarlar (kayıttan yüklerken kullanılır).
 func yz_yonetimini_goster(acik: bool) -> void:
 	_ust_cubuk.yz_yonetimini_goster(acik)
+
+
+## Güç sıralamasını ortada gösterir. `siralama`, Oyun.guc_siralamasi()'nin döndürdüğü listedir.
+func siralamayi_goster(siralama: Array[Dictionary], oyuncu_ulkesi: String) -> void:
+	_siralama_paneli.goster(siralama, _dunya, oyuncu_ulkesi)
+
+
+func _siralama_degisti(acik: bool) -> void:
+	if acik:
+		siralama_istendi.emit()
+	else:
+		_siralama_paneli.hide()
 
 
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.
