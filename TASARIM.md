@@ -464,8 +464,13 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
   (`Oyun.guc_siralamasi()`, `SiralamaPaneli`). İlk 10 ülke ve altında, oyuncu ilk 10'da
   değilse ayraçla ayrılmış kendi sırası gösterilir; oyuncunun satırı vurgu rengiyle
   işaretlenir. Zamanı durdurmaz, bilgi amaçlıdır.
-- Henüz yok: diğer bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti vb.)
-  (bkz. 14. Yol haritası, F).
+- **Bildirimler:** oyuncuyla ilgili önemli olaylarda (`Oyun.bildirim_gonder(metin, bolge_id)`)
+  sağ üstte, üst çubuğun altında küçük kartlar birikir (`BildirimKutusu`, en yenisi en
+  üstte, en fazla 4 — fazlası okunmadan atılır). Üç olay: sana savaş ilanı (düşmanın
+  başkentine odaklar), bölge kaybı/kazancı, üretim bitti (tümen/fabrika). Karta dokunmak
+  onu kapatır VE kamerayı `HaritaKamerasi.odaklan()` ile ilgili bölgeye götürür
+  (`Bolge.sinir_kutusu()`). Zamanı durdurmaz, oyuncunun KENDİ ülkesini ilgilendirmeyen
+  olaylar (ör. iki YZ ülkesi arasında savaş) bildirim üretmez.
 
 ## 13. Kod mimarisi
 

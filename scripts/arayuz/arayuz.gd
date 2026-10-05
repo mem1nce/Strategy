@@ -20,12 +20,16 @@ signal sonuc_kapatildi
 signal yz_yonetimi_degisti(acik: bool)
 ## Oyuncu "Sıralama" düğmesini açtığında yayılır (güncel veri main.gd'den istenir).
 signal siralama_istendi
+## Oyuncu bir bildirim kartına dokunduğunda, ilgili bölge id'siyle (yoksa boş) yayılır.
+signal bildirime_dokunuldu(bolge_id: String)
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
+## Bildirim kartlarının üst çubuğun altında kalması için üstten boşluk (piksel).
+const BILDIRIM_UST_BOSLUGU: float = 140.0
 
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
@@ -34,6 +38,7 @@ var _bolge_paneli: BolgePaneli = null
 var _birlik_paneli: BirlikPaneli = null
 var _sonuc_paneli: SonucPaneli = null
 var _siralama_paneli: SiralamaPaneli = null
+var _bildirim_kutusu: BildirimKutusu = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -91,6 +96,21 @@ func kur(dunya: Dunya) -> void:
 	_siralama_paneli = SiralamaPaneli.new()
 	siralama_ortalayici.add_child(_siralama_paneli)
 
+	# Sabit boyut: tek seferlik PRESET_TOP_RIGHT, kutu henüz boşken (sıfır içerik
+	# genişliğinde) hesaplanıp donardı; sonradan eklenen kartlar büyümezdi.
+	var bildirim_konumu: MarginContainer = MarginContainer.new()
+	bildirim_konumu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bildirim_konumu.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	bildirim_konumu.offset_top = BILDIRIM_UST_BOSLUGU
+	bildirim_konumu.offset_right = -KENAR_BOSLUGU
+	bildirim_konumu.offset_left = -KENAR_BOSLUGU - BildirimKutusu.KART_BOYUTU.x
+	bildirim_konumu.offset_bottom = BILDIRIM_UST_BOSLUGU + \
+			(BildirimKutusu.KART_BOYUTU.y + 10.0) * BildirimKutusu.AZAMI_KART
+	kok.add_child(bildirim_konumu)
+	_bildirim_kutusu = BildirimKutusu.new()
+	bildirim_konumu.add_child(_bildirim_kutusu)
+	_bildirim_kutusu.bildirime_dokunuldu.connect(func(bolge_id: String) -> void: bildirime_dokunuldu.emit(bolge_id))
+
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
 
@@ -138,6 +158,11 @@ func yz_yonetimini_goster(acik: bool) -> void:
 ## Güç sıralamasını ortada gösterir. `siralama`, Oyun.guc_siralamasi()'nin döndürdüğü listedir.
 func siralamayi_goster(siralama: Array[Dictionary], oyuncu_ulkesi: String) -> void:
 	_siralama_paneli.goster(siralama, _dunya, oyuncu_ulkesi)
+
+
+## Yeni bir bildirim kartı gösterir (bkz. Oyun.bildirim_gonder).
+func bildirim_goster(metin: String, bolge_id: String) -> void:
+	_bildirim_kutusu.ekle(metin, bolge_id)
 
 
 func _siralama_degisti(acik: bool) -> void:

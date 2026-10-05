@@ -30,6 +30,15 @@ var cokgenler: Array[Cokgen] = []
 var alan: float = 0.0
 
 
+## Bölgenin bütün çokgenlerini kapsayan sınır kutusu (bildirime dokununca kamerayı
+## bölgeye odaklamak için, bkz. HaritaKamerasi.odaklan).
+func sinir_kutusu() -> Rect2:
+	var kutu: Rect2 = Rect2(etiket, Vector2.ZERO)
+	for cokgen: Cokgen in cokgenler:
+		kutu = kutu.merge(cokgen.sinir_kutusu)
+	return kutu
+
+
 static func sozlukten(veri: Dictionary) -> Bolge:
 	var bolge: Bolge = Bolge.new()
 	bolge.id = str(veri.get("id", ""))

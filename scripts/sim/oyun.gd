@@ -26,6 +26,11 @@ signal oyun_kaybedildi
 ## Oyuncunun kıtasındaki bölgelerin ZAFER_ORANI (×0,6) kadarı kendisinin olunca bir kez
 ## yayılır (zafer); sonrasında oynamaya devam edilebilir, oyun kilitlenmez.
 signal oyun_kazanildi
+## Oyuncuyla ilgili önemli bir olay olduğunda (sana savaş ilanı, bölge kaybı/kazancı,
+## üretim bitti) kısa bir bildirim metni ve -varsa, kamerayı odaklamak için- ilgili
+## bölge id'siyle yayılır. Bölge id'si yoksa (ör. gelecekte eklenebilecek bölgesiz bir
+## olay) boş metindir.
+signal bildirim_gonder(metin: String, bolge_id: String)
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
@@ -296,6 +301,11 @@ func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> voi
 	bolge.sahip = yeni_sahip
 	bolge.isgal_saati = su_anki_saat
 	bolge_sahipligi_degisti.emit()
+	if oyuncu_ulkesi != "" and eski_sahip != yeni_sahip:
+		if yeni_sahip == oyuncu_ulkesi:
+			bildirim_gonder.emit("%s bölgesini ele geçirdin." % bolge.ad, bolge.id)
+		elif eski_sahip == oyuncu_ulkesi:
+			bildirim_gonder.emit("%s bölgesini kaybettin." % bolge.ad, bolge.id)
 	_teslimi_kontrol_et(eski_sahip, su_anki_saat)
 	_zaferi_kontrol_et()
 
@@ -414,6 +424,9 @@ func savas_ilan_et(ilan_eden: String, hedef: String, su_anki_saat: int) -> bool:
 		return false
 	_savaslar[_savas_anahtari(ilan_eden, hedef)] = su_anki_saat
 	savas_ilan_edildi.emit(ilan_eden, hedef)
+	if hedef == oyuncu_ulkesi and ilan_eden != oyuncu_ulkesi:
+		var ilan_eden_ulke: Ulke = dunya.ulkeler[ilan_eden]
+		bildirim_gonder.emit("%s sana savaş ilan etti." % ilan_eden_ulke.ad, ilan_eden_ulke.baskent_bolgesi)
 	return true
 
 
@@ -553,6 +566,10 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 		var bolge: Bolge = dunya.bolgeler.get(is_.bolge_id)
 		if bolge != null:
 			bolge.fabrika_sanayisi += _fabrika_sanayi_artisi
+	if is_.sahip == oyuncu_ulkesi:
+		var bolge_adi: String = dunya.bolgeler[is_.bolge_id].ad
+		var ne: String = "Tümen" if is_.tur == InsaIsi.Tur.TUMEN else "Fabrika"
+		bildirim_gonder.emit("%s tamamlandı: %s." % [ne, bolge_adi], is_.bolge_id)
 
 
 ## Bir ülkenin günlük geliri: o an sahip olduğu bölgelerin sanayilerinin toplamı.

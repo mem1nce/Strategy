@@ -413,19 +413,47 @@ F) OYUN AKIŞI — ana menü tamamlandı:
     `const` olarak biçimsiz (`_BICIMI` sonekli) tutulup `%` çalışma zamanında, parantezle
     tüm metne uygulanacak şekilde kullanıldı.
 
+F) OYUN AKIŞI — bildirimler tamamlandı (TASARIM.md'de F artık tamamen bitti):
+- `Oyun.bildirim_gonder(metin, bolge_id)`: oyuncuyla ilgili üç olayda yayılır — sana savaş
+  ilanı (`savas_ilan_et`, yalnızca `hedef == oyuncu_ulkesi and ilan_eden != oyuncu_ulkesi`
+  ise; bölge id'si ilan edenin başkenti), bölge kaybı/kazancı (`_bolgeyi_devret`, TEK
+  sahiplik değiştirme noktası — `_teslimi_kontrol_et`'in TOPLU teslim devri buradan
+  GEÇMİYOR, bilinçli: tek seferde onlarca bölge değişince tek tek bildirim yerine sessiz
+  kalması tercih edildi), üretim bitti (`_insayi_tamamla`, yalnızca `is_.sahip ==
+  oyuncu_ulkesi` ise).
+- `Bolge.sinir_kutusu()`: bölgenin bütün çokgenlerinin birleşik sınır kutusu (`Cokgen.
+  sinir_kutusu` zaten vardı, tek tek birleştirildi) — kamerayı bölgeye odaklamak için
+  (`Ulke.anakara_kutusu`'nun bölge karşılığı, ama veri değil çalışma zamanında hesaplanıyor).
+- `arayuz/bildirim_kutusu.gd` (`BildirimKutusu extends VBoxContainer`): her bildirim bir
+  Button ("kart"); dokununca hem kendini kapatır hem `bildirime_dokunuldu(bolge_id)` yayar.
+  En fazla 4 kart (`AZAMI_KART`), aşan en eski kart sessizce atılır (okunmamış bildirimler
+  sonsuza kadar birikmesin diye). `Arayuz`, sağ üstte üst çubuğun altında sabit boyutlu bir
+  `MarginContainer`e yerleştiriyor; main.gd `_bildirime_dokunuldu()`'da
+  `_kamera.odaklan(bolge.sinir_kutusu())` çağırıyor.
+- 6 yeni sınama (`tests/sim/bildirim_testi.gd`): düşman ilan edince gelir (oyuncu ilan
+  edince gelmez), bölge kazanınca/kaybedince gelir, başkasının bölge değişikliğinde
+  gelmez, üretim bitince gelir. Toplam 99/99 sınama geçiyor.
+  - **Ekran görüntüsünde bulunup düzeltilen hata (üretim kodu, commit edilmeden):**
+    bildirim kutusunun konumu `set_anchors_and_offsets_preset(PRESET_TOP_RIGHT)` ile TEK
+    SEFERLİK kuruluyordu — o anda kutu boş (sıfır genişlik) olduğundan donup kalıyordu;
+    sonradan `ekle()` ile kart eklense de kutunun ayrılmış alanı hiç büyümüyordu (`kok`
+    bir Container değil düz `Control` olduğu için üst öge çocuğun minimum boyutunu da
+    zorlamıyor). Düzeltme: `set_anchors_preset` (yalnızca çapa, ofset yok) + bütün
+    ofsetler `BildirimKutusu.KART_BOYUTU`'na göre elle, sabit hesaplandı. Ayrıca metin
+    480 px kart genişliğini taşıyordu (480→620 px, yazı boyutu 36→32).
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. F) OYUN AKIŞI'nın geri kalanı: diğer bildirimler (savaş ilanı, bölge kaybı/kazancı,
-   üretim bitti — dokununca kamera oraya gitsin).
-2. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
+1. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
    göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
    kamera, kısa öğretici, tek çeviri dosyası.
-3. H) DENGE: uzun koşu testiyle sayıları ayarlama.
-4. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
-E) YAPAY ZEKÂ tamamen bitti. Kayıt/yükleme ve zafer/kaybetme ile oyun artık baştan sona
-(seçim → savaş/ekonomi/YZ → zafer ya da kaybetme → kapat-aç sürdür) oynanabilir; bundan
-sonraki iş büyük ölçüde tamamlama ve cila.
+2. H) DENGE: uzun koşu testiyle sayıları ayarlama.
+3. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
+F) OYUN AKIŞI tamamen bitti (ana menü + kayıt/yükleme + zafer/kaybetme + güç sıralaması +
+bildirimler). Oyun artık baştan sona (ana menü → seçim → savaş/ekonomi/YZ → zafer ya da
+kaybetme → kapat-aç sürdür, bildirimlerle takip) oynanabilir; bundan sonraki iş G-I, yani
+büyük ölçüde tamamlama/cila/denge/performans.
 
 ## Kararlar
 

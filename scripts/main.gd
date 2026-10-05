@@ -67,6 +67,8 @@ func _ready() -> void:
 	_arayuz.baris_istendi.connect(_baris_istendi)
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
 	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
+	_arayuz.bildirime_dokunuldu.connect(_bildirime_dokunuldu)
+	_oyun.bildirim_gonder.connect(_arayuz.bildirim_goster)
 
 	_ana_menu = AnaMenu.new()
 	_ana_menu.name = "AnaMenu"
@@ -109,6 +111,14 @@ func _devam_secildi() -> void:
 	_oyuncu_secildi(_oyun.oyuncu_ulkesi)
 	Zaman.durumu_uygula(_bekleyen_kayit["zaman_durumu"])
 	_arayuz.yz_yonetimini_goster(_oyun.yz_oyuncuyu_yonetsin)
+
+
+## Bir bildirim kartına dokunulunca kamerayı ilgili bölgeye odaklar (bölge id'si boşsa
+## ya da artık yoksa bir şey yapmaz — bildirim kartı zaten BildirimKutusu'nda kapanmıştı).
+func _bildirime_dokunuldu(bolge_id: String) -> void:
+	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
+	if bolge != null:
+		_kamera.odaklan(bolge.sinir_kutusu())
 
 
 ## Kamera her kaydığında ya da yakınlaştığında haritaya yeni görünümü bildirir.
