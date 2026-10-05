@@ -496,12 +496,34 @@ zaten karşılandığı doğrulanarak kapatıldı:
   onlara geçiliyor; bu madde atlanmadı, ertelendi — zaman kalırsa J) cila döngüsünde ele
   alınacak.
 
+H) DENGE — başlandı, henüz tamamlanmadı. "Uzun koşu" sınaması hâlâ yalnızca `Zaman`'ı
+(bkz. `tests/sim/zaman_testi.gd`) ilerletiyor, gerçek bir YZ oyununu değil — CLAUDE.md'nin
+kendi notu bunun "büyütülmesi" gerektiğini söylüyordu, bu oturumda henüz yapılmadı.
+Denemek için (geçici, commit edilmemiş bir betikle) 176 ülkenin tamamını YZ'nin yönettiği
+gerçek bir oyunu 30 gün ilerlettim ve süreyi ölçtüm: 30 gün ≈ 3,3 saniye; 5 yıla (1825 gün)
+doğrusal ölçeklenirse ≈ 200 saniye (3,3 dakika) — CLAUDE.md'nin kendi hedefi olan "2
+dakikadan kısa" sınırını aşıyor. Üç alt adımı ayrı ayrı ölçtüm (30 gün için):
+`_muharebeleri_isle` ~1 sn, `_insa_islerini_isle` ~0 sn (önemsiz), `_yapay_zekayi_isle`
+~1,4 sn. En olası ortak darboğaz: `Dunya.ulkenin_bolgeleri(ulke_id)`
+(scripts/sim/dunya.gd:68) — önbelleksiz, HER çağrıda bütün `bolge_listesi`'ni (516 bölge)
+baştan tarıyor; `_yapay_zekayi_isle`, `ulkenin_geliri`, `_teslimi_kontrol_et`,
+`_savastaki_ulke_dusun` gibi birçok yerden saatte/günde defalarca çağrılıyor. Henüz
+DOKUNULMADI (ölçüm/teşhis aşamasında kaldı, kod değişikliği yapılmadı).
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. G)'den ertelenen: tek çeviri dosyası (yukarıya bkz.).
-2. H) DENGE: uzun koşu testiyle sayıları ayarlama.
-3. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
+1. **I) PERFORMANS'tan öne alınmalı:** `Dunya.ulkenin_bolgeleri()`'ni önbellekle (ör.
+   `Dictionary[String, Array[Bolge]]`, yalnızca `_bolgeyi_devret`/`_teslimi_kontrol_et`
+   bölge sahipliğini değiştirdiğinde güncellenir) — H)'nin kendi uzun koşu aracının
+   pratik olabilmesi için önce bu gerekiyor. Düzeltildikten sonra 30 günlük ölçüm
+   tekrarlanıp gerçekten hızlandığı doğrulanmalı, sonra 5 yıllık tam YZ sınaması
+   `zaman_testi.gd`'ye eklenmeli (CLAUDE.md'nin "büyütülmeli" notu).
+2. H) DENGE'nin geri kalanı: 5 yıllık sınama çalışır hâle gelince sonuçlarına bakıp
+   (kaç ülke hayatta kaldı, en büyüğü ne kadar büyüdü vb.) data/balance.json sayılarını
+   gerekirse ayarlama.
+3. I) PERFORMANS VE ANDROID'in geri kalanı: dışa aktarma, gerçek cihazda ölçüm.
+4. G)'den ertelenen: tek çeviri dosyası (yukarıya bkz.).
 F) OYUN AKIŞI tamamen bitti (ana menü + kayıt/yükleme + zafer/kaybetme + güç sıralaması +
 bildirimler). Oyun artık baştan sona (ana menü → seçim → savaş/ekonomi/YZ → zafer ya da
 kaybetme → kapat-aç sürdür, bildirimlerle takip) oynanabilir; bundan sonraki iş G-I, yani
