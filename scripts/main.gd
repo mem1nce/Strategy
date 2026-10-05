@@ -30,11 +30,15 @@ func _ready() -> void:
 		push_error("Dünya verisi yüklenemedi; oyun başlatılamıyor.")
 		return
 	_oyun = Oyun.new(dunya)
+	var kayit: Dictionary = KayitYoneticisi.yukle()
+	if not kayit.is_empty():
+		_oyun.kayittan_yukle(kayit["oyun_verisi"])
 	_oyun.oyuncu_secildi.connect(_oyuncu_secildi)
 	_oyun.birlikler_degisti.connect(_birlikler_degisti)
 	_oyun.hazine_degisti.connect(_hazine_degisti)
 	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
+	Zaman.gun_basladi.connect(func(_gun: int) -> void: _otomatik_kaydet())
 
 	_harita = HaritaGorunumu.new()
 	_harita.name = "Harita"
@@ -59,11 +63,28 @@ func _ready() -> void:
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
 
+	if not kayit.is_empty() and _oyun.oyuncu_secildi_mi():
+		_oyuncu_secildi(_oyun.oyuncu_ulkesi)
+		Zaman.durumu_uygula(kayit["zaman_durumu"])
+
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
 		_harita.ucgenlenemeyenler.size()])
 
 	_ekran_goruntusu_istendiyse_kaydet()
+
+
+## Uygulama arka plana geçtiğinde (telefonda) ya da kapatılmak istendiğinde (bilgisayarda)
+## otomatik kaydeder.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_otomatik_kaydet()
+
+
+## Oyuncu henüz ülkesini seçmediyse kaydedecek bir ilerleme yoktur.
+func _otomatik_kaydet() -> void:
+	if _oyun != null and _oyun.oyuncu_secildi_mi():
+		KayitYoneticisi.kaydet(_oyun, Zaman.durumu_al())
 
 
 ## Kamera her kaydığında ya da yakınlaştığında haritaya yeni görünümü bildirir.

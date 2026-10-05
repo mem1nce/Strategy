@@ -303,20 +303,39 @@ zekâ yönetsin" anahtarı, bkz. Sıradaki iş):
 - Ekran görüntüsü bu adımda alınmadı (saf sim mantığı, UI yok); 9 hedefli sınama ve
   temiz headless çalıştırma ile doğrulandı.
 
+F) OYUN AKIŞI — ilk alt adım, kayıt/yükleme, tamamlandı (TASARIM.md yol haritasında
+"7. Kayıt" artık ✅):
+- `Oyun.kaydet_icin_veri()`/`kayittan_yukle()`: oyunun tüm durumunu (oyuncu ülkesi,
+  değişmiş bölgeler — hiç değişmemiş olanlar atlanır, tümenler, savaşlar, hazineler, inşa
+  kuyrukları) düz bir sözlüğe çevirir/geri uygular.
+- `Zaman.durumu_al()`/`durumu_uygula()`: aynı şey zaman için. `KayitYoneticisi`
+  (`sim/kayit_yoneticisi.gd`) ikisini birleştirip `user://kayit.json`'a JSON olarak
+  yazar/okur; tek kayıt yuvası, sürüm numarası (uyuşmazsa kayıt yok sayılır).
+- Otomatik kayıt: her oyun günü başında (`Zaman.gun_basladi`) ve uygulama arka plana
+  geçince/kapatılmak istenince (`_notification`, `NOTIFICATION_APPLICATION_PAUSED` /
+  `NOTIFICATION_WM_CLOSE_REQUEST`). Oyuncu seçilmediyse kaydedilmez.
+- Açılışta (`main.gd _ready()`) kayıt varsa otomatik yüklenir (henüz "Yeni oyun/Devam et"
+  seçen bir ana menü yok — bu F'nin sıradaki alt adımı).
+- 9 yeni sınama (`tests/sim/kayit_testi.gd`): kayıt yoksa boş döner, oyuncu ülkesi/birlik
+  gücü/bölge sahipliği-işgal saati-fabrika sanayisi/savaş/hazine/inşa kuyruğu doğru
+  korunur, sürüm uyuşmazsa yok sayılır. GERÇEK user:// kayıt yuvasını kullanır (ayrı bir
+  sınama yolu yok); her sınama başında ve sonunda dosyayı siler ki ne sınamalar birbirini
+  etkilesin ne de gerçek bir oturumun kaydını ezsin. Toplam 81/81 sınama geçiyor.
+- **Uçtan uca ekran görüntüsüyle doğrulandı** (iki ayrı süreç): birinci çalıştırmada
+  (geçici debug ile) TUR seçilip 24 saat ilerletildi, otomatik kayıt tetiklendi; kayıt
+  dosyası gerçek, tutarlı veri içeriyordu (176 ülkenin tümenleri, bir YZ hareket emri
+  dahil). İKİNCİ, debug'sız TEMİZ bir çalıştırmada oyun "2 Ocak 2026" ve "Hazine: 10" ile
+  açıldı — kayıt gerçekten otomatik yüklendi. Test dosyaları temizlendi.
+
 ## Sıradaki iş
 
 İki seçenek var:
-1. E) YAPAY ZEKÂ'nın kalan parçası: "Ordumu yapay zekâ yönetsin" anahtarı (açılınca
-   oyuncunun birliklerini de aynı YZ fonksiyonları yönetir — muhtemelen
-   `_savastaki_ulke_dusun`/`_baristaki_ulke_dusun`'u oyuncu için de çağırmak, bir
-   `oyun.yz_yonetsin: bool` bayrağıyla).
-2. F) OYUN AKIŞI'na geçmek (TASARIM.md yol haritasında sıradaki aşama): ana menü, otomatik
-   kayıt, kaybetme/zafer koşulları, güç sıralaması, bildirimler. Oyunu gerçek anlamda
-   "baştan sona oynanabilir" hâle getirir (şu an kayıt yok — oyunu kapatınca her şey
-   kayboluyor).
-Seçim: F) OYUN AKIŞI'na geçilecek — kayıt/yükleme olmadan oyun gerçekten "bitmiyor" ve
-test edilemiyor (her oturum sıfırdan başlıyor); "ordumu YZ yönetsin" küçük ve bağımsız bir
-anahtar, F'den sonra tek başına eklenebilir.
+1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar),
+   kaybetme (teslim) / zafer (kıtanın %60'ı) koşulları, güç sıralaması paneli, bildirimler.
+2. E) YAPAY ZEKÂ'nın kalan parçası: "Ordumu yapay zekâ yönetsin" anahtarı.
+Her ikisi de bağımsız, küçük parçalara bölünebilir. Kayıt/yükleme artık çalıştığı için
+oyun gerçek anlamda "oturumlar arası sürüyor" — bu, bu oturumun en büyük tek boşluğunu
+kapattı.
 
 ## Kararlar
 

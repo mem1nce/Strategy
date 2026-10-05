@@ -669,3 +669,94 @@ func oyuncuyu_sec(ulke_id: String) -> bool:
 	oyuncu_ulkesi = ulke_id
 	oyuncu_secildi.emit(ulke_id)
 	return true
+
+
+## Oyunun durumunu (zaman hariç; onu çağıran Zaman.durumu_al() ile ekler) kaydedilebilir
+## düz bir sözlük olarak döndürür. KayitYoneticisi.kaydet() tarafından kullanılır.
+func kaydet_icin_veri() -> Dictionary:
+	var bolgeler: Array = []
+	for bolge: Bolge in dunya.bolge_listesi:
+		if bolge.isgal_saati == -1 and bolge.fabrika_sanayisi == 0.0 and bolge.sahip == bolge.id.split("_")[0]:
+			continue  # Hiç değişmemiş bölge; yer kaplamasın.
+		bolgeler.append({
+			"id": bolge.id, "sahip": bolge.sahip,
+			"isgal_saati": bolge.isgal_saati, "fabrika_sanayisi": bolge.fabrika_sanayisi,
+		})
+
+	var birlik_verisi: Array = []
+	for birlik: Birlik in birlikler:
+		birlik_verisi.append({
+			"sahip": birlik.sahip, "bolge_id": birlik.bolge_id, "guc": birlik.guc,
+			"hedef_bolge_id": birlik.hedef_bolge_id, "varis_saati": birlik.varis_saati,
+			"son_adim_deniz_mi": birlik.son_adim_deniz_mi,
+		})
+
+	var savas_verisi: Array = []
+	for anahtar: String in _savaslar:
+		savas_verisi.append({"anahtar": anahtar, "ilan_saati": _savaslar[anahtar]})
+
+	var kuyruk_verisi: Dictionary = {}
+	for ulke_id: String in insa_kuyruklari:
+		var liste: Array = []
+		for is_: InsaIsi in (insa_kuyruklari[ulke_id] as Array):
+			liste.append({
+				"tur": is_.tur, "sahip": is_.sahip,
+				"bolge_id": is_.bolge_id, "kalan_saat": is_.kalan_saat,
+			})
+		kuyruk_verisi[ulke_id] = liste
+
+	return {
+		"oyuncu_ulkesi": oyuncu_ulkesi,
+		"bolgeler": bolgeler,
+		"birlikler": birlik_verisi,
+		"savaslar": savas_verisi,
+		"hazineler": hazineler,
+		"insa_kuyruklari": kuyruk_verisi,
+	}
+
+
+## kaydet_icin_veri()'nin ürettiği biçimdeki bir sözlüğü uygular; başlangıçta OrduKurucu'nun
+## ürettiği taze orduyu ve dünyanın başlangıç sahipliklerini tamamen değiştirir.
+func kayittan_yukle(veri: Dictionary) -> void:
+	oyuncu_ulkesi = str(veri.get("oyuncu_ulkesi", ""))
+
+	for b: Dictionary in (veri.get("bolgeler", []) as Array):
+		var bolge: Bolge = dunya.bolgeler.get(str(b.get("id", "")))
+		if bolge == null:
+			continue
+		bolge.sahip = str(b.get("sahip", bolge.sahip))
+		bolge.isgal_saati = int(b.get("isgal_saati", -1))
+		bolge.fabrika_sanayisi = float(b.get("fabrika_sanayisi", 0.0))
+
+	birlikler = []
+	for b: Dictionary in (veri.get("birlikler", []) as Array):
+		var birlik: Birlik = Birlik.new()
+		birlik.sahip = str(b.get("sahip", ""))
+		birlik.bolge_id = str(b.get("bolge_id", ""))
+		birlik.guc = float(b.get("guc", 0.0))
+		birlik.hedef_bolge_id = str(b.get("hedef_bolge_id", ""))
+		birlik.varis_saati = int(b.get("varis_saati", -1))
+		birlik.son_adim_deniz_mi = bool(b.get("son_adim_deniz_mi", false))
+		birlikler.append(birlik)
+
+	_savaslar = {}
+	for s: Dictionary in (veri.get("savaslar", []) as Array):
+		_savaslar[str(s.get("anahtar", ""))] = int(s.get("ilan_saati", 0))
+
+	hazineler = {}
+	var hazine_verisi: Dictionary = veri.get("hazineler", {})
+	for ulke_id: String in hazine_verisi:
+		hazineler[ulke_id] = float(hazine_verisi[ulke_id])
+
+	insa_kuyruklari = {}
+	var kuyruk_verisi: Dictionary = veri.get("insa_kuyruklari", {})
+	for ulke_id: String in kuyruk_verisi:
+		var liste: Array[InsaIsi] = []
+		for is_verisi: Dictionary in (kuyruk_verisi[ulke_id] as Array):
+			var is_: InsaIsi = InsaIsi.new()
+			is_.tur = InsaIsi.Tur.FABRIKA if int(is_verisi.get("tur", 0)) == InsaIsi.Tur.FABRIKA else InsaIsi.Tur.TUMEN
+			is_.sahip = str(is_verisi.get("sahip", ulke_id))
+			is_.bolge_id = str(is_verisi.get("bolge_id", ""))
+			is_.kalan_saat = int(is_verisi.get("kalan_saat", 0))
+			liste.append(is_)
+		insa_kuyruklari[ulke_id] = liste

@@ -103,6 +103,21 @@ func tarih_metni() -> String:
 	return Takvim.metin(_baslangic_unix, toplam_saat)
 
 
+## Kayıt için zamanın durumunu düz bir sözlük olarak döndürür.
+func durumu_al() -> Dictionary:
+	return {"toplam_saat": toplam_saat, "durdu": durdu, "hiz": hiz, "kilitli": kilitli}
+
+
+## Kayıttan yüklenen zaman durumunu uygular.
+func durumu_uygula(veri: Dictionary) -> void:
+	toplam_saat = int(veri.get("toplam_saat", 0))
+	durdu = bool(veri.get("durdu", true))
+	hiz = clampi(int(veri.get("hiz", 1)), 1, _hizlar.size())
+	kilitli = bool(veri.get("kilitli", true))
+	_birikim = 0.0
+	durum_degisti.emit()
+
+
 func _ayarlari_yukle() -> void:
 	var veri: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI)
 	var ayarlar: Dictionary = veri.get("zaman", {})

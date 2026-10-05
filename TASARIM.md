@@ -10,9 +10,9 @@ Android, yatay ekran. Godot 4.7, GDScript, 2D, Mobile renderer.
 Oyuncu haritadan bir ülke seçer ve onu yönetir. Zaman 1 Ocak 2026'da başlar,
 durdurulabilir ve üç hızda akar; bitiş tarihi yoktur.
 
-Dünya haritası, bölgeler, birlikler, savaş, ekonomi ve yapay zekânın barış davranışı
-vardır; yapay zekânın savaş davranışı, kayıt ve Android dışa aktarma henüz yoktur
-(bkz. 12. Yol haritası).
+Dünya haritası, bölgeler, birlikler, savaş, ekonomi, yapay zekâ ve kayıt/yükleme vardır;
+ana menü, zafer/kaybetme koşulları ve Android dışa aktarma henüz yoktur
+(bkz. 13. Yol haritası).
 
 "Yerküre" geçici bir çalışma adıdır; kalıcı ad sonra seçilecek.
 
@@ -299,7 +299,7 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
   tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
   sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
 - Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
-  değişir) (bkz. 12. Yol haritası, C).
+  değişir) (bkz. 13. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
@@ -406,9 +406,32 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   güçsüz, henüz savaşılmayan ilk ülkeye ilan eder. Oyuncu, oyunun ilk
   `yapay_zeka.oyuncuya_dokunulmazlik_gun` (90) günü boyunca aday sayılmaz
   (`Oyun._savas_ilanini_degerlendir`).
-- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 12. Yol haritası, E).
+- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 13. Yol haritası, E).
 
-## 11. Kod mimarisi
+## 11. Kayıt
+
+Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve
+yalnızca buraya yazılır (bkz. 2. Harita verisi'ndeki "Oyun yalnızca data/ altındaki dosyaları
+okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
+
+- **Ne kaydedilir** (`Oyun.kaydet_icin_veri()`): oyuncunun ülkesi; değişmiş bölgeler
+  (sahip, işgal saati, fabrika sanayisi — hiç değişmemiş bölgeler yer kaplamasın diye
+  atlanır); bütün tümenler; savaşlar (ilan saatleriyle); hazineler; inşa kuyrukları.
+  Zaman durumu (`Zaman.durumu_al()`) ayrıca eklenir; `KayitYoneticisi` Zaman autoload'ına
+  bağlı olmasın diye bu, çağıran taraftan (main.gd) parametre olarak verilir.
+- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`). Okurken sürüm
+  uyuşmazsa kayıt yok sayılır, oyun sıfırdan başlar — eski bir kayıt sessizce bozuk
+  davranışa yol açmaz.
+- **Otomatik kayıt:** her oyun günü başında (`Zaman.gun_basladi`) ve uygulama arka plana
+  geçince ya da kapatılmak istenince (`NOTIFICATION_APPLICATION_PAUSED`,
+  `NOTIFICATION_WM_CLOSE_REQUEST`). Oyuncu henüz ülkesini seçmediyse kaydedilmez (henüz
+  korunacak bir ilerleme yok).
+- **Yükleme:** oyun açılışta (`main.gd _ready()`) bir kayıt bulursa `Oyun.kayittan_yukle()`
+  ile OrduKurucu'nun ürettiği taze orduyu ve dünyanın başlangıç sahipliklerini tamamen
+  değiştirir, sonra `Zaman.durumu_uygula()` çağrılır. Henüz "Yeni oyun / Devam et" seçeneği
+  sunan bir ana menü yok; kayıt varsa otomatik yüklenir (bkz. 13. Yol haritası, F).
+
+## 12. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -432,6 +455,7 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
 | `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
 | `sim/insa_isi.gd` | İnşa kuyruğundaki tek bir iş: tümen ya da fabrika |
+| `sim/kayit_yoneticisi.gd` | Oyun durumunu user:// altına JSON olarak kaydeder/yükler |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
 | `sim/zaman.gd` | Zaman yöneticisi (autoload `Zaman`) |
 | `gorsel/harita_gorunumu.gd` | Dolguları, sınırları, çerçeveleri, vurguları, adları ve tümen kutularını çizer |
@@ -457,7 +481,7 @@ Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini 
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 12. Yol haritası
+## 13. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -470,13 +494,13 @@ istenen aşama yapılır.
 | 4 | ✅ | **Savaş** | Savaş ilanı, çarpışma, bölge ele geçirme |
 | 5 | ✅ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
 | 6 | ✅ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
-| 7 | ⬜ | **Kayıt** | Oyunu kaydetme ve yükleme |
+| 7 | ✅ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 8 | ⬜ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 13. Geçmiş
+## 14. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman
