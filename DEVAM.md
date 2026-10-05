@@ -327,15 +327,44 @@ F) OYUN AKIŞI — ilk alt adım, kayıt/yükleme, tamamlandı (TASARIM.md yol h
   dahil). İKİNCİ, debug'sız TEMİZ bir çalıştırmada oyun "2 Ocak 2026" ve "Hazine: 10" ile
   açıldı — kayıt gerçekten otomatik yüklendi. Test dosyaları temizlendi.
 
+F) OYUN AKIŞI — kaybetme/zafer koşulları tamamlandı:
+- `Oyun.oyun_kaybedildi`: oyuncunun ülkesi teslim olunca (`_teslimi_kontrol_et` içinde,
+  `ulke_id == oyuncu_ulkesi` ise) bir kez yayılır.
+- `Oyun.oyun_kazanildi` / `ZAFER_ORANI` (×0,6): oyuncunun kıtasındaki bölgelerin (bir
+  bölgenin kıtası "ev sahibi" ülkesininkidir, ekonomideki gibi kimin elinde olduğundan
+  bağımsız) yeterince payı kendisininse bir kez yayılır (`_zafer_kazanildi` bayrağı,
+  kayıtta da saklanır — yeniden yüklenince tekrar yayılmaz). `_bolgeyi_devret()`'in
+  sonunda kontrol edilir.
+- `SonucPaneli` (`arayuz/sonuc_paneli.gd`): ekranın ortasında kapatılabilir bir bildirim
+  (başlık + metin + "Kapat"); `Arayuz.zaferi_goster()`/`kaybi_goster()`. main.gd, bu
+  sinyaller gelince paneli gösterip `Zaman.durdur()` çağırıyor (önemli olay, bkz. F'nin
+  "Bildirimler" maddesindeki "önemli olayda oyun otomatik dursun" — bu kural buraya da
+  uygulandı).
+- 5 yeni sınama (`tests/sim/sonuc_testi.gd`): oyuncu teslim olunca kaybedildi yayılır,
+  başkası teslim olunca yayılmaz, kıtanın %60'ı olunca kazanıldı yayılır (gerçek oranla
+  doğrulandı), zafer bir kez yayılır, oyuncu seçilmemişken kontrol patlamaz. Toplam
+  86/86 sınama geçiyor. Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı):
+  "Zafer!" paneli doğru görünüyor.
+- TASARIM.md'nin orijinal 8 aşamalı yol haritası (1-7 artık hepsi ✅, yalnızca 8) Android
+  kaldı) kullanıcının daha ayrıntılı F-J talimatıyla birebir eşleşmiyor (bu talimat daha
+  sonra geldi); yeni satırlar eklemek yerine bu dosya (DEVAM.md) F-J'nin ayrıntılı takibini
+  sürdürüyor.
+
 ## Sıradaki iş
 
-İki seçenek var:
-1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar),
-   kaybetme (teslim) / zafer (kıtanın %60'ı) koşulları, güç sıralaması paneli, bildirimler.
+Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
+1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar), güç
+   sıralaması paneli (ilk 10 ülke + oyuncu), diğer bildirimler (savaş ilanı, bölge kaybı/
+   kazancı, üretim bitti — dokununca kamera oraya gitsin).
 2. E) YAPAY ZEKÂ'nın kalan parçası: "Ordumu yapay zekâ yönetsin" anahtarı.
-Her ikisi de bağımsız, küçük parçalara bölünebilir. Kayıt/yükleme artık çalıştığı için
-oyun gerçek anlamda "oturumlar arası sürüyor" — bu, bu oturumun en büyük tek boşluğunu
-kapattı.
+3. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
+   göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
+   kamera, kısa öğretici, tek çeviri dosyası.
+4. H) DENGE: uzun koşu testiyle sayıları ayarlama.
+5. I) PERFORMANS VE ANDROID: dışa aktarma, performans ölçümü.
+Kayıt/yükleme ve zafer/kaybetme ile oyun artık baştan sona (seçim → savaş/ekonomi/YZ →
+zafer ya da kaybetme → kapat-aç sürdür) oynanabilir; bundan sonraki iş büyük ölçüde
+tamamlama ve cila.
 
 ## Kararlar
 

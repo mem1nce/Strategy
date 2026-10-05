@@ -14,6 +14,11 @@ signal yarisini_ayir_istendi
 signal savas_istendi(ulke_id: String)
 ## Oyuncu "Barış teklif et" düğmesine bastığında, hedef ülkenin id'siyle yayılır.
 signal baris_istendi(ulke_id: String)
+## Oyuncu zafer/kaybetme bildirimini kapattığında yayılır.
+signal sonuc_kapatildi
+
+## Kaybetme başlığının rengi (üzüntü/tehlike).
+const KAYBETME_RENGI: Color = Color("#e05b5b")
 
 ## Ekran kenarıyla arayüz arasındaki boşluk (piksel).
 const KENAR_BOSLUGU: int = 20
@@ -23,6 +28,7 @@ var _kenar: MarginContainer = null
 var _ust_cubuk: UstCubuk = null
 var _bolge_paneli: BolgePaneli = null
 var _birlik_paneli: BirlikPaneli = null
+var _sonuc_paneli: SonucPaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -63,8 +69,28 @@ func kur(dunya: Dunya) -> void:
 	dikey.add_child(_birlik_paneli)
 	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
 
+	var sonuc_ortalayici: CenterContainer = CenterContainer.new()
+	sonuc_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sonuc_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	kok.add_child(sonuc_ortalayici)
+	_sonuc_paneli = SonucPaneli.new()
+	sonuc_ortalayici.add_child(_sonuc_paneli)
+	_sonuc_paneli.kapat_basildi.connect(func() -> void: sonuc_kapatildi.emit())
+
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
+
+
+## Zafer bildirimini ortada gösterir. Oyun kilitlenmez; "sonrasında oynamaya devam edilebilir".
+func zaferi_goster() -> void:
+	_sonuc_paneli.goster("Zafer!",
+			"Kıtandaki bölgelerin en az %%%d'i artık senin. Oynamaya devam edebilirsin." % roundi(Oyun.ZAFER_ORANI * 100),
+			ArayuzTemasi.ETKIN_RENK)
+
+
+## Kaybetme bildirimini ortada gösterir.
+func kaybi_goster() -> void:
+	_sonuc_paneli.goster("Kaybettin", "Ülken teslim oldu.", KAYBETME_RENGI)
 
 
 ## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.

@@ -36,6 +36,8 @@ func _ready() -> void:
 	_oyun.oyuncu_secildi.connect(_oyuncu_secildi)
 	_oyun.birlikler_degisti.connect(_birlikler_degisti)
 	_oyun.hazine_degisti.connect(_hazine_degisti)
+	_oyun.oyun_kazanildi.connect(_oyun_kazanildi)
+	_oyun.oyun_kaybedildi.connect(_oyun_kaybedildi)
 	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
 	Zaman.gun_basladi.connect(func(_gun: int) -> void: _otomatik_kaydet())
@@ -141,6 +143,19 @@ func _birlikler_degisti() -> void:
 func _hazine_degisti() -> void:
 	if _oyun.oyuncu_secildi_mi():
 		_arayuz.hazineyi_goster(_oyun.hazineler.get(_oyun.oyuncu_ulkesi, 0.0))
+
+
+## Oyuncu zafer kazanınca (kıtasının %60'ı kendisinin olunca) çağrılır. Önemli bir olay
+## olduğu için oyun durur; oyuncu "Kapat"tan sonra "Devam"a basarak sürdürebilir.
+func _oyun_kazanildi() -> void:
+	_arayuz.zaferi_goster()
+	Zaman.durdur()
+
+
+## Oyuncunun ülkesi teslim olunca çağrılır.
+func _oyun_kaybedildi() -> void:
+	_arayuz.kaybi_goster()
+	Zaman.durdur()
 
 
 ## Bölge panelinde "Savaş ilan et" onaylandığında çağrılır. Kabul edilirse seçim kaldırılır.

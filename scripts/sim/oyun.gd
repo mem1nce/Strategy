@@ -21,6 +21,11 @@ signal baris_yapildi(ulke_a: String, ulke_b: String)
 signal hazine_degisti
 ## Bir ülkenin inşa kuyruğuna iş eklendiğinde ya da bir iş tamamlandığında yayılır.
 signal insa_kuyrugu_degisti(ulke_id: String)
+## Oyuncu teslim olunca bir kez yayılır (kaybetme).
+signal oyun_kaybedildi
+## Oyuncunun kıtasındaki bölgelerin ZAFER_ORANI (×0,6) kadarı kendisinin olunca bir kez
+## yayılır (zafer); sonrasında oynamaya devam edilebilir, oyun kilitlenmez.
+signal oyun_kazanildi
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
@@ -29,6 +34,8 @@ const ASGARI_GUC: float = 1.0
 const BARIS_ESIGI_SAAT: int = 180 * 24
 ## İnşa kuyruğunda aynı anda en fazla bu kadar iş bekleyebilir.
 const AZAMI_KUYRUK_UZUNLUGU: int = 5
+## Zafer için, oyuncunun kıtasındaki bölgelerin gereken sahiplik oranı.
+const ZAFER_ORANI: float = 0.6
 
 var dunya: Dunya = null
 ## Oyuncunun yönettiği ülkenin id'si. Seçim yapılmadıysa boştur.
@@ -78,6 +85,8 @@ var hazineler: Dictionary[String, float] = {}
 ## Ülke id'si -> o ülkenin inşa kuyruğu (Array[InsaIsi], en fazla AZAMI_KUYRUK_UZUNLUGU).
 ## Yalnızca kuyruğun önündeki iş ilerler (tek kuyruk).
 var insa_kuyruklari: Dictionary[String, Array] = {}
+## oyun_kazanildi tekrar tekrar yayılmasın diye.
+var _zafer_kazanildi: bool = false
 
 
 func _init(yeni_dunya: Dunya) -> void:
@@ -285,6 +294,7 @@ func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> voi
 	bolge.isgal_saati = su_anki_saat
 	bolge_sahipligi_degisti.emit()
 	_teslimi_kontrol_et(eski_sahip, su_anki_saat)
+	_zaferi_kontrol_et()
 
 
 ## Başkenti düşmüş ve oyun başındaki bölgelerinin yarısından fazlasını kaybetmiş bir ülke
@@ -316,6 +326,32 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	bolge_sahipligi_degisti.emit()
 	birlikler_degisti.emit()
 	ulke_teslim_oldu.emit(ulke_id, galip_id)
+	if ulke_id == oyuncu_ulkesi:
+		oyun_kaybedildi.emit()
+	_zaferi_kontrol_et()
+
+
+## Oyuncunun kıtasındaki bölgelerin ZAFER_ORANI (×0,6) kadarı kendisinin olunca bir kez
+## oyun_kazanildi yayar. Bir bölgenin kıtası, "ev sahibi" ülkesinin (bkz. _bolge_ev_sahibi)
+## kıtasıdır; kimin elinde olduğundan bağımsızdır.
+func _zaferi_kontrol_et() -> void:
+	if oyuncu_ulkesi == "" or _zafer_kazanildi:
+		return
+	var oyuncu: Ulke = dunya.ulkeler.get(oyuncu_ulkesi)
+	if oyuncu == null:
+		return
+	var toplam: int = 0
+	var sahip_olunan: int = 0
+	for bolge: Bolge in dunya.bolge_listesi:
+		var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
+		if ev_ulke == null or ev_ulke.kita != oyuncu.kita:
+			continue
+		toplam += 1
+		if bolge.sahip == oyuncu_ulkesi:
+			sahip_olunan += 1
+	if toplam > 0 and float(sahip_olunan) / float(toplam) >= ZAFER_ORANI:
+		_zafer_kazanildi = true
+		oyun_kazanildi.emit()
 
 
 func _toplam_guc(liste: Array[Birlik]) -> float:
@@ -712,6 +748,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"savaslar": savas_verisi,
 		"hazineler": hazineler,
 		"insa_kuyruklari": kuyruk_verisi,
+		"zafer_kazanildi": _zafer_kazanildi,
 	}
 
 
@@ -760,3 +797,5 @@ func kayittan_yukle(veri: Dictionary) -> void:
 			is_.kalan_saat = int(is_verisi.get("kalan_saat", 0))
 			liste.append(is_)
 		insa_kuyruklari[ulke_id] = liste
+
+	_zafer_kazanildi = bool(veri.get("zafer_kazanildi", false))

@@ -10,9 +10,9 @@ Android, yatay ekran. Godot 4.7, GDScript, 2D, Mobile renderer.
 Oyuncu haritadan bir ülke seçer ve onu yönetir. Zaman 1 Ocak 2026'da başlar,
 durdurulabilir ve üç hızda akar; bitiş tarihi yoktur.
 
-Dünya haritası, bölgeler, birlikler, savaş, ekonomi, yapay zekâ ve kayıt/yükleme vardır;
-ana menü, zafer/kaybetme koşulları ve Android dışa aktarma henüz yoktur
-(bkz. 13. Yol haritası).
+Dünya haritası, bölgeler, birlikler, savaş, ekonomi, yapay zekâ, kayıt/yükleme ve zafer/
+kaybetme koşulları vardır; ana menü ve Android dışa aktarma henüz yoktur
+(bkz. 14. Yol haritası).
 
 "Yerküre" geçici bir çalışma adıdır; kalıcı ad sonra seçilecek.
 
@@ -299,7 +299,7 @@ Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.jso
   tümende gücü ikiye böler, birden çok tümende sayıca yarısını ayırır); ayrılan yarı bir
   sonraki hedef seçiminde yürütülür, kalan yarı yerinde durur.
 - Henüz yok: savaş, bakım, hareketin görsel animasyonu (şu an yalnızca varış anında bölge
-  değişir) (bkz. 13. Yol haritası, C).
+  değişir) (bkz. 14. Yol haritası, C).
 
 Kod mimarisinde: `sim/birlik.gd` (tümen verisi), `sim/ordu_kurucu.gd` (başlangıç ordusu
 üretimi), `Oyun.birlikler` (oyunun o anki tümen listesi).
@@ -406,7 +406,7 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   güçsüz, henüz savaşılmayan ilk ülkeye ilan eder. Oyuncu, oyunun ilk
   `yapay_zeka.oyuncuya_dokunulmazlik_gun` (90) günü boyunca aday sayılmaz
   (`Oyun._savas_ilanini_degerlendir`).
-- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 13. Yol haritası, E).
+- Henüz yok: "ordumu yapay zekâ yönetsin" anahtarı (bkz. 14. Yol haritası, E).
 
 ## 11. Kayıt
 
@@ -429,9 +429,23 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
 - **Yükleme:** oyun açılışta (`main.gd _ready()`) bir kayıt bulursa `Oyun.kayittan_yukle()`
   ile OrduKurucu'nun ürettiği taze orduyu ve dünyanın başlangıç sahipliklerini tamamen
   değiştirir, sonra `Zaman.durumu_uygula()` çağrılır. Henüz "Yeni oyun / Devam et" seçeneği
-  sunan bir ana menü yok; kayıt varsa otomatik yüklenir (bkz. 13. Yol haritası, F).
+  sunan bir ana menü yok; kayıt varsa otomatik yüklenir (bkz. 14. Yol haritası, F).
 
-## 12. Kod mimarisi
+## 12. Oyun sonu
+
+- **Kaybetme:** oyuncunun ülkesi teslim olunca (bkz. 8. Savaş'taki teslim kuralı)
+  `Oyun.oyun_kaybedildi` bir kez yayılır.
+- **Zafer:** oyuncunun kıtasındaki bölgelerin (bir bölgenin kıtası, "ev sahibi" ülkesinin
+  kıtasıdır, kimin elinde olduğundan bağımsız) `ZAFER_ORANI`'ı (×0,6) kadarı kendisinin
+  olunca `Oyun.oyun_kazanildi` bir kez yayılır (`_zafer_kazanildi` bayrağıyla, kayıtta da
+  saklanır). Oyun kilitlenmez; "sonrasında oynamaya devam edilebilir".
+- Her ikisinde de ekranın ortasında kapatılabilir bir bildirim gösterilir
+  (`Arayuz.zaferi_goster()`/`kaybi_goster()`, `SonucPaneli`) ve zaman durur (önemli bir
+  olay olduğu için); oyuncu "Kapat"tan sonra "Devam"a basarak sürdürebilir.
+- Henüz yok: ana menü, güç sıralaması paneli, diğer bildirimler (bölge kaybı/kazancı,
+  üretim bitti vb.) (bkz. 14. Yol haritası, F).
+
+## 13. Kod mimarisi
 
 ```
 data/              Oyun verisi (JSON): world.json, regions.json, balance.json
@@ -481,7 +495,7 @@ Görsel taraf oyun durumunu doğrudan değiştirmez; simülasyonun işlevlerini 
 (ör. `oyun.oyuncuyu_sec("TUR")`, `Zaman.hiz_sec(2)`) ve sinyallerini dinler. Bir bölgenin
 sahibi değiştiğinde harita `HaritaGorunumu.yenile()` ile güncellenir.
 
-## 13. Yol haritası
+## 14. Yol haritası
 
 Her aşama tek başına çalışıp sınanabilir bir oyun bırakır. Bir seferde yalnızca
 istenen aşama yapılır.
@@ -500,7 +514,7 @@ istenen aşama yapılır.
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 araştırma, çok oyunculu oyun.
 
-## 14. Geçmiş
+## 15. Geçmiş
 
 2 Ekim 2026'ya kadar oyun, kurgusal Kalmera kıtasında geçen "Altı Sancak" olarak
 tasarlanmıştı. O hâli git'te `kalmera-arsiv` etiketiyle durur. Kamera, dokunma, zaman
