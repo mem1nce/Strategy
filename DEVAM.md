@@ -381,11 +381,43 @@ F) OYUN AKIŞI — güç sıralaması paneli tamamlandı:
     `oyun._yz_savas_ilani_olasiligi = 0.0` ayarlanarak sınamayla alakasız rastgelelik
     kapatıldı. 5 ardışık tam koşuyla (91/91) doğrulandı.
 
+F) OYUN AKIŞI — ana menü tamamlandı:
+- `arayuz/ana_menu.gd` (`AnaMenu extends CanvasLayer`, `layer = 10` ki `Arayuz`'un üstünde
+  kalsın): açılışta haritanın üstünde görünen, dokunuşu yutan tam ekran bir menü. Dört
+  düğme: Yeni oyun, Devam et (yalnızca kayıt varken etkin), Nasıl oynanır (bilgi paneli),
+  Ayarlar (şu an yalnızca "Kaydı sil" — ses/grafik ayarı yok, eklenecek başka ayar da yok).
+  Kendi teması (`ArayuzTemasi.olustur()`), kendi `ConfirmationDialog`'ları (Yeni oyun ve
+  Kaydı sil, ikisi de onaylı — geri dönüşsüz bir silme).
+- `KayitYoneticisi.sil()`: kayıt dosyasını siler (yoksa no-op). 2 yeni sınama
+  (`tests/sim/kayit_testi.gd`): siler, kayıt yokken hata vermez.
+- `main.gd` yeniden düzenlendi: kayıt artık açılışta OKUNUR ama HEMEN UYGULANMAZ
+  (`_bekleyen_kayit` üyesi); "Devam et" basılınca `_devam_secildi()` içinde uygulanır
+  (eskiden otomatikti). "Yeni oyun" içinse yapacak bir şey yok — `_oyun`/`Dunya` zaten hiç
+  kayıt uygulanmadan taze kurulmuş durumda, AnaMenu kaydı kendi içinde zaten sildi. Bu
+  tasarım, "kaydı önce uygulayıp Yeni oyun'da geri almak" yerine seçildi — çok daha az
+  kod ve sıfır sıfırlama mantığı gerektiriyor (bkz. Kararlar).
+- Ekran görüntüsüyle doğrulandı (geçici debug, geri alındı): boş/dolu kayıtla menü doğru
+  görünüyor (Devam et pasif/etkin), Nasıl oynanır ve Ayarlar panelleri doğru açılıyor,
+  "Devam et" çağrısı gerçekten ülkeyi/kamerayı/üst çubuğu doğru yüklüyor.
+  - **Ekran görüntüsünde bulunup düzeltilen hata (üretim kodu, commit edilmeden):** alt
+    panelleri göster/gizlerken yanlış düğüm tutuluyordu — dönen değer içteki `PanelContainer`
+    idi ama gizlenen onu saran `CenterContainer`; `panel.show()` görünür bir panel üretiyordu
+    ama gizli ebeveyni yüzünden yine ekranda görünmüyordu. Fonksiyonlar artık `CenterContainer`
+    döndürüyor.
+  - **Ayrıca bulunan Türkçe ünlü uyumu hatası:** "Nasıl oynanır" metnindeki "%60'ini" yanlıştı
+    (olması gereken "%60'ını"); ZAFER_ORANI ileride değişebileceğinden (H) DENGE) sayıya özel
+    bir ek yerine "%60 ya da daha fazlası" gibi her sayıda doğru kalan bir ifadeye çevrildi.
+  - **Üretim kodu değil, GDScript dili notu:** `const` içinde `"%%%d" % roundi(...)` gibi bir
+    ifade yazarken `%` operatörünün + zincirinin EN SONUNDAKİ parçaya değil tüm ifadeye
+    uygulandığını varsaymak hataya yol açtı ("not all arguments converted" hatası) — metin
+    `const` olarak biçimsiz (`_BICIMI` sonekli) tutulup `%` çalışma zamanında, parantezle
+    tüm metne uygulanacak şekilde kullanıldı.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. F) OYUN AKIŞI'nın geri kalanı: ana menü (Yeni oyun/Devam et/Nasıl oynanır/Ayarlar), diğer
-   bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti — dokununca kamera oraya gitsin).
+1. F) OYUN AKIŞI'nın geri kalanı: diğer bildirimler (savaş ilanı, bölge kaybı/kazancı,
+   üretim bitti — dokununca kamera oraya gitsin).
 2. G) ARAYÜZ VE GÖRSEL CİLA: tek tema/Theme kaynağı, üst çubukta üretim göstergesi, bağlama
    göre değişen alt panel, savaştaki ülkeler için kırmızı çerçeve/taralı yeni işgal, yumuşak
    kamera, kısa öğretici, tek çeviri dosyası.
@@ -439,6 +471,16 @@ sonraki iş büyük ölçüde tamamlama ve cila.
 - 2026-10-05: Savaş ilanı arayüzü, ayrı bir "ülke paneli" yerine mevcut bölge paneline
   eklendi (zaten ülke bilgisi gösteriyordu). G) ARAYÜZ aşamasında "bağlama göre değişen
   panel" ile resmîleştirilecek; şimdilik gereksiz bir UI bileşeni tekrarından kaçınıldı.
+- 2026-10-05: Ana menüdeki "Ayarlar" yalnızca "Kaydı sil" içeriyor. Kullanıcının talimatı
+  "Ayarlar" demişti ama projede ses/grafik gibi ayarlanabilecek başka bir sistem yok;
+  tek anlamlı ayar zaten var olan tekil kayıt yuvasını yönetmek. Gereksiz yer tutucu
+  seçenekler eklenmedi.
+- 2026-10-05: AnaMenu, `KayitYoneticisi.sil()`'i main.gd üzerinden değil doğrudan kendi
+  içinde çağırıyor (CLAUDE.md'nin "arayuz oyun durumunu doğrudan değiştirmez" kuralına
+  rağmen). Gerekçe: KayitYoneticisi salt dosya G/Ç'si yapan bir yardımcı, aktif `Oyun`/
+  `Dunya` nesnelerini değiştirmiyor; kural, SİMÜLASYON DURUMUNUN arayüzden mutasyona
+  uğramasını önlemeyi hedefliyor, dosya sistemini değil. main.gd zaten aynı sınıfın
+  `yukle()`/`kaydet()` fonksiyonlarını doğrudan çağırıyordu, aynı emsal sürdürüldü.
 
 ## Bilinen sorunlar
 

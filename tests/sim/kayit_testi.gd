@@ -174,3 +174,23 @@ func sina_surum_uyusmazsa_yukle_bos_sozluk_doner() -> String:
 	if not sonuc:
 		return "Sürümü uyuşmayan kayıt yok sayılmalı (boş sözlük dönmeli)."
 	return ""
+
+
+func sina_sil_kaydi_kaldirir() -> String:
+	_kayit_dosyasini_sil()
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.oyuncuyu_sec("TUR")
+	KayitYoneticisi.kaydet(oyun, {})
+	if not KayitYoneticisi.kayit_var_mi():
+		return "Sınama kurulamadı: kayıt yazılamadı."
+
+	KayitYoneticisi.sil()
+	if KayitYoneticisi.kayit_var_mi():
+		return "sil()'den sonra kayit_var_mi() false dönmeli."
+	return ""
+
+
+func sina_sil_kayit_yokken_hata_vermez() -> String:
+	_kayit_dosyasini_sil()
+	KayitYoneticisi.sil()
+	return ""

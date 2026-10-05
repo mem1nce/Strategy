@@ -13,6 +13,13 @@ static func kayit_var_mi() -> bool:
 	return FileAccess.file_exists(KAYIT_DOSYASI)
 
 
+## Kayıt dosyasını siler (yoksa bir şey yapmaz). Ana menüdeki "Yeni oyun" ve "Ayarlar ->
+## Kaydı sil" tarafından kullanılır.
+static func sil() -> void:
+	if kayit_var_mi():
+		DirAccess.remove_absolute(KAYIT_DOSYASI)
+
+
 ## `zaman_durumu`, Zaman.durumu_al()'ın döndürdüğü sözlüktür; KayitYoneticisi Zaman
 ## autoload'ına bağlı olmasın diye çağıran taraftan parametre olarak alınır.
 static func kaydet(oyun: Oyun, zaman_durumu: Dictionary) -> void:

@@ -226,9 +226,24 @@ açıktır: fareyle sürükleme tek parmak gibi çalışır, fare tekerleği yak
   kaydırılabilir; açılan yer deniz rengindedir.
 - Arayüze (panel, düğme) dokunuş haritaya geçmez.
 
-## 5. Ülke seçimi ve arayüz
+## 5. Ana menü ve ülke seçimi
 
 Temel çözünürlük 1920 × 1080, yatay. Ölçekleme `canvas_items`, en-boy `expand`.
+
+**Ana menü** (`AnaMenu`): oyun açılır açılmaz haritanın üstünde görünen, dokunuşu yutan bir
+menü. Dört düğme:
+
+- **Yeni oyun:** varsa kayıt dosyası onay penceresinden sonra silinir (`KayitYoneticisi.sil()`);
+  `Oyun`/`Dunya` zaten hiç kayıt uygulanmadan taze kurulmuş olduğundan başka bir şey
+  yapmaya gerek yoktur, menü kapanır ve oyuncu normal "Ülkeni seç" akışına düşer.
+- **Devam et:** yalnızca bir kayıt varken etkindir; basılınca açılışta okunan kayıt
+  `Oyun.kayittan_yukle()` ve `Zaman.durumu_uygula()` ile uygulanır (bkz. 11. Kayıt).
+- **Nasıl oynanır:** oyunun amacını ve temel eylemlerini özetleyen, kapatılabilir bir
+  bilgi paneli açar.
+- **Ayarlar:** şu an yalnızca **"Kaydı sil"** içerir (onaylı, kayıt yoksa pasif); tek
+  kalıcı ayar kayıt dosyasıdır, başka bir ayar (ses, grafik) henüz yok.
+
+Menü kapanınca (Yeni oyun ya da Devam et) aşağıdaki ülke seçimi akışı başlar:
 
 1. Oyun, üstte **"Ülkeni seç"** yazısıyla açılır. Zaman durmuştur, zaman düğmeleri kilitlidir.
 2. Bir bölgeye dokununca **alt panel** açılır ve **"Bu ülkeyle oyna"** düğmesi görünür;
@@ -428,10 +443,10 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
   geçince ya da kapatılmak istenince (`NOTIFICATION_APPLICATION_PAUSED`,
   `NOTIFICATION_WM_CLOSE_REQUEST`). Oyuncu henüz ülkesini seçmediyse kaydedilmez (henüz
   korunacak bir ilerleme yok).
-- **Yükleme:** oyun açılışta (`main.gd _ready()`) bir kayıt bulursa `Oyun.kayittan_yukle()`
-  ile OrduKurucu'nun ürettiği taze orduyu ve dünyanın başlangıç sahipliklerini tamamen
-  değiştirir, sonra `Zaman.durumu_uygula()` çağrılır. Henüz "Yeni oyun / Devam et" seçeneği
-  sunan bir ana menü yok; kayıt varsa otomatik yüklenir (bkz. 14. Yol haritası, F).
+- **Yükleme:** oyun açılışta kaydı okur ama hemen uygulamaz; ana menüde oyuncu "Devam et"e
+  basınca `Oyun.kayittan_yukle()` (OrduKurucu'nun ürettiği taze orduyu ve dünyanın başlangıç
+  sahipliklerini tamamen değiştirir) ve `Zaman.durumu_uygula()` çağrılır (bkz. 5. Ana menü
+  ve ülke seçimi). "Yeni oyun" seçilirse hiç uygulanmaz; `Oyun`/`Dunya` zaten taze kurulmuştur.
 
 ## 12. Oyun sonu
 
@@ -449,8 +464,8 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
   (`Oyun.guc_siralamasi()`, `SiralamaPaneli`). İlk 10 ülke ve altında, oyuncu ilk 10'da
   değilse ayraçla ayrılmış kendi sırası gösterilir; oyuncunun satırı vurgu rengiyle
   işaretlenir. Zamanı durdurmaz, bilgi amaçlıdır.
-- Henüz yok: ana menü, diğer bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti
-  vb.) (bkz. 14. Yol haritası, F).
+- Henüz yok: diğer bildirimler (savaş ilanı, bölge kaybı/kazancı, üretim bitti vb.)
+  (bkz. 14. Yol haritası, F).
 
 ## 13. Kod mimarisi
 

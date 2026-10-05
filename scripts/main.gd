@@ -19,6 +19,9 @@ var _oyun: Oyun = null
 var _harita: HaritaGorunumu = null
 var _kamera: HaritaKamerasi = null
 var _arayuz: Arayuz = null
+var _ana_menu: AnaMenu = null
+## Açılışta bulunan kayıt (varsa); "Devam et" seçilince uygulanır (bkz. _devam_secildi).
+var _bekleyen_kayit: Dictionary = {}
 ## Birlik kartı açıkken, kartta gösterilen (ve bir sonraki hedef seçiminde yürütülecek)
 ## tümenler; seçim yoksa boştur. "Yarısını ayır" bu listeyi küçültebilir.
 var _secili_birlikler: Array[Birlik] = []
@@ -30,9 +33,7 @@ func _ready() -> void:
 		push_error("Dünya verisi yüklenemedi; oyun başlatılamıyor.")
 		return
 	_oyun = Oyun.new(dunya)
-	var kayit: Dictionary = KayitYoneticisi.yukle()
-	if not kayit.is_empty():
-		_oyun.kayittan_yukle(kayit["oyun_verisi"])
+	_bekleyen_kayit = KayitYoneticisi.yukle()
 	_oyun.oyuncu_secildi.connect(_oyuncu_secildi)
 	_oyun.birlikler_degisti.connect(_birlikler_degisti)
 	_oyun.hazine_degisti.connect(_hazine_degisti)
@@ -67,10 +68,13 @@ func _ready() -> void:
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
 	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
 
-	if not kayit.is_empty() and _oyun.oyuncu_secildi_mi():
-		_oyuncu_secildi(_oyun.oyuncu_ulkesi)
-		Zaman.durumu_uygula(kayit["zaman_durumu"])
-		_arayuz.yz_yonetimini_goster(_oyun.yz_oyuncuyu_yonetsin)
+	_ana_menu = AnaMenu.new()
+	_ana_menu.name = "AnaMenu"
+	add_child(_ana_menu)
+	_ana_menu.kur()
+	_ana_menu.yeni_oyun_istendi.connect(_yeni_oyun_secildi)
+	_ana_menu.devam_istendi.connect(_devam_secildi)
+	_ana_menu.goster(not _bekleyen_kayit.is_empty())
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
@@ -90,6 +94,21 @@ func _notification(what: int) -> void:
 func _otomatik_kaydet() -> void:
 	if _oyun != null and _oyun.oyuncu_secildi_mi():
 		KayitYoneticisi.kaydet(_oyun, Zaman.durumu_al())
+
+
+## Ana menüde "Yeni oyun" onaylandı (AnaMenu eski kaydı zaten sildi). _oyun ve dünya hiç
+## kayıt uygulanmadan taze kurulmuştu; yapacak başka bir şey yok, oyuncu normal "Ülkeni
+## seç" akışıyla karşılaşır.
+func _yeni_oyun_secildi() -> void:
+	pass
+
+
+## Ana menüde "Devam et" seçildi: açılışta okunan kaydı şimdi uygular.
+func _devam_secildi() -> void:
+	_oyun.kayittan_yukle(_bekleyen_kayit["oyun_verisi"])
+	_oyuncu_secildi(_oyun.oyuncu_ulkesi)
+	Zaman.durumu_uygula(_bekleyen_kayit["zaman_durumu"])
+	_arayuz.yz_yonetimini_goster(_oyun.yz_oyuncuyu_yonetsin)
 
 
 ## Kamera her kaydığında ya da yakınlaştığında haritaya yeni görünümü bildirir.
