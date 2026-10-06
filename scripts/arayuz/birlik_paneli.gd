@@ -4,16 +4,18 @@ extends PanelContainer
 ##
 ## Yalnızca oyuncunun kendi tümenlerinin olduğu bir bölgeye dokununca açılır (bkz. main.gd).
 ## "Yarısını ayır" düğmesi gösterilen tümenlerin yarısını ayırır; sonraki hedef seçimi
-## yalnızca ayrılan yarıyı yürütür. "Tümen kur" ve "Fabrika kur" bu bölgede üretim sıralar.
+## yalnızca ayrılan yarıyı yürütür. "Tümen kur", "Fabrika kur" ve "Tahkimat kur" bu bölgede
+## üretim sıralar. Tümen sayısı türlere göre ayrı ayrı yazar.
 
 const AYIR_DUGMESI_BOYUTU: Vector2 = Vector2(260.0, 112.0)
 
 ## "Yarısını ayır" düğmesine basıldığında yayılır.
 signal yarisini_ayir_basildi
-## "Tümen kur" ("tumen") ya da "Fabrika kur" ("fabrika") düğmesine basıldığında yayılır.
+## "Tümen kur" ("tumen"), "Fabrika kur" ("fabrika") ya da "Tahkimat kur" ("tahkimat")
+## düğmesine basıldığında yayılır.
 signal insa_istendi(tur: String)
 
-const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(300.0, 112.0)
+const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(250.0, 112.0)
 
 var _renk_kutusu: ColorRect = null
 var _ad: Label = null
@@ -50,6 +52,7 @@ func _ready() -> void:
 
 	yatay.add_child(InsaDugmeleri.dugme_olustur("tumen", INSA_DUGMESI_BOYUTU, insa_istendi))
 	yatay.add_child(InsaDugmeleri.dugme_olustur("fabrika", INSA_DUGMESI_BOYUTU, insa_istendi))
+	yatay.add_child(InsaDugmeleri.dugme_olustur("tahkimat", INSA_DUGMESI_BOYUTU, insa_istendi))
 
 	hide()
 
@@ -59,9 +62,15 @@ func goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 	_renk_kutusu.color = HaritaGorunumu.ulke_rengi(ulke)
 	_ad.text = bolge.ad
 	var toplam: float = 0.0
+	var sayilar: Dictionary[String, int] = {}
 	for birlik: Birlik in birlikler:
 		toplam += birlik.guc
-	_tumen_sayisi.text = "Tümen: %d" % birlikler.size()
+		sayilar[birlik.tur] = sayilar.get(birlik.tur, 0) + 1
+	var parcalar: PackedStringArray = PackedStringArray()
+	for tur: String in BirlikTurleri.SIRA:
+		if sayilar.has(tur):
+			parcalar.append("%s %d" % [BirlikTurleri.ad(tur), sayilar[tur]])
+	_tumen_sayisi.text = "Tümen: %d  (%s)" % [birlikler.size(), "  ·  ".join(parcalar)]
 	_toplam_guc.text = "Toplam güç: %d" % roundi(toplam)
 	show()
 

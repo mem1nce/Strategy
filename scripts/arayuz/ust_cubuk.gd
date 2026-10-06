@@ -1,17 +1,22 @@
 class_name UstCubuk
 extends HBoxContainer
 ## Üst çubuk: solda oyuncunun ülkesi ve tarih, ortada "Ülkeni seç" yazısı (seçim
-## yapılana kadar), sağda durdur/devam, hız ve "Ordu: YZ" düğmeleri.
+## yapılana kadar), sağda durdur/devam, hız, "Ordu: YZ", "Sıralama" ve "Teknoloji" düğmeleri.
 ## Zaman yöneticisini (Zaman) okur ve düğmelerle ona emir verir.
 
 ## "Ordu: YZ" açılıp kapandığında yayılır.
 signal yz_yonetimi_degisti(acik: bool)
 ## "Sıralama" düğmesi açılıp kapandığında yayılır.
 signal siralama_degisti(acik: bool)
+## "Teknoloji" düğmesi açılıp kapandığında yayılır.
+signal teknoloji_degisti(acik: bool)
 
-const SOL_PANEL_GENISLIGI: float = 560.0
+const SOL_PANEL_GENISLIGI: float = 480.0
+const DURDUR_DUGMESI_BOYUTU: Vector2 = Vector2(180.0, 104.0)
+const HIZ_DUGMESI_BOYUTU: Vector2 = Vector2(104.0, 104.0)
 const YZ_DUGMESI_BOYUTU: Vector2 = Vector2(170.0, 104.0)
-const SIRALAMA_DUGMESI_BOYUTU: Vector2 = Vector2(190.0, 104.0)
+const SIRALAMA_DUGMESI_BOYUTU: Vector2 = Vector2(180.0, 104.0)
+const TEKNOLOJI_DUGMESI_BOYUTU: Vector2 = Vector2(200.0, 104.0)
 
 var _ulke_sirasi: HBoxContainer = null
 var _ulke_rengi: ColorRect = null
@@ -24,6 +29,7 @@ var _durdur: Button = null
 var _hiz_dugmeleri: Array[Button] = []
 var _yz_yonetimi: Button = null
 var _siralama: Button = null
+var _teknoloji: Button = null
 
 
 func _ready() -> void:
@@ -47,6 +53,7 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_hazine.show()
 	_yz_yonetimi.show()
 	_siralama.show()
+	_teknoloji.show()
 
 
 ## Oyuncunun hazinesini üst çubuğa yazar.
@@ -60,7 +67,12 @@ func uretimi_goster(is_: InsaIsi, kuyrukta_baska: int) -> void:
 	if is_ == null:
 		_uretim.hide()
 		return
-	var tur_adi: String = "Tümen" if is_.tur == InsaIsi.Tur.TUMEN else "Fabrika"
+	var tur_adi: String = "Fabrika"
+	match is_.tur:
+		InsaIsi.Tur.TUMEN:
+			tur_adi = BirlikTurleri.ad(is_.birlik_turu)
+		InsaIsi.Tur.TAHKIMAT:
+			tur_adi = "Tahkimat"
 	var metin: String = "İnşa: %s (%d sa)" % [tur_adi, is_.kalan_saat]
 	if kuyrukta_baska > 1:
 		metin += " +%d" % (kuyrukta_baska - 1)
@@ -135,12 +147,12 @@ func _dugme_panelini_kur() -> void:
 	sira.add_theme_constant_override("separation", 12)
 	panel.add_child(sira)
 
-	_durdur = _dugme_olustur("", Vector2(210.0, ArayuzTemasi.DUGME_BOYUTU.y))
+	_durdur = _dugme_olustur("", DURDUR_DUGMESI_BOYUTU)
 	_durdur.pressed.connect(_durdur_basildi)
 	sira.add_child(_durdur)
 
 	for i: int in Zaman.hiz_sayisi():
-		var dugme: Button = _dugme_olustur("%dx" % (i + 1), ArayuzTemasi.DUGME_BOYUTU)
+		var dugme: Button = _dugme_olustur("%dx" % (i + 1), HIZ_DUGMESI_BOYUTU)
 		dugme.pressed.connect(_hiz_basildi.bind(i + 1))
 		sira.add_child(dugme)
 		_hiz_dugmeleri.append(dugme)
@@ -153,10 +165,15 @@ func _dugme_panelini_kur() -> void:
 	_siralama.pressed.connect(_siralama_basildi)
 	sira.add_child(_siralama)
 
-	# Ülke seçilene kadar bu iki düğmenin işlevi yok; gizli kalırlar ki "Ülkeni seç" yazısıyla
+	_teknoloji = _dugme_olustur("Teknoloji", TEKNOLOJI_DUGMESI_BOYUTU)
+	_teknoloji.pressed.connect(func() -> void: teknoloji_degisti.emit(_teknoloji.button_pressed))
+	sira.add_child(_teknoloji)
+
+	# Ülke seçilene kadar bu düğmelerin işlevi yok; gizli kalırlar ki "Ülkeni seç" yazısıyla
 	# birlikte üst çubuk 16:9 ekrana da sığsın (sığmayınca alttaki paneli de genişletiyordu).
 	_yz_yonetimi.hide()
 	_siralama.hide()
+	_teknoloji.hide()
 
 
 func _dugme_olustur(metin: String, boyut: Vector2) -> Button:
@@ -187,6 +204,16 @@ func yz_yonetimini_goster(acik: bool) -> void:
 	_yz_yonetimi.set_pressed_no_signal(acik)
 
 
+## "Teknoloji" düğmesini, sinyal yaymadan kapatır (panel başka yoldan kapandığında).
+func teknoloji_dugmesini_kapat() -> void:
+	_teknoloji.set_pressed_no_signal(false)
+
+
+## "Sıralama" düğmesini, sinyal yaymadan kapatır.
+func siralama_dugmesini_kapat() -> void:
+	_siralama.set_pressed_no_signal(false)
+
+
 func _siralama_basildi() -> void:
 	siralama_degisti.emit(_siralama.button_pressed)
 
@@ -207,3 +234,4 @@ func _yenile() -> void:
 		_hiz_dugmeleri[i].disabled = Zaman.kilitli
 	_yz_yonetimi.disabled = Zaman.kilitli
 	_siralama.disabled = Zaman.kilitli
+	_teknoloji.disabled = Zaman.kilitli

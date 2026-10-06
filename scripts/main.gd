@@ -43,6 +43,7 @@ func _ready() -> void:
 	_oyun.oyun_kaybedildi.connect(_oyun_kaybedildi)
 	Zaman.saat_gecti.connect(_oyun.saat_ilerledi)
 	Zaman.saat_gecti.connect(func(_saat: int) -> void: _uretimi_guncelle())
+	Zaman.saat_gecti.connect(func(_saat: int) -> void: _teknoloji_ilerlemesini_guncelle())
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _harita.isgalleri_yenile(gun * 24))
 	Zaman.gun_basladi.connect(func(_gun: int) -> void: _otomatik_kaydet())
@@ -57,6 +58,7 @@ func _ready() -> void:
 	_oyun.bolge_sahipligi_degisti.connect(_harita.yenile)
 	_oyun.savas_ilan_edildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.baris_yapildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
+	_oyun.tahkimat_degisti.connect(_tahkimat_degisti)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -73,7 +75,13 @@ func _ready() -> void:
 	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
 	_arayuz.insa_istendi.connect(_insa_istendi)
-	InsaDugmeleri.maliyetleri_ayarla(_oyun.tumen_maliyeti(), _oyun.fabrika_maliyeti())
+	_arayuz.tumen_istendi.connect(_tumen_istendi)
+	InsaDugmeleri.maliyetleri_ayarla(_oyun.fabrika_maliyeti(), _oyun.tahkimat_azami_seviye())
+	_arayuz.teknoloji_istendi.connect(_teknolojiyi_ac)
+	_arayuz.arastirma_istendi.connect(_arastirma_istendi)
+	_oyun.teknoloji_degisti.connect(func(ulke_id: String) -> void:
+		if ulke_id == _oyun.oyuncu_ulkesi and _arayuz.teknoloji_acik_mi():
+			_teknolojiyi_goster())
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
@@ -164,6 +172,7 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
 	_secili_bolge_id = bolge_id if bolge != null else ""
 	_harita.secimi_ayarla(bolge_id)
+	_tahkimat_dugmesini_guncelle()
 	var kendi_bolgen: bool = bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi
 	if kendi_bolgen:
 		var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge_id)
@@ -179,23 +188,93 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen)
 
 
-## Bölge ya da birlik panelinde "Tümen kur" / "Fabrika kur"a basıldı: seçili (kendi)
-## bölgede üretim sıralanır. Kabul edilmezse nedeni bildirim olarak gösterilir.
+## Bölge ya da birlik panelinde "Fabrika kur" / "Tahkimat kur"a basıldı: seçili (kendi)
+## bölgede iş sıralanır. Kabul edilmezse nedeni bildirim olarak gösterilir.
 func _insa_istendi(tur: String) -> void:
 	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
 		return
 	var ulke_id: String = _oyun.oyuncu_ulkesi
-	var tumen: bool = tur == "tumen"
-	var ad: String = "Tümen" if tumen else "Fabrika"
-	var bolge_adi: String = _oyun.dunya.bolgeler[_secili_bolge_id].ad
-	var kabul: bool = _oyun.tumen_sirala(ulke_id, _secili_bolge_id) if tumen 			else _oyun.fabrika_sirala(ulke_id, _secili_bolge_id)
+	if tur == "tahkimat":
+		var seviye: int = _oyun.sonraki_tahkimat_seviyesi(ulke_id, _secili_bolge_id)
+		_siralama_sonucunu_bildir(_oyun.tahkimat_sirala(ulke_id, _secili_bolge_id), "Tahkimat",
+				_oyun.tahkimat_maliyeti(seviye))
+		_tahkimat_dugmesini_guncelle()
+	else:
+		_siralama_sonucunu_bildir(_oyun.fabrika_sirala(ulke_id, _secili_bolge_id), "Fabrika",
+				_oyun.fabrika_maliyeti())
+
+
+## Tür seçim panelinde bir tümen türü seçildi: seçili (kendi) bölgede o türde tümen sıralanır.
+func _tumen_istendi(birlik_turu: String) -> void:
+	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
+		return
+	_siralama_sonucunu_bildir(_oyun.tumen_sirala(_oyun.oyuncu_ulkesi, _secili_bolge_id, birlik_turu),
+			"%s tümen" % BirlikTurleri.ad(birlik_turu), _oyun.tumen_maliyeti(birlik_turu))
+
+
+func _siralama_sonucunu_bildir(kabul: bool, ad: String, maliyet: float) -> void:
 	if kabul:
-		_arayuz.bildirim_goster("%s sıraya alındı: %s." % [ad, bolge_adi], _secili_bolge_id)
-	elif _oyun.kuyruktaki_is_sayisi(ulke_id) >= Oyun.AZAMI_KUYRUK_UZUNLUGU:
+		_arayuz.bildirim_goster("%s sıraya alındı: %s." % [ad, _oyun.dunya.bolgeler[_secili_bolge_id].ad],
+				_secili_bolge_id)
+	elif _oyun.kuyruktaki_is_sayisi(_oyun.oyuncu_ulkesi) >= Oyun.AZAMI_KUYRUK_UZUNLUGU:
 		_arayuz.bildirim_goster("İnşa kuyruğu dolu (en çok %d iş)." % Oyun.AZAMI_KUYRUK_UZUNLUGU, "")
 	else:
-		var maliyet: float = _oyun.tumen_maliyeti() if tumen else _oyun.fabrika_maliyeti()
 		_arayuz.bildirim_goster("Hazine yetmiyor (%s: %d)." % [ad, roundi(maliyet)], "")
+
+
+## "Tahkimat" düğmesine seçili bölgenin seviyesini ve bir sonraki seviyenin fiyatını yazar.
+func _tahkimat_dugmesini_guncelle() -> void:
+	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
+		return
+	var seviye: int = _oyun.sonraki_tahkimat_seviyesi(_oyun.oyuncu_ulkesi, _secili_bolge_id)
+	InsaDugmeleri.tahkimat_durumunu_ayarla(_oyun.dunya.bolgeler[_secili_bolge_id].tahkimat,
+			_oyun.tahkimat_maliyeti(seviye) if seviye > 0 else 0.0)
+
+
+## Bir bölgenin tahkimatı yükseldi: harita işaretini ve (o bölge gösteriliyorsa) paneli yeniler.
+func _tahkimat_degisti(bolge_id: String) -> void:
+	_harita.birlikleri_yenile()
+	if bolge_id != _secili_bolge_id:
+		return
+	if _secili_birlikler.is_empty():
+		_bolgeyi_sec(bolge_id)
+	else:
+		# Birlik kartı açık: seçimi ("Yarısını ayır" ile küçülmüş olabilir) bozmadan yenile.
+		_arayuz.birligi_goster(_oyun.dunya.bolgeler[bolge_id], _secili_birlikler,
+				_oyun.dunya.ulkeler[_oyun.oyuncu_ulkesi])
+
+
+## "Teknoloji" düğmesi açıldı: alt panel aynı yeri kapladığı için seçim kaldırılır.
+func _teknolojiyi_ac() -> void:
+	_bolgeyi_sec("")
+	_teknolojiyi_goster()
+
+
+## Teknoloji panelini oyuncunun güncel seviyeleri ve süren araştırmasıyla açar/yeniler.
+func _teknolojiyi_goster() -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	_arayuz.teknolojiyi_goster(_oyun.teknolojiler.get(ulke_id, {}), _oyun.suren_arastirma(ulke_id))
+
+
+func _teknoloji_ilerlemesini_guncelle() -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	_arayuz.teknoloji_ilerlemesini_goster(_oyun.teknolojiler.get(ulke_id, {}), _oyun.suren_arastirma(ulke_id))
+
+
+## Teknoloji panelinde bir kutuya dokunuldu: araştırma başlar ya da nedeni bildirilir.
+func _arastirma_istendi(dal: String) -> void:
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	if _oyun.arastirma_baslat(ulke_id, dal):
+		return
+	if not _oyun.suren_arastirma(ulke_id).is_empty():
+		_arayuz.bildirim_goster("Aynı anda tek araştırma yapılabilir.", "")
+	else:
+		var seviye: int = _oyun.teknoloji_seviyesi(ulke_id, dal) + 1
+		_arayuz.bildirim_goster("Hazine yetmiyor (Araştırma: %d)." % roundi(Teknoloji.maliyet(seviye)), "")
 
 
 ## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.

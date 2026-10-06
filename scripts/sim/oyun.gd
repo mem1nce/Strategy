@@ -23,6 +23,9 @@ signal hazine_degisti
 signal insa_kuyrugu_degisti(ulke_id: String)
 ## Bir ülkenin araştırması başladığında ya da bittiğinde yayılır.
 signal teknoloji_degisti(ulke_id: String)
+## Bir bölgenin tahkimatı inşa bitince yükseldiğinde yayılır (el değiştirirken düşmesi
+## bolge_sahipligi_degisti ile birlikte gelir).
+signal tahkimat_degisti(bolge_id: String)
 ## Oyuncu teslim olunca bir kez yayılır (kaybetme).
 signal oyun_kaybedildi
 ## Oyuncunun kıtasındaki bölgelerin ZAFER_ORANI (×0,6) kadarı kendisinin olunca bir kez
@@ -735,7 +738,7 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 			# Bölge bu arada el değiştirdiyse iş boşa gider.
 			if bolge != null and bolge.sahip == is_.sahip:
 				bolge.tahkimat = mini(_tahkimat_azami, bolge.tahkimat + 1)
-				bolge_sahipligi_degisti.emit()
+				tahkimat_degisti.emit(bolge.id)
 			ne = "Tahkimat"
 		_:
 			if bolge != null:

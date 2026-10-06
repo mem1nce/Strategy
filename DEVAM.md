@@ -553,9 +553,14 @@ Adımlar (her biri ayrı commit):
    araştırma / tahkimat, kayıt sürümü 2 (1. sürüm kayıtlar açılır, tümenler piyade).
    Yeni sınama dosyaları: birlik_turu_testi, teknoloji_testi, tahkimat_testi; kayit_testi'ne
    eski kayıt + yeni alanların korunması eklendi. 124/124 geçiyor.
-2. ⬜ Arayüz: haritada tür işaretleri + yığın kutusunda tür sayıları, "Tümen kur" tür
-   seçimi, "Tahkimat kur" + bölge panelinde seviye + harita işareti, üst çubukta
-   "Teknoloji" düğmesi ve paneli; 16:9 ve 20:9 ekran görüntüleri.
+2. ✅ Arayüz: tümen kutusu "güç ✕piyade ⬭zırhlı ●topçu" sayılarıyla; tahkimatlı bölgenin
+   adının solunda gri kule + seviye; "Tümen kur" → ortada üç seçenekli TumenSecimPaneli
+   (fiyat, süre, neye karşı güçlü); "Tahkimat 1/3 / Kur (160)" düğmesi bölge ve birlik
+   panelinde (yabancı bölgede seviye komşu satırında yazar); üst çubukta "Teknoloji" →
+   TeknolojiPaneli (4 dal × 3 kutu, başlık yanında ilerleme çubuğu). Teknoloji paneli
+   açılınca bölge seçimi kalkar, bölge seçilince panel kapanır (ikisi aynı yeri kaplıyor).
+   Üst çubuk 16:9'a sığsın diye daraltıldı (sol panel 480, hız düğmeleri 104).
+   16:9 (1600×900) ve 20:9 (1924×900) ekran görüntüleriyle denetlendi. 124/124.
 3. ⬜ Denge: uzun koşu raporu (teslim sayısı, en büyük ülke payı, tür üretim payları, süre).
 4. ⬜ Belgeler: Nasıl oynanır, TASARIM.md, TEST_LISTESI.md.
 
@@ -570,6 +575,9 @@ Adımlar (her biri ayrı commit):
 - 2026-10-06: Karışık yığında üstünlük bonusu, karşı tarafın gücünün o türdeki payıyla
   orantılı uygulanır (ör. yarısı piyade olan yığına zırhlı +%25). Hasar, alan tarafa
   güçleriyle orantılı dağıtılır; yığın en yavaş türünün hızıyla yürür.
+- 2026-10-06: Tahkimat bitince `bolge_sahipligi_degisti` yerine yeni `tahkimat_degisti`
+  sinyali yayılır; yalnızca harita üst katmanı yeniden çizilir (sahiplik sinyali bütün
+  dolgu ağını yeniden kuruyordu, YZ sık tahkimat yaptığı için gereksiz yük olurdu).
 - 2026-10-06: Savunma teknolojisi alınan hasarı böler (savunma_carpani); Silah verilen
   hasarı çarpar. Lojistik yürüyüş süresini böler ve denizden saldırı cezasını seviye başına
   0,1 azaltır.

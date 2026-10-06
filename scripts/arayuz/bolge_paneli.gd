@@ -5,7 +5,9 @@ extends PanelContainer
 ## Üstte bölgenin adı, nüfusu ve başkent olup olmadığı; altında ülkenin adı, kıtası,
 ## toplam nüfusu ve GSYH'si yazar. "Komşuları göster" düğmesi haritada bölgenin
 ## komşularını vurgular. Oyuncu henüz ülkesini seçmediyse "Bu ülkeyle oyna" düğmesi de görünür.
-## Oyuncunun kendi bölgesinde "Tümen kur" ve "Fabrika kur" düğmeleri görünür.
+## Oyuncunun kendi bölgesinde "Tümen kur", "Fabrika kur" ve "Tahkimat kur" düğmeleri
+## görünür. Bölgenin tahkimat seviyesi kendi bölgende "Tahkimat" düğmesinde, başkasının
+## bölgesinde (varsa) komşu sayılarının yanında yazar.
 
 ## "Bu ülkeyle oyna" düğmesine basıldığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
 signal oyna_basildi(ulke_id: String)
@@ -15,14 +17,15 @@ signal komsular_degisti(acik: bool)
 signal savas_istendi(ulke_id: String)
 ## "Barış teklif et" düğmesine basıldığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
 signal baris_istendi(ulke_id: String)
-## "Tümen kur" ("tumen") ya da "Fabrika kur" ("fabrika") düğmesine basıldığında yayılır.
+## "Tümen kur" ("tumen"), "Fabrika kur" ("fabrika") ya da "Tahkimat kur" ("tahkimat")
+## düğmesine basıldığında yayılır.
 signal insa_istendi(tur: String)
 
-const KOMSU_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
+const KOMSU_DUGMESI_BOYUTU: Vector2 = Vector2(250.0, 112.0)
 const OYNA_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const SAVAS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const BARIS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
-const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(300.0, 112.0)
+const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(250.0, 112.0)
 
 var _ulke_id: String = ""
 var _ulke_adi: String = ""
@@ -33,12 +36,14 @@ var _nufus: Label = null
 var _ulke: Label = null
 var _kara_sayisi: Label = null
 var _deniz_sayisi: Label = null
+var _tahkimat: Label = null
 var _komsular: Button = null
 var _oyna: Button = null
 var _savas: Button = null
 var _savas_onayi: ConfirmationDialog = null
 var _tumen_kur: Button = null
 var _fabrika_kur: Button = null
+var _tahkimat_kur: Button = null
 var _baris: Button = null
 
 
@@ -80,6 +85,9 @@ func _ready() -> void:
 	komsu_sirasi.add_child(ara)
 	_renk_kutusu_ekle(komsu_sirasi, 30.0, HaritaGorunumu.DENIZ_GECISI_RENGI)
 	_deniz_sayisi = _etiket_ekle(komsu_sirasi)
+	_tahkimat = _etiket_ekle(komsu_sirasi)
+	_tahkimat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tahkimat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	_komsular = Button.new()
 	_komsular.custom_minimum_size = KOMSU_DUGMESI_BOYUTU
@@ -122,6 +130,8 @@ func _ready() -> void:
 	yatay.add_child(_tumen_kur)
 	_fabrika_kur = InsaDugmeleri.dugme_olustur("fabrika", INSA_DUGMESI_BOYUTU, insa_istendi)
 	yatay.add_child(_fabrika_kur)
+	_tahkimat_kur = InsaDugmeleri.dugme_olustur("tahkimat", INSA_DUGMESI_BOYUTU, insa_istendi)
+	yatay.add_child(_tahkimat_kur)
 
 	_komsu_dugmesini_yenile()
 	hide()
@@ -152,6 +162,9 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	_baris.visible = baris_dugmesi_gorunur
 	_tumen_kur.visible = insa_dugmeleri_gorunur
 	_fabrika_kur.visible = insa_dugmeleri_gorunur
+	_tahkimat_kur.visible = insa_dugmeleri_gorunur
+	_tahkimat.visible = not insa_dugmeleri_gorunur and bolge.tahkimat > 0
+	_tahkimat.text = "Tahkimat: %d/%d" % [bolge.tahkimat, InsaDugmeleri.tahkimat_azami]
 	show()
 
 
@@ -166,7 +179,7 @@ func _komsular_basildi(acik: bool) -> void:
 
 
 func _komsu_dugmesini_yenile() -> void:
-	_komsular.text = "Komşuları gizle" if _komsular.button_pressed else "Komşuları göster"
+	_komsular.text = "Komşuları\ngizle" if _komsular.button_pressed else "Komşuları\ngöster"
 
 
 func _sira_ekle(ust: Container, aralik: int) -> HBoxContainer:

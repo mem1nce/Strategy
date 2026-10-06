@@ -8,9 +8,15 @@ extends CanvasLayer
 signal oyna_istendi(ulke_id: String)
 ## Oyuncu "Komşuları göster" düğmesini açıp kapadığında yayılır.
 signal komsular_degisti(acik: bool)
-## Oyuncu bölge ya da birlik panelinde "Tümen kur" / "Fabrika kur"a bastığında yayılır
-## (`tur`: "tumen" ya da "fabrika").
+## Oyuncu bölge ya da birlik panelinde "Fabrika kur" / "Tahkimat kur"a bastığında yayılır
+## (`tur`: "fabrika" ya da "tahkimat"). "Tümen kur" önce tür seçimini açar.
 signal insa_istendi(tur: String)
+## Oyuncu tür seçim panelinde bir tümen türü seçtiğinde yayılır.
+signal tumen_istendi(birlik_turu: String)
+## Oyuncu "Teknoloji" düğmesini açtığında yayılır (güncel veri main.gd'den istenir).
+signal teknoloji_istendi
+## Oyuncu teknoloji panelinde araştırılabilir bir kutuya dokunduğunda yayılır.
+signal arastirma_istendi(dal: String)
 ## Oyuncu birlik panelinde "Yarısını ayır" düğmesine bastığında yayılır.
 signal yarisini_ayir_istendi
 ## Oyuncu "Savaş ilan et" düğmesini onayladığında, hedef ülkenin id'siyle yayılır.
@@ -36,6 +42,9 @@ const BILDIRIM_UST_BOSLUGU: float = 140.0
 ## Sıralama panelinin üst çubuğa ve alt panele binmemesi için bırakılan boşluklar (piksel).
 const SIRALAMA_UST_BOSLUGU: float = 150.0
 const SIRALAMA_ALT_BOSLUGU: float = 250.0
+## Teknoloji paneli büyüktür: sol üstteki hazine yazısının altından ekranın altına kadar olan
+## alanda ortalanır. Açıkken alt panel kapalıdır (bkz. main.gd, _teknolojiyi_ac).
+const TEKNOLOJI_UST_BOSLUGU: float = 250.0
 
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
@@ -45,6 +54,8 @@ var _birlik_paneli: BirlikPaneli = null
 var _sonuc_paneli: SonucPaneli = null
 var _siralama_paneli: SiralamaPaneli = null
 var _bildirim_kutusu: BildirimKutusu = null
+var _tumen_secim_paneli: TumenSecimPaneli = null
+var _teknoloji_paneli: TeknolojiPaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -70,6 +81,7 @@ func kur(dunya: Dunya) -> void:
 	dikey.add_child(_ust_cubuk)
 	_ust_cubuk.yz_yonetimi_degisti.connect(func(acik: bool) -> void: yz_yonetimi_degisti.emit(acik))
 	_ust_cubuk.siralama_degisti.connect(_siralama_degisti)
+	_ust_cubuk.teknoloji_degisti.connect(_teknoloji_degisti)
 
 	var bosluk: Control = Control.new()
 	bosluk.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -82,12 +94,12 @@ func kur(dunya: Dunya) -> void:
 	_bolge_paneli.komsular_degisti.connect(func(acik: bool) -> void: komsular_degisti.emit(acik))
 	_bolge_paneli.savas_istendi.connect(func(ulke_id: String) -> void: savas_istendi.emit(ulke_id))
 	_bolge_paneli.baris_istendi.connect(func(ulke_id: String) -> void: baris_istendi.emit(ulke_id))
-	_bolge_paneli.insa_istendi.connect(func(tur: String) -> void: insa_istendi.emit(tur))
+	_bolge_paneli.insa_istendi.connect(_insa_basildi)
 
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
 	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
-	_birlik_paneli.insa_istendi.connect(func(tur: String) -> void: insa_istendi.emit(tur))
+	_birlik_paneli.insa_istendi.connect(_insa_basildi)
 
 	var sonuc_ortalayici: CenterContainer = CenterContainer.new()
 	sonuc_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -107,6 +119,24 @@ func kur(dunya: Dunya) -> void:
 	kok.add_child(siralama_ortalayici)
 	_siralama_paneli = SiralamaPaneli.new()
 	siralama_ortalayici.add_child(_siralama_paneli)
+
+	var teknoloji_ortalayici: CenterContainer = CenterContainer.new()
+	teknoloji_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	teknoloji_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	teknoloji_ortalayici.offset_top = TEKNOLOJI_UST_BOSLUGU
+	teknoloji_ortalayici.offset_bottom = -KENAR_BOSLUGU
+	kok.add_child(teknoloji_ortalayici)
+	_teknoloji_paneli = TeknolojiPaneli.new()
+	teknoloji_ortalayici.add_child(_teknoloji_paneli)
+	_teknoloji_paneli.arastirma_istendi.connect(func(dal: String) -> void: arastirma_istendi.emit(dal))
+
+	var tumen_ortalayici: CenterContainer = CenterContainer.new()
+	tumen_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tumen_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	kok.add_child(tumen_ortalayici)
+	_tumen_secim_paneli = TumenSecimPaneli.new()
+	tumen_ortalayici.add_child(_tumen_secim_paneli)
+	_tumen_secim_paneli.tur_secildi.connect(func(tur: String) -> void: tumen_istendi.emit(tur))
 
 	# Sabit boyut: tek seferlik PRESET_TOP_RIGHT, kutu henüz boşken (sıfır içerik
 	# genişliğinde) hesaplanıp donardı; sonradan eklenen kartlar büyümezdi.
@@ -140,9 +170,12 @@ func kaybi_goster() -> void:
 
 
 ## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.
+## Teknoloji paneli alt panelle aynı yeri kapladığı için bir bölge gösterilince kapanır.
 func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
 		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false,
 		insa_dugmeleri_gorunur: bool = false) -> void:
+	if bolge != null:
+		_teknoloji_panelini_kapat()
 	_birlik_paneli.hide()
 	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur,
 			insa_dugmeleri_gorunur)
@@ -150,6 +183,7 @@ func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
 
 ## Alt panelde, verilen bölgedeki oyuncu tümenlerini gösterir (bölge paneli yerine).
 func birligi_goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
+	_teknoloji_panelini_kapat()
 	_bolge_paneli.hide()
 	_birlik_paneli.goster(bolge, birlikler, ulke)
 
@@ -184,11 +218,51 @@ func bildirim_goster(metin: String, bolge_id: String) -> void:
 	_bildirim_kutusu.ekle(metin, bolge_id)
 
 
+## Teknoloji panelini oyuncunun güncel durumuyla açar (bkz. TeknolojiPaneli.goster).
+func teknolojiyi_goster(seviyeler: Dictionary, suren: Dictionary) -> void:
+	_teknoloji_paneli.goster(seviyeler, suren)
+
+
+## Teknoloji paneli açıksa yalnızca ilerleme çubuğunu günceller.
+func teknoloji_ilerlemesini_goster(seviyeler: Dictionary, suren: Dictionary) -> void:
+	if _teknoloji_paneli.visible:
+		_teknoloji_paneli.ilerlemeyi_goster(seviyeler, suren)
+
+
+func _teknoloji_panelini_kapat() -> void:
+	_teknoloji_paneli.hide()
+	_ust_cubuk.teknoloji_dugmesini_kapat()
+
+
+func teknoloji_acik_mi() -> bool:
+	return _teknoloji_paneli.visible
+
+
+## Bölge/birlik panelindeki inşa düğmeleri: "Tümen kur" tür seçimini açar, diğerleri
+## doğrudan main.gd'ye iletilir.
+func _insa_basildi(tur: String) -> void:
+	if tur == "tumen":
+		_tumen_secim_paneli.show()
+	else:
+		insa_istendi.emit(tur)
+
+
+## Sıralama ve teknoloji panelleri aynı yerde durur; biri açılınca öteki kapanır.
 func _siralama_degisti(acik: bool) -> void:
 	if acik:
+		_teknoloji_panelini_kapat()
 		siralama_istendi.emit()
 	else:
 		_siralama_paneli.hide()
+
+
+func _teknoloji_degisti(acik: bool) -> void:
+	if acik:
+		_siralama_paneli.hide()
+		_ust_cubuk.siralama_dugmesini_kapat()
+		teknoloji_istendi.emit()
+	else:
+		_teknoloji_paneli.hide()
 
 
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.

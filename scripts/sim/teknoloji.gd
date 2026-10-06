@@ -81,6 +81,6 @@ static func seviye_aciklamasi(dal: String, seviye: int) -> String:
 		"savunma":
 			return "Savunma +%%%d" % roundi((savunma_carpani(seviye) - 1.0) * 100.0)
 		"lojistik":
-			return "Hız +%%%d, deniz cezası −%%%d" % [roundi((hiz_carpani(seviye) - 1.0) * 100.0),
+			return "Hız +%%%d, deniz cezası -%%%d" % [roundi((hiz_carpani(seviye) - 1.0) * 100.0),
 					roundi(deniz_cezasi_azalisi(seviye) * 100.0)]
 	return ""

@@ -83,19 +83,25 @@ const BOLGE_ADI_SIGMA_SINIRI: float = 10.0
 ## İki ad arasında bırakılan en az boşluk (piksel).
 const YAZI_ARALIGI: float = 6.0
 const YILDIZ_YARICAPI: float = 13.0
-## Aynı bölgedeki bütün tümenler tek kutuda, toplam güçleriyle gösterilir. Bölge adları gibi
-## yakınlıktan bağımsız sabit ekran boyutundadır.
+## Aynı bölgedeki bütün tümenler tek kutuda gösterilir: solda toplam güç, sağında her tür
+## için işareti ve tümen sayısı. Bölge adları gibi yakınlıktan bağımsız sabit ekran
+## boyutundadır; genişlik içerikle değişir, yükseklik ve en küçük genişlik sabittir.
 const BIRLIK_KUTU_BOYUTU: Vector2 = Vector2(64.0, 40.0)
+const BIRLIK_KUTU_IC_BOSLUGU: float = 8.0
+## Tür işaretinin kapladığı kare (piksel) ve işaretle sayısı arasındaki boşluk.
+const TUR_ISARETI_BOYUTU: float = 20.0
+const TUR_ISARETI_ARALIGI: float = 4.0
+const TUR_ISARETI_KALINLIGI: float = 3.0
+## Tahkimatlı bölgenin adının solundaki küçük kale işareti.
+const TAHKIMAT_ISARETI_BOYUTU: float = 22.0
+const TAHKIMAT_ISARETI_RENGI: Color = Color(0.62, 0.62, 0.66)
+const TAHKIMAT_YAZI_BOYUTU: int = 20
 const BIRLIK_KUTU_KENAR_RENGI: Color = Color(0.0, 0.0, 0.0, 0.85)
 const BIRLIK_KUTU_KENAR_KALINLIGI: float = 3.0
 const BIRLIK_YAZI_BOYUTU: int = 26
-## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir.
+## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir. Bu yer başka bir
+## kutuya çarpıyorsa daha üstü, solu ve sağı denenir (bkz. _birlik_kutularini_yerlestir).
 const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
-## Kutu, varsayılan yerinde başka bir kutuya çarpıyorsa sırayla bu yerler denenir
-## (bölge etiketine göre, ekran pikseli). Hiçbiri boş değilse varsayılan yer kullanılır.
-const BIRLIK_YEDEK_KONUMLARI: Array[Vector2] = [
-	Vector2(0.0, -46.0), Vector2(0.0, -92.0), Vector2(-76.0, -46.0), Vector2(76.0, -46.0),
-]
 ## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu. Yakınlıktan bağımsız her zaman görünür.
 const YOL_CIZGISI_RENGI: Color = Color(1.0, 0.95, 0.42, 0.85)
 const YOL_CIZGISI_KALINLIGI: float = 4.0
@@ -523,10 +529,11 @@ func _ust_katmani_ciz() -> void:
 	# Önce tümen kutularının yeri belirlenir; bölge adları kutulara çarpıyorsa yazılmaz
 	# (tümen bilgisi bölge adından önemlidir; ad yakınlaşınca yine görünür).
 	var kutu_alanlari: Array[Rect2] = []
-	var kutu_yerleri: Dictionary[String, Vector2] = _birlik_kutularini_yerlestir(gorunen, kutu_alanlari)
+	var ozetler: Dictionary[String, Dictionary] = _birlik_ozetleri(gorunen)
+	var kutu_yerleri: Dictionary[String, Vector2] = _birlik_kutularini_yerlestir(ozetler, kutu_alanlari)
 	_ulke_adlarini_ciz(gorunen, olcek)
 	_bolge_adlarini_ciz(gorunen, olcek, kutu_alanlari)
-	_birlikleri_ciz(gorunen, olcek, kutu_yerleri)
+	_birlikleri_ciz(olcek, ozetler, kutu_yerleri)
 	_ust_katman.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -653,11 +660,18 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float, kutu_alanlari: Array[Rect
 				if kutu.intersects(ad_alani):
 					ad_gorunur = false
 					break
-		if not ad_gorunur and not bolge.baskent:
+		if not ad_gorunur and not bolge.baskent and bolge.tahkimat == 0:
 			continue
 		var oge_opakligi: float = 1.0 if secili else opaklik
 
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
+		if bolge.tahkimat > 0:
+			# Ad yazılıyorsa solunda, yazılmıyorsa etiket noktasının biraz altında durur.
+			var tahkimat_yeri: Vector2 = Vector2(0.0, TAHKIMAT_ISARETI_BOYUTU)
+			if ad_gorunur:
+				tahkimat_yeri = Vector2(-_bolge_adi_genisligi[i] * 0.5 - TAHKIMAT_ISARETI_BOYUTU,
+						taban_y - BOLGE_ADI_BOYUTU * 0.35)
+			_tahkimat_isareti_ciz(tahkimat_yeri, bolge.tahkimat, oge_opakligi)
 		if bolge.baskent:
 			_yildiz_ciz(Vector2(0.0, -YILDIZ_YARICAPI * 0.6), oge_opakligi)
 		if ad_gorunur:
@@ -684,59 +698,82 @@ func _yol_cizgilerini_ciz(olcek: float) -> void:
 		_ust_katman.draw_line(kaynak.etiket, hedef.etiket, YOL_CIZGISI_RENGI, YOL_CIZGISI_KALINLIGI * olcek, true)
 
 
-## Aynı bölgedeki tümenleri tek kutuda, toplam güçleriyle çizer. Bölge sınırları ve adları
-## gibi yalnızca yakınlaşınca görünür; uzaktan dünya genelinde yüzlerce kutu dünyayı
-## karmaşıklaştırmasın diye.
-## `kutu_yerleri`, _birlik_kutularini_yerlestir()'in seçtiği yerlerdir.
-func _birlikleri_ciz(gorunen: Rect2, olcek: float, kutu_yerleri: Dictionary[String, Vector2]) -> void:
+## Ekrandaki her tümenli bölgenin özeti: bölge id'si -> {"guc": toplam güç, "sayilar": tür ->
+## tümen sayısı, "sahipler": ülke id'si kümesi, "genislik": kutunun ekran genişliği}.
+## Yalnızca yakınlaşınca (bölge ayrıntıları görünürken) dolar; uzaktan dünya genelinde
+## yüzlerce kutu haritayı karmaşıklaştırmasın diye.
+func _birlik_ozetleri(gorunen: Rect2) -> Dictionary[String, Dictionary]:
+	var ozetler: Dictionary[String, Dictionary] = {}
 	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
-		return
-	var toplam_guc: Dictionary[String, float] = {}
-	var sahipler: Dictionary[String, Dictionary] = {}
+		return ozetler
 	for birlik: Birlik in _oyun.birlikler:
-		toplam_guc[birlik.bolge_id] = toplam_guc.get(birlik.bolge_id, 0.0) + birlik.guc
-		var kume: Dictionary = sahipler.get(birlik.bolge_id, {})
-		kume[birlik.sahip] = true
-		sahipler[birlik.bolge_id] = kume
+		var ozet: Dictionary = ozetler.get(birlik.bolge_id, {})
+		if ozet.is_empty():
+			var bolge: Bolge = _dunya.bolgeler.get(birlik.bolge_id)
+			if bolge == null or not gorunen.has_point(bolge.etiket):
+				continue
+			ozet = {"guc": 0.0, "sayilar": {}, "sahipler": {}}
+			ozetler[birlik.bolge_id] = ozet
+		ozet["guc"] += birlik.guc
+		ozet["sayilar"][birlik.tur] = int(ozet["sayilar"].get(birlik.tur, 0)) + 1
+		ozet["sahipler"][birlik.sahip] = true
+	for bolge_id: String in ozetler:
+		ozetler[bolge_id]["genislik"] = _birlik_kutusu_genisligi(ozetler[bolge_id])
+	return ozetler
 
-	for bolge_id: String in toplam_guc:
-		var bolge: Bolge = _dunya.bolgeler.get(bolge_id)
-		if bolge == null or not gorunen.has_point(bolge.etiket):
-			continue
+
+## Kutunun genişliği: iç boşluk + güç yazısı + her tür için (aralık + işaret + sayı).
+func _birlik_kutusu_genisligi(ozet: Dictionary) -> float:
+	var genislik: float = BIRLIK_KUTU_IC_BOSLUGU * 2.0 + _yazi_genisligi(str(roundi(ozet["guc"])))
+	for tur: String in BirlikTurleri.SIRA:
+		var sayi: int = ozet["sayilar"].get(tur, 0)
+		if sayi > 0:
+			genislik += BIRLIK_KUTU_IC_BOSLUGU + TUR_ISARETI_BOYUTU + TUR_ISARETI_ARALIGI + _yazi_genisligi(str(sayi))
+	return maxf(genislik, BIRLIK_KUTU_BOYUTU.x)
+
+
+func _yazi_genisligi(metin: String) -> float:
+	return _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
+
+
+## Aynı bölgedeki tümenleri tek kutuda çizer (bkz. _birlik_ozetleri).
+## `kutu_yerleri`, _birlik_kutularini_yerlestir()'in seçtiği yerlerdir.
+func _birlikleri_ciz(olcek: float, ozetler: Dictionary[String, Dictionary],
+		kutu_yerleri: Dictionary[String, Vector2]) -> void:
+	for bolge_id: String in ozetler:
+		var bolge: Bolge = _dunya.bolgeler[bolge_id]
 		var sahip: Ulke = _dunya.bolgenin_sahibi(bolge_id)
 		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
 		var yer: Vector2 = kutu_yerleri.get(bolge_id, BIRLIK_KONUM_PAYI)
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
-		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id], yer)
-		if sahipler[bolge_id].size() > 1:
-			_muharebe_isareti_ciz(yer)
+		_birlik_kutusu_ciz(renk, ozetler[bolge_id], yer)
+		if ozetler[bolge_id]["sahipler"].size() > 1:
+			_muharebe_isareti_ciz(yer, ozetler[bolge_id]["genislik"])
 
 
 ## Ekrandaki tümen kutularına, birbirlerinin üstüne binmeyecek yerler seçer: güçlü bölgeden
-## zayıfa, her kutu için BIRLIK_YEDEK_KONUMLARI sırayla denenir. Seçilen yerleri (bölge id'si
-## -> etikete göre ekran pikseli) döndürür; kutuların kapladığı alanları da `kutu_alanlari`na
-## (kamera kaymasından bağımsız, yalnızca yakınlığa bağlı koordinatlarla) ekler.
-func _birlik_kutularini_yerlestir(gorunen: Rect2, kutu_alanlari: Array[Rect2]) -> Dictionary[String, Vector2]:
+## zayıfa, her kutu için etiketin üstü, daha üstü, solu ve sağı sırayla denenir. Seçilen
+## yerleri (bölge id'si -> etikete göre ekran pikseli) döndürür; kutuların kapladığı alanları
+## da `kutu_alanlari`na (kamera kaymasından bağımsız, yalnızca yakınlığa bağlı koordinatlarla) ekler.
+func _birlik_kutularini_yerlestir(ozetler: Dictionary[String, Dictionary],
+		kutu_alanlari: Array[Rect2]) -> Dictionary[String, Vector2]:
 	var yerler: Dictionary[String, Vector2] = {}
-	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
-		return yerler
-	var toplam_guc: Dictionary[String, float] = {}
-	for birlik: Birlik in _oyun.birlikler:
-		toplam_guc[birlik.bolge_id] = toplam_guc.get(birlik.bolge_id, 0.0) + birlik.guc
 	var bolge_idleri: Array[String] = []
-	for bolge_id: String in toplam_guc:
-		var bolge: Bolge = _dunya.bolgeler.get(bolge_id)
-		if bolge != null and gorunen.has_point(bolge.etiket):
-			bolge_idleri.append(bolge_id)
-	bolge_idleri.sort_custom(func(a: String, b: String) -> bool: return toplam_guc[a] > toplam_guc[b])
+	bolge_idleri.assign(ozetler.keys())
+	bolge_idleri.sort_custom(func(a: String, b: String) -> bool: return ozetler[a]["guc"] > ozetler[b]["guc"])
 
-	# Muharebe işareti kutunun sağında durduğu için alan sağa doğru biraz geniş tutulur.
-	var boyut: Vector2 = BIRLIK_KUTU_BOYUTU + Vector2(MUHAREBE_ISARETI_YARICAPI * 2.0 + 10.0, 0.0)
 	for bolge_id: String in bolge_idleri:
+		var genislik: float = ozetler[bolge_id]["genislik"]
+		# Muharebe işareti kutunun sağında durduğu için alan sağa doğru biraz geniş tutulur.
+		var boyut: Vector2 = Vector2(genislik + MUHAREBE_ISARETI_YARICAPI * 2.0 + 10.0, BIRLIK_KUTU_BOYUTU.y)
+		var yan: float = genislik * 0.5 + MUHAREBE_ISARETI_YARICAPI + 20.0
+		var adaylar: Array[Vector2] = [BIRLIK_KONUM_PAYI, BIRLIK_KONUM_PAYI * 2.0,
+				BIRLIK_KONUM_PAYI + Vector2(-yan, 0.0), BIRLIK_KONUM_PAYI + Vector2(yan, 0.0)]
 		var temel: Vector2 = _dunya.bolgeler[bolge_id].etiket * _yakinlik
+		var yarim: Vector2 = Vector2(genislik, BIRLIK_KUTU_BOYUTU.y) * 0.5
 		var secilen: Vector2 = BIRLIK_KONUM_PAYI
-		for aday: Vector2 in BIRLIK_YEDEK_KONUMLARI:
-			var alan: Rect2 = Rect2(temel + aday - BIRLIK_KUTU_BOYUTU * 0.5, boyut).grow(YAZI_ARALIGI * 0.5)
+		for aday: Vector2 in adaylar:
+			var alan: Rect2 = Rect2(temel + aday - yarim, boyut).grow(YAZI_ARALIGI * 0.5)
 			var carpiyor: bool = false
 			for dolu: Rect2 in kutu_alanlari:
 				if dolu.intersects(alan):
@@ -746,15 +783,15 @@ func _birlik_kutularini_yerlestir(gorunen: Rect2, kutu_alanlari: Array[Rect2]) -
 				secilen = aday
 				break
 		yerler[bolge_id] = secilen
-		kutu_alanlari.append(Rect2(temel + secilen - BIRLIK_KUTU_BOYUTU * 0.5, boyut))
+		kutu_alanlari.append(Rect2(temel + secilen - yarim, boyut))
 	return yerler
 
 
-## `konum` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
+## `merkez` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
 ## yakınlıktan bağımsız olarak bölge etiketine göre hep aynı ekran uzaklığında kalsın
 ## (konum dönüşüm köküne eklenseydi, kamera yakınlığıyla birlikte ekranda büyürdü).
-func _birlik_kutusu_ciz(renk: Color, guc: float, merkez: Vector2 = BIRLIK_KONUM_PAYI) -> void:
-	var yarim: Vector2 = BIRLIK_KUTU_BOYUTU * 0.5
+func _birlik_kutusu_ciz(renk: Color, ozet: Dictionary, merkez: Vector2 = BIRLIK_KONUM_PAYI) -> void:
+	var yarim: Vector2 = Vector2(ozet["genislik"], BIRLIK_KUTU_BOYUTU.y) * 0.5
 	var kose: PackedVector2Array = PackedVector2Array([
 		merkez + Vector2(-yarim.x, -yarim.y), merkez + Vector2(yarim.x, -yarim.y),
 		merkez + Vector2(yarim.x, yarim.y), merkez + Vector2(-yarim.x, yarim.y),
@@ -763,15 +800,71 @@ func _birlik_kutusu_ciz(renk: Color, guc: float, merkez: Vector2 = BIRLIK_KONUM_
 	kose.append(kose[0])
 	_ust_katman.draw_polyline(kose, BIRLIK_KUTU_KENAR_RENGI, BIRLIK_KUTU_KENAR_KALINLIGI, true)
 
-	var metin: String = str(roundi(guc))
-	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
-	_yazi_ciz(metin, merkez + Vector2(-genislik * 0.5, BIRLIK_YAZI_BOYUTU * 0.35), BIRLIK_YAZI_BOYUTU, 1.0)
+	var taban_y: float = merkez.y + BIRLIK_YAZI_BOYUTU * 0.35
+	var x: float = merkez.x - yarim.x + BIRLIK_KUTU_IC_BOSLUGU
+	var guc_metni: String = str(roundi(ozet["guc"]))
+	_yazi_ciz(guc_metni, Vector2(x, taban_y), BIRLIK_YAZI_BOYUTU, 1.0)
+	x += _yazi_genisligi(guc_metni)
+	for tur: String in BirlikTurleri.SIRA:
+		var sayi: int = ozet["sayilar"].get(tur, 0)
+		if sayi == 0:
+			continue
+		x += BIRLIK_KUTU_IC_BOSLUGU
+		_tur_isareti_ciz(tur, Vector2(x + TUR_ISARETI_BOYUTU * 0.5, merkez.y))
+		x += TUR_ISARETI_BOYUTU + TUR_ISARETI_ARALIGI
+		var metin: String = str(sayi)
+		_yazi_ciz(metin, Vector2(x, taban_y), BIRLIK_YAZI_BOYUTU, 1.0)
+		x += _yazi_genisligi(metin)
+
+
+## Tümen türünün sade işareti (TUR_ISARETI_BOYUTU'luk karede, koyu kenarlı beyaz):
+## piyade çarpı, zırhlı yatay oval, topçu dolu daire.
+func _tur_isareti_ciz(tur: String, merkez: Vector2) -> void:
+	var r: float = TUR_ISARETI_BOYUTU * 0.5
+	var kenar: Color = BIRLIK_KUTU_KENAR_RENGI
+	match tur:
+		"zirhli":
+			var oval: PackedVector2Array = PackedVector2Array()
+			for k: int in 21:
+				var aci: float = TAU * k / 20.0
+				oval.append(merkez + Vector2(cos(aci) * r, sin(aci) * r * 0.55))
+			_ust_katman.draw_polyline(oval, kenar, TUR_ISARETI_KALINLIGI + 3.0, true)
+			_ust_katman.draw_polyline(oval, Color.WHITE, TUR_ISARETI_KALINLIGI, true)
+		"topcu":
+			_ust_katman.draw_circle(merkez, r * 0.7 + 1.5, kenar)
+			_ust_katman.draw_circle(merkez, r * 0.7, Color.WHITE)
+		_:
+			var a: Vector2 = Vector2(r * 0.8, r * 0.8)
+			var b: Vector2 = Vector2(r * 0.8, -r * 0.8)
+			for renk_kalinlik: Array in [[kenar, TUR_ISARETI_KALINLIGI + 3.0], [Color.WHITE, TUR_ISARETI_KALINLIGI]]:
+				_ust_katman.draw_line(merkez - a, merkez + a, renk_kalinlik[0], renk_kalinlik[1], true)
+				_ust_katman.draw_line(merkez - b, merkez + b, renk_kalinlik[0], renk_kalinlik[1], true)
+
+
+## Tahkimatlı bölgenin küçük kale işareti: gri, dişli bir kule ve içinde seviyesi.
+## `merkez`, bölge etiketinin ölçeklenmiş yerel çerçevesindedir.
+func _tahkimat_isareti_ciz(merkez: Vector2, seviye: int, opaklik: float) -> void:
+	var y: float = TAHKIMAT_ISARETI_BOYUTU * 0.5
+	var d: float = y / 3.0
+	# Üstte üç diş olan bir kule silueti.
+	var kule: PackedVector2Array = PackedVector2Array([
+		merkez + Vector2(-y, y), merkez + Vector2(-y, -y), merkez + Vector2(-y + d, -y),
+		merkez + Vector2(-y + d, -y + d), merkez + Vector2(-d * 0.5, -y + d), merkez + Vector2(-d * 0.5, -y),
+		merkez + Vector2(d * 0.5, -y), merkez + Vector2(d * 0.5, -y + d), merkez + Vector2(y - d, -y + d),
+		merkez + Vector2(y - d, -y), merkez + Vector2(y, -y), merkez + Vector2(y, y),
+	])
+	_ust_katman.draw_colored_polygon(kule, Color(TAHKIMAT_ISARETI_RENGI, opaklik))
+	kule.append(kule[0])
+	_ust_katman.draw_polyline(kule, Color(BIRLIK_KUTU_KENAR_RENGI, opaklik), 2.0, true)
+	var metin: String = str(seviye)
+	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TAHKIMAT_YAZI_BOYUTU).x
+	_yazi_ciz(metin, merkez + Vector2(-genislik * 0.5, y * 0.2 + TAHKIMAT_YAZI_BOYUTU * 0.35), TAHKIMAT_YAZI_BOYUTU, opaklik)
 
 
 ## Tümen kutusunun sağına, birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen
 ## kırmızı bir daire çizer. `_birlik_kutusu_ciz` ile aynı ölçeklenmiş yerel çerçevede çalışır.
-func _muharebe_isareti_ciz(kutu_merkezi: Vector2 = BIRLIK_KONUM_PAYI) -> void:
-	var merkez: Vector2 = kutu_merkezi + Vector2(BIRLIK_KUTU_BOYUTU.x * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
+func _muharebe_isareti_ciz(kutu_merkezi: Vector2, kutu_genisligi: float) -> void:
+	var merkez: Vector2 = kutu_merkezi + Vector2(kutu_genisligi * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
 	_ust_katman.draw_circle(merkez, MUHAREBE_ISARETI_YARICAPI, MUHAREBE_ISARETI_RENGI)
 	_ust_katman.draw_arc(merkez, MUHAREBE_ISARETI_YARICAPI, 0.0, TAU, 24, Color.WHITE, 2.0)
 
