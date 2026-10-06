@@ -308,18 +308,37 @@ Birlikler, savaş ve ekonomi ileride bu sinyallere bağlanacaktır.
 
 ## 7. Birlikler
 
-Tek birlik türü: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.json → "ordu").
+Birlik: **tümen**. Gücü 0-100 arasındadır (bkz. data/balance.json → "ordu"). Üç tümen türü
+vardır (`sim/birlik_turleri.gd`, sayılar data/balance.json → "birlik_turleri"):
+
+| Tür | Fiyat | Süre | Bakım/gün | Saldırı | Savunma | Hız | Üstün olduğu |
+|---|---|---|---|---|---|---|---|
+| Piyade | 40 | 4 gün | 0,4 | ×1,0 | ×1,0 | ×1,0 | topçu |
+| Zırhlı | 90 | 7 gün | 1,0 | ×1,2 | ×0,9 | ×0,6 süre (hızlı) | piyade |
+| Topçu | 60 | 5 gün | 0,6 | ×1,1 | ×1,1 | ×1,1 süre (yavaş) | zırhlı |
+
+- **Üstünlük üçgeni:** zırhlı > piyade > topçu > zırhlı. Üstün tür, yendiği türe
+  `ustunluk_bonusu` (+%50) fazla hasar verir. Karışık bir yığında bonus, karşı tarafın
+  gücünün o türdeki payıyla orantılıdır (yarısı piyade olan yığına zırhlı +%25).
+- Karışık yığın tek muharebede çözülür; yığın en yavaş türünün hızıyla yürür.
+- Eski (1. sürüm) kayıtlardaki ve türü bilinmeyen tümenler piyade sayılır.
 
 - **Başlangıç ordusu:** ülke başına tümen sayısı nüfus ve GSYH'den basit bir puanla çıkar:
   `puan = (sqrt(nufus / nufus_bolen) + sqrt(gsyh_milyon_dolar / gsyh_bolen)) / 2`, yuvarlanıp
   `asgari_tumen`-`azami_tumen` (1-24) arasına sınırlanır. Sabitler data/balance.json →
   "ordu" içindedir; dengesi ileride uzun koşu sınamasıyla ayarlanacaktır (bkz. 9. Yol
   haritası, H).
+- **Başlangıçta tür dağılımı:** kişi başı GSYH `ordu.kisi_basi_gsyh_alt` (2 000 $) ile
+  `kisi_basi_gsyh_ust` (50 000 $) arasında `agir_pay_asgari` (%10) ile `agir_pay_azami`
+  (%50) arasında bir "ağır tümen" (zırhlı + topçu) payı verir; zengin ülkenin zırhlı ve
+  topçusu daha çoktur. Ağır tümenler zırhlı ve topçu arasında dönüşümlü dağıtılır.
 - **Yerleşim:** tümenler başkent bölgesine ve kara sınırı olan (başka ülkeye komşu) bölgelere
   sırayla dağıtılır; sınır bölgesi yoksa (ör. ada ülkesi) hepsi başkente yerleşir.
 - **Gösterim:** aynı bölgedeki bütün tümenler haritada tek bir kutu olarak görünür; kutu
-  bölgenin sahibinin renginde, içinde o bölgedeki toplam güç yazar. Kutu, bölge adları gibi
-  yakınlıktan bağımsız, sabit ekran boyutundadır.
+  bölgenin sahibinin renginde, solunda toplam güç, sağında her tür için sade bir işaret ve
+  tümen sayısı yazar (piyade çarpı, zırhlı yatay oval, topçu dolu daire; ör. "520 ✕3 ⬭2 ●1").
+  Kutu, bölge adları gibi yakınlıktan bağımsız, sabit ekran boyutundadır. Birlik kartında
+  tümen sayısı türlere göre yazar ("Tümen: 6 (Piyade 3 · Zırhlı 2 · Topçu 1)").
 - **Seçme ve emir:** oyuncunun kendi tümenlerinin olduğu bölgeye dokununca birlik kartı
   açılır. Kart açıkken başka bir bölgeye dokunmak hareket emridir: tümenler
   `YolBulucu`nun bulduğu sürede (kara 24 saat, deniz daha yavaş) hedefe yürür; yürürken
@@ -353,9 +372,14 @@ savaş varsa her iki yönde de `savasta_mi()` doğru döner.
   data/balance.json → "savas"):
   - Her taraf, karşı tarafın **etkin** toplam gücüyle orantılı saatlik kayıp alır
     (`saatlik_kayip_orani`).
-  - **Savunan** `savunan_avantaji` (×1,25) kadar avantajlıdır: verdiği hasar bu oranda artar.
+  - Bir tarafın verdiği hasar, tümenlerinin türüne göre (`saldiri` ya da savunurken
+    `savunma` çarpanı, karşı tarafın tür dağılımına göre üstünlük bonusu) ve Silah
+    teknolojisine göre artar; alınan hasar tümenlere güçleriyle orantılı dağıtılır ve
+    Savunma teknolojisine bölünür (bkz. 10a. Teknoloji).
+  - **Savunan** `savunan_avantaji` (×1,25) kadar avantajlıdır: verdiği hasar bu oranda artar;
+    bölgenin tahkimatı da seviye başına +%15 ekler (bkz. 10b. Tahkimat).
   - Son adımı deniz yoluyla gelen **saldırgan** tümenler `deniz_cezasi` (×0,70) alır: güçleri
-    hasap edilirken bu oranda azalır.
+    hasap edilirken bu oranda azalır. Lojistik teknolojisi cezayı seviye başına 0,1 hafifletir.
   - Gücü `ASGARI_GUC`'un altına düşen tümen yok sayılır (silinir).
   - Bir taraf tükenirse ya da karşı tarafın gücünün `cekilme_esigi`'nin (×0,25) altına
     düşerse **geri çekilir**: en yakın dost komşu (kara ya da deniz) bölgeye taşınır; öyle
@@ -398,21 +422,24 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
 - **Hazine:** `Oyun.hazineler` (ülke id'si → birikmiş üretim), her oyun günü başında
   (`Oyun.gun_basladi()`, `Zaman.gun_basladi`'den main.gd aracılığıyla çağrılır) o günün
   geliri eklenerek güncellenir. Üst çubukta oyuncunun hazinesi yazılı.
-- **Harcama:** `Oyun.tumen_sirala()` ve `fabrika_sirala()`, bir ülkenin (kendi) bir
-  bölgesinde iş sıralar; maliyet hemen hazineden düşülür (yetmezse sıralanamaz). Her
+- **Harcama:** `Oyun.tumen_sirala(ulke, bolge, tur)`, `fabrika_sirala()` ve `tahkimat_sirala()`,
+  bir ülkenin (kendi) bir bölgesinde iş sıralar; maliyet hemen hazineden düşülür (yetmezse sıralanamaz). Her
   ülkenin **tek** bir inşa kuyruğu vardır (`Oyun.insa_kuyruklari`), en fazla
   `AZAMI_KUYRUK_UZUNLUGU` (5) iş bekleyebilir; yalnızca kuyruğun ÖNÜNDEKİ iş ilerler,
   arkadakiler sırasını bekler. Süresi dolan tümen işi, belirtilen bölgede
   `baslangic_gucu` ile yeni bir tümen doğurur; fabrika işi bölgenin `fabrika_sanayisi`'ni
-  kalıcı olarak `fabrika_sanayi_artisi` kadar artırır (bkz. yukarıdaki "Sanayi"). Sabitler
-  data/balance.json → "ekonomi" (`tumen_maliyeti`, `tumen_suresi_saat`, ...).
-- **Bakım:** her oyun günü başında (gelir eklendikten sonra), her ülkenin tümen sayısı ×
-  `bakim_birim_maliyeti` hazinesinden düşülür. Hazine yetmezse 0'da kalır ve açık, o
+  kalıcı olarak `fabrika_sanayi_artisi` kadar artırır (bkz. yukarıdaki "Sanayi"). Tümenin
+  fiyatı ve süresi türüne göredir (bkz. 7. Birlikler); fabrika sabitleri data/balance.json →
+  "ekonomi".
+- **Bakım:** her oyun günü başında (gelir eklendikten sonra), her ülkenin tümenlerinin
+  türlerine göre bakımları toplamı (bkz. 7. Birlikler) hazinesinden düşülür. Hazine yetmezse 0'da kalır ve açık, o
   ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak yansıtılır (muharebedeki
   `_guc_azalt` ile aynı mekanizma); güç `ASGARI_GUC` altına düşen tümen silinir.
+- **Gelir çarpanı:** Sanayi teknolojisi geliri seviye başına %10 artırır.
 - Arayüz: oyuncunun kendi bölgesine dokununca açılan bölge ya da birlik panelinde
-  **"Tümen kur (50)"** ve **"Fabrika kur (500)"** düğmeleri vardır (maliyetler
-  data/balance.json'dan gelir); iş o bölgeye sıralanır. Sıralanamazsa (hazine yetmiyor ya
+  **"Tümen kur"**, **"Fabrika kur (500)"** ve **"Tahkimat 1/3 · Kur (160)"** düğmeleri vardır
+  (maliyetler data/balance.json'dan gelir); iş o bölgeye sıralanır. "Tümen kur" ortada üç
+  büyük seçenek açar (her birinde fiyat, süre ve neye karşı güçlü olduğu) ve "Vazgeç". Sıralanamazsa (hazine yetmiyor ya
   da kuyruk dolu) nedeni bildirim kartında yazar; sıralanınca da kısa bir bildirim çıkar.
 
 ## 10. Yapay zekâ
@@ -428,6 +455,14 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   (`yapay_zeka.fabrika_olasiligi`, ×0,2) fabrika, yoksa tümen; başkente ya da rastgele bir
   sınır bölgesine (`OrduKurucu.yerlesim_bolgeleri`, başlangıç ordusuyla aynı yerleşim
   mantığı) kurar.
+- **Tümen türü:** taban ağırlıklarla (`yapay_zeka.tur_agirliklari`: piyade 0,45, zırhlı 0,3,
+  topçu 0,25) rastgele seçilir; komşu ülkelerin toplamda en çok kullandığı türe üstün gelen
+  türün ağırlığı `karsi_tur_bonusu` (+%60) artar. Seçilen türün parası yetmiyorsa ucuz bir
+  türe geçmez, para birikene kadar bekler (yoksa piyade hep önce alınıyordu).
+- **Araştırma:** araştırması yoksa günde `arastirma_olasiligi` (×0,3) olasılıkla en geride
+  kalan dalda bir sonraki seviyeye başlar.
+- **Tahkimat:** günde `tahkimat_olasiligi` (×0,08) olasılıkla başkentini ya da savaştığı bir
+  ülkeye komşu bölgelerinden en az tahkim edilmiş olanı bir seviye tahkim eder.
 - **Savaşta:** her sınır bölgesinde (başkent hariç — başkent hiç saldırıya katılmaz, böylece
   hep korunur) kendi gücünü savaşta olduğu bir komşu bölgedeki düşman gücüyle kıyaslar;
   en az `yapay_zeka.saldiri_esigi` (×1,3) katıysa oraya saldırır (`Oyun._savastaki_ulke_dusun`).
@@ -442,6 +477,35 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   açılınca, oyuncunun ülkesi de `_yapay_zekayi_isle()`'nin atladığı istisnadan çıkar ve aynı
   barış/savaş davranışıyla yönetilir. Tercih kayıtta saklanır.
 
+## 10a. Teknoloji
+
+Dört dal, her biri 3 seviye (`sim/teknoloji.gd`, sayılar data/balance.json → "teknoloji"):
+
+| Dal | Seviye başına |
+|---|---|
+| Sanayi | Gelir +%10 |
+| Silah | Verilen hasar +%10 |
+| Savunma | Alınan hasar ÷ (1 + 0,1 × seviye) |
+| Lojistik | Hız +%15 (yürüyüş süresi bu orana bölünür), denizden saldırı cezası 0,1 hafifler |
+
+- Her ülke aynı anda **tek** araştırma yürütür. Seviye n'nin maliyeti `taban_maliyet` × n
+  (150, 300, 450), süresi `taban_sure_gun` × n gün (30, 60, 90); maliyet hazineden peşin ödenir.
+- Bitince seviye artar; oyuncuya "Araştırma tamamlandı: Silah 2 (Saldırı +%20)." bildirimi gelir.
+- **Arayüz:** üst çubuktaki "Teknoloji" düğmesi paneli açar: 4 satır × 3 kutu, her kutuda
+  seviyenin ne verdiği, fiyatı ve süresi. Biten seviyeler sarı, sıradaki seviye dokunulabilir,
+  sonrakiler kapalı; başlığın yanında süren araştırmanın kalan günü ve ilerleme çubuğu.
+  Panel açılınca bölge seçimi kalkar, bir bölge seçilince panel kapanır (aynı yeri kaplarlar).
+
+## 10b. Tahkimat
+
+- Oyuncu kendi bölgesinde "Tahkimat" düğmesiyle bir seviye tahkimat sıralar (inşa kuyruğuna
+  girer). En çok `tahkimat.azami_seviye` (3) seviye; kuyrukta bekleyenler de sayılır.
+  Seviye n'nin maliyeti `taban_maliyet` × n (80, 160, 240), süresi `sure_saat` (240 saat).
+- Savunanın verdiği hasar seviye başına `seviye_avantaji` (+%15) artar.
+- Bölge el değiştirince tahkimatı 1 seviye düşer.
+- **Arayüz:** haritada tahkimatlı bölgenin adının solunda gri bir kule ve içinde seviyesi;
+  kendi bölgende düğmede "Tahkimat 2/3", başkasının bölgesinde bölge panelinde "Tahkimat: 2/3".
+
 ## 11. Kayıt
 
 Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve
@@ -450,11 +514,13 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
 
 - **Ne kaydedilir** (`Oyun.kaydet_icin_veri()`): oyuncunun ülkesi; değişmiş bölgeler
   (sahip, işgal saati, fabrika sanayisi — hiç değişmemiş bölgeler yer kaplamasın diye
-  atlanır); bütün tümenler; savaşlar (ilan saatleriyle); hazineler; inşa kuyrukları.
+  atlanır; tahkimat da burada); bütün tümenler (türleriyle); savaşlar (ilan saatleriyle);
+  hazineler; inşa kuyrukları; teknoloji seviyeleri ve süren araştırmalar.
   Zaman durumu (`Zaman.durumu_al()`) ayrıca eklenir; `KayitYoneticisi` Zaman autoload'ına
   bağlı olmasın diye bu, çağıran taraftan (main.gd) parametre olarak verilir.
-- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`). Okurken sürüm
-  uyuşmazsa kayıt yok sayılır, oyun sıfırdan başlar — eski bir kayıt sessizce bozuk
+- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`, şu an 2). 1. sürüm
+  kayıtlar da açılır: tümenler piyade sayılır, teknoloji ve tahkimat sıfırdan başlar.
+  Bilinmeyen bir sürüm yok sayılır, oyun sıfırdan başlar — eski bir kayıt sessizce bozuk
   davranışa yol açmaz.
 - **Otomatik kayıt:** her oyun günü başında (`Zaman.gun_basladi`) ve uygulama arka plana
   geçince ya da kapatılmak istenince (`NOTIFICATION_APPLICATION_PAUSED`,
@@ -510,9 +576,11 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `sim/sinir.gd` | İki bölge (ya da bölge ile deniz) arasındaki sınır çizgisi |
 | `sim/dunya.gd` | Ülkeleri, bölgeleri ve sınırları yükler, doğrular, sorguları yanıtlar |
 | `sim/oyun.gd` | Oyunun durumu: dünya, oyuncunun ülkesi, tümenler, savaş, hazineler, yapay zekâ |
-| `sim/birlik.gd` | Bir tümenin verisi: sahip, bulunduğu bölge, güç |
+| `sim/birlik.gd` | Bir tümenin verisi: sahip, tür, bulunduğu bölge, güç |
+| `sim/birlik_turleri.gd` | Tümen türlerinin sayıları ve üstünlük üçgeni |
+| `sim/teknoloji.gd` | Teknoloji dalları, seviyelerin maliyeti, süresi ve etkisi |
 | `sim/ordu_kurucu.gd` | Ülkelerin başlangıç ordusunu üretir |
-| `sim/insa_isi.gd` | İnşa kuyruğundaki tek bir iş: tümen ya da fabrika |
+| `sim/insa_isi.gd` | İnşa kuyruğundaki tek bir iş: tümen (türüyle), fabrika ya da tahkimat |
 | `sim/kayit_yoneticisi.gd` | Oyun durumunu user:// altına JSON olarak kaydeder/yükler |
 | `sim/takvim.gd` | Saat sayısını tarihe çevirir |
 | `sim/zaman.gd` | Zaman yöneticisi (autoload `Zaman`) |
@@ -522,6 +590,9 @@ tools/             Dönüştürücü ve kaynak veri (oyunun parçası değildir)
 | `arayuz/arayuz.gd` | Arayüzün kökü ve güvenli alan |
 | `arayuz/ust_cubuk.gd`, `bolge_paneli.gd` | Üst çubuk, alt panel |
 | `arayuz/arayuz_temasi.gd`, `bicim.gd` | Ortak görünüm, sayı biçimleme |
+| `arayuz/tumen_secim_paneli.gd` | "Tümen kur"un üç seçenekli tür seçimi |
+| `arayuz/teknoloji_paneli.gd` | Teknoloji paneli (4 dal × 3 seviye, ilerleme çubuğu) |
+| `tests/uzun_kosu.gd` | 5 yıllık tam YZ koşusu ve denge hedefleri raporu |
 
 **Simülasyon sorguları** (`Dunya`):
 
@@ -553,10 +624,15 @@ istenen aşama yapılır.
 | 5 | ✅ | **Ekonomi ve üretim** | Kaynaklar, gelir, birlik üretimi |
 | 6 | ✅ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ✅ | **Kayıt** | Oyunu kaydetme ve yükleme |
+| 7a | ✅ | **Birlik türleri, teknoloji, tahkimat** | Piyade/zırhlı/topçu ve üstünlük üçgeni, 4 dal × 3 seviye araştırma, 3 seviye tahkimat, YZ'nin üçünü de kullanması |
 | 8 | ⬜ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
-araştırma, çok oyunculu oyun.
+çok oyunculu oyun.
+
+**Denge hedefleri** (`tests/uzun_kosu.gd`, 5 yıllık tam YZ oyunu): 5-30 ülke teslim olur,
+hiçbir ülke dünyadaki bölgelerin %40'ını geçmez, üç tümen türünün her biri üretimin en az
+%15'i olur, koşu 120 saniyeden kısa sürer.
 
 ## 15. Geçmiş
 

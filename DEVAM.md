@@ -531,12 +531,11 @@ Windows test turu ve düzeltmeler (2026-10-06; ayrıntı TEST_RAPORU.md):
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. Uzun koşu artık 66,5 sn (hedef 120 sn altı). 5 yıllık tam YZ sınaması henüz
-   `zaman_testi.gd`'ye eklenmedi (CLAUDE.md'nin "büyütülmeli" notu); her sınama koşusuna
-   ~1 dakika ekleyeceği için ayrı bir "uzun sınama" seçeneği olarak düşünülmeli.
-2. H) DENGE'nin geri kalanı: 5 yıllık sınama çalışır hâle gelince sonuçlarına bakıp
-   (kaç ülke hayatta kaldı, en büyüğü ne kadar büyüdü vb.) data/balance.json sayılarını
-   gerekirse ayarlama.
+1. ✅ (2026-10-06) 5 yıllık tam YZ koşusu artık ayrı bir betik: `tests/uzun_kosu.gd`
+   (~71 sn, denge hedeflerini raporlar; bkz. "Paket: birlik türleri, teknoloji, tahkimat").
+2. H) DENGE: uzun koşunun hedefleri tutuyor. Gözlem: dünya çok durağan — en büyük ülke
+   5 yılda bölgelerin yalnızca ~%6'sına ulaşıyor, teslim olanlar çoğunlukla küçük ülkeler.
+   Daha hareketli bir oyun istenirse YZ savaş ilanı olasılığı/eşiği gevşetilebilir.
 3. I) PERFORMANS VE ANDROID'in geri kalanı: dışa aktarma, gerçek cihazda ölçüm.
 4. G)'den ertelenen: tek çeviri dosyası (yukarıya bkz.).
 F) OYUN AKIŞI tamamen bitti (ana menü + kayıt/yükleme + zafer/kaybetme + güç sıralaması +
@@ -569,7 +568,14 @@ Adımlar (her biri ayrı commit):
    birikene kadar kararını korur (yeni sınama). Sonuç (tohum 1/2/3): teslim 12/10/8, en
    büyük ülke %5,6/%5,4/%5,8, piyade ~%42, zırhlı ~%36, topçu ~%22, süre ~71 sn.
    balance.json sayılarına dokunmak gerekmedi. 125/125.
-4. ⬜ Belgeler: Nasıl oynanır, TASARIM.md, TEST_LISTESI.md.
+4. ✅ Belgeler: "Nasıl oynanır"a tümen türleri, teknoloji, tahkimat paragrafları (metin
+   uzadığı için panel genişletildi, yazı 30 px, paragraf boşluğu 18 px, gövde gerekirse
+   kaydırılır; 16:9 ve 20:9'da denetlendi). TASARIM.md: 7. Birlikler (tür tablosu, üçgen),
+   8. Savaş, 9. Ekonomi, 10. YZ, yeni 10a. Teknoloji ve 10b. Tahkimat, 11. Kayıt (sürüm 2),
+   kod mimarisi, yol haritası (7a ✅) ve denge hedefleri. TEST_LISTESI.md: 4 ve 12 güncel,
+   16-23 yeni maddeler.
+
+Paket tamam. Kalan iş "Sıradaki iş" bölümündedir (Android dışa aktarma vb.).
 
 ## Kararlar
 

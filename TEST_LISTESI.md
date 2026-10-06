@@ -32,7 +32,7 @@ kaydırma, tekerlek = yakınlaştırma.
    düğmeleri etkinleşmeli.
 
 4. **Birlik yürütme** — Kendi ülkende üstünde sayılı kutu (tümen) olan bir bölgeye tıkla →
-   alt panelde "Tümen: N, Toplam güç: …" kartı açılmalı. Sonra komşu kendi bölgene tıkla
+   alt panelde "Tümen: N (Piyade … · Zırhlı … · Topçu …)", "Toplam güç: …" kartı açılmalı. Sonra komşu kendi bölgene tıkla
    → iki bölge arasında sarı yol çizgisi çıkmalı. "Devam"a bas; yaklaşık 24 oyun saati
    sonra kutu hedef bölgeye geçmeli.
 
@@ -64,11 +64,9 @@ kaydırma, tekerlek = yakınlaştırma.
     uzun sürdüyse kabul etmeli (kırmızı çerçeve kalkmalı); güçlü bir rakip erken teklifi
     reddetmeli (savaş sürmeli).
 
-12. **Üretim kuyruğu** — Oyuncunun tümen ya da fabrika sıralayacağı bir düğme şu an **yok**
-    (bkz. TEST_RAPORU.md). Bunu doğrula: kendi bölgelerinde ve panellerde "Tümen kur" /
-    "Fabrika kur" gibi bir düğme arama. Sonra "Ordu: YZ"yi aç ve birkaç gün ilerlet → sol
-    üstte "İnşa: Tümen (… sa)" ya da "İnşa: Fabrika (… sa)" satırı görünmeli, saat geri
-    saymalı, iş bitince hazine düşmüş ve bölgede yeni tümen belirmiş olmalı.
+12. **Üretim kuyruğu** — Kendi bölgende "Fabrika kur"a bas → hazine düşmeli, sol üstte
+    "İnşa: Fabrika (… sa)" satırı görünmeli ve saat geri saymalı. "Ordu: YZ"yi açıp birkaç
+    gün ilerletince senin ülken de kendi kendine iş sıralamalı.
 
 13. **Bildirimler** — Bir bölge kazan, bir bölge kaybet ya da bir üretim işini bitir → sağ
     üstte üst çubuğun altında bir kart çıkmalı. Karta tıklayınca kart kapanmalı ve kamera
@@ -85,3 +83,47 @@ kaydırma, tekerlek = yakınlaştırma.
     tarihi ve hazineyi not et, pencereyi kapat. Oyunu yeniden aç → "Devam et" etkin olmalı;
     basınca aynı ülke, tarih, hazine, bölgeler, tümenler ve savaşlarla devam etmeli. "Ordu:
     YZ" açık bıraktıysan açık gelmeli.
+
+16. **Tümen türü seçimi** — Kendi bölgende "Tümen kur"a bas → ortada "Hangi tümeni
+    kuralım?" paneli açılmalı: Piyade (Fiyat 40, 4 gün, topçuya karşı güçlü), Zırhlı (90,
+    7 gün, piyadeye karşı), Topçu (60, 5 gün, zırhlıya karşı) ve "Vazgeç". Zırhlı'ya bas →
+    panel kapanmalı, hazine 90 düşmeli, "Zırhlı tümen sıraya alındı" bildirimi çıkmalı, sol
+    üstte "İnşa: Zırhlı (… sa)" yazmalı. "Vazgeç" hiçbir şey sıralamamalı.
+
+17. **Haritada tür işaretleri** — Kendi ülkene yakınlaş → tümen kutularında önce toplam güç,
+    sonra her tür için işaret ve sayı görünmeli: çarpı = piyade, yatay oval = zırhlı, dolu
+    daire = topçu (ör. "520 ✕3 ⬭2 ●1"). Zengin bir ülkede (ABD, Almanya) oval ve daireler,
+    yoksul bir ülkede (ör. Çad, Nijer) çarpılar daha çok olmalı.
+
+18. **Üstünlük üçgeni ve hız** — Savaşta, aynı güçte zırhlı ağırlıklı bir yığınla düşmanın
+    piyade ağırlıklı yığınına saldır → senin tarafın belirgin daha az kayıp vermeli. Bir
+    zırhlı tümeni ve bir piyadeyi aynı anda komşu bölgeye yürüt → zırhlı daha önce varmalı;
+    zırhlı ile topçuyu birlikte yürütürsen yığın topçunun (en yavaşın) hızıyla gitmeli.
+
+19. **Teknoloji paneli** — Üst çubukta "Teknoloji"ye bas → alt panel kapanmalı, ortada 4
+    satır (Sanayi, Silah, Savunma, Lojistik) × 3 kutu açılmalı; her kutuda "Seviye n", ne
+    verdiği (ör. "Gelir +%10") ve "Fiyat 150 · 30 gün" yazmalı. Bir 1. seviye kutusuna bas →
+    hazine 150 düşmeli, başlığın yanında "… araştırılıyor, 30 gün kaldı" ve ilerleme çubuğu
+    çıkmalı, diğer kutular basılamaz olmalı. Oyun akarken çubuk dolmalı. Bir bölgeye
+    dokununca panel kapanmalı; "Teknoloji" düğmesi tekrar basınca da kapanmalı. "Sıralama"
+    açılınca teknoloji paneli kapanmalı (ikisi üst üste binmemeli).
+
+20. **Araştırma bitince** — 3x hızda araştırmayı bekle (30 gün) → sağ üstte "Araştırma
+    tamamlandı: Sanayi 1 (Gelir +%10)." bildirimi çıkmalı; panelde o kutu sarı ("tamam")
+    olmalı ve 2. seviye basılabilir hâle gelmeli. Sanayi'den sonra günlük hazine artışı
+    biraz büyümeli.
+
+21. **Tahkimat** — Kendi bölgende "Tahkimat 0/3 · Kur (80)" düğmesine bas → hazine 80 düşmeli,
+    düğme "Tahkimat 0/3 · Kur (160)" olmalı (kuyruktaki iş sayılır). 10 gün sonra haritada
+    bölge adının solunda gri kule ve içinde "1" görünmeli. Üç seviye sıralayınca düğme
+    "Tam" yazıp soluklaşmalı. Başka bir ülkenin tahkimatlı bölgesine dokununca panelde
+    "Tahkimat: n/3" yazmalı. Tahkimatlı bir bölge el değiştirince seviyesi bir düşmeli.
+
+22. **Eski kayıt** — Bu güncellemeden önce kaydedilmiş bir oyunun varsa "Devam et"e bas →
+    oyun çökmeden açılmalı, bütün tümenler piyade (yalnız çarpı işareti) olmalı, teknolojiler
+    ve tahkimatlar sıfır olmalı.
+
+23. **Nasıl oynanır ve geniş ekran** — Ana menüde "Nasıl oynanır"a bas → tümen türleri,
+    teknoloji ve tahkimat paragrafları görünmeli, "Kapat" ekranın içinde olmalı. Pencereyi
+    genişletip (ör. 2400 × 1080 gibi geniş, telefona benzer oran) ve daraltıp (16:9) üst
+    çubuğa, alt panele ve teknoloji paneline bak → hiçbir düğme ekran dışına taşmamalı.

@@ -12,15 +12,26 @@ signal devam_istendi
 
 const BASLIK: String = "Yerküre"
 const DUGME_BOYUTU: Vector2 = Vector2(420.0, 112.0)
-const METIN_GENISLIGI: float = 700.0
+const METIN_GENISLIGI: float = 1400.0
+## "Nasıl oynanır" metninin görünen yüksekliği; daha uzun metin kaydırılır.
+const METIN_YUKSEKLIGI: float = 720.0
+const METIN_YAZI_BOYUTU: int = 30
+## Paragraflar arasındaki boşluk (piksel); boş satırdan daha az yer kaplar.
+const PARAGRAF_ARALIGI: int = 18
 
 const NASIL_OYNANIR_METNI_BICIMI: String = (
-		"Bir bölgeye dokunup \"Bu ülkeyle oyna\" ile ülkeni seç.\n\n" +
+		"Bir bölgeye dokunup \"Bu ülkeyle oyna\" ile ülkeni seç.\n" +
 		"Bölgelere dokunarak bilgi al; kendi tümenlerinin olduğu bölgeye dokunup " +
-		"başka bir bölgeye yürüt.\n\n" +
+		"başka bir bölgeye yürüt.\n" +
 		"Komşu bir ülkeye savaş ilan edebilir, savaştaki bir ülkeye barış teklif " +
-		"edebilirsin.\n\n" +
-		"Hazinenle başkentinde ya da sınır bölgelerinde tümen ya da fabrika kur.\n\n" +
+		"edebilirsin.\n" +
+		"Hazinenle kendi bölgelerinde tümen, fabrika ya da tahkimat kur.\n" +
+		"Tümen türleri: zırhlı piyadeyi, piyade topçuyu, topçu zırhlıyı yener (%%50 fazla " +
+		"hasar). Zırhlı hızlı ama pahalı, piyade ucuz ama yavaş.\n" +
+		"Teknoloji: üst çubuktaki düğmeden aynı anda bir araştırma seç. Sanayi geliri, " +
+		"Silah saldırıyı, Savunma dayanıklılığı, Lojistik hızı artırır.\n" +
+		"Tahkimat: her seviye bölgeni savunanlara %%15 güç katar; bölge el değiştirince " +
+		"bir seviye düşer.\n" +
 		"Amaç: kıtandaki bölgelerin %%%d'ı ya da daha fazlasını ele geçirmek ya da " +
 		"ülkeni teslim olmaktan korumak.")
 
@@ -132,10 +143,18 @@ func _bilgi_paneli_olustur(baslik_metni: String, govde_metni: String) -> CenterC
 	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dikey.add_child(baslik)
 
+	# Metin uzarsa ekrandan taşmasın: belli bir yükseklikten sonra parmakla kaydırılır.
+	var kaydirici: ScrollContainer = ScrollContainer.new()
+	kaydirici.custom_minimum_size = Vector2(0.0, METIN_YUKSEKLIGI)
+	kaydirici.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	dikey.add_child(kaydirici)
 	var govde: Label = Label.new()
 	govde.text = govde_metni
 	govde.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	dikey.add_child(govde)
+	govde.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	govde.add_theme_font_size_override("font_size", METIN_YAZI_BOYUTU)
+	govde.add_theme_constant_override("paragraph_spacing", PARAGRAF_ARALIGI)
+	kaydirici.add_child(govde)
 
 	var kapat: Button = _dugme_ekle(dikey, "Kapat")
 	kapat.pressed.connect(func() -> void: ortalayici.hide())
