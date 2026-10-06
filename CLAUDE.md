@@ -79,6 +79,8 @@ sonra kod.
 - **Simülasyon sınamaları:** `tests/calistirici.gd`, `tests/sim/` altındaki sınıflardaki
   `sina_` ile başlayan işlevleri çalıştırır (boş metin = geçti, metin = hata açıklaması).
   Çalıştırmak için: `Godot --headless --path . --script res://tests/calistirici.gd`.
+  Sınamalar oyuncunun gerçek kaydına dokunmaz: çalıştırıcı `KayitYoneticisi.kayit_dosyasi`'nı
+  `user://sinama_kayit.json` yapar.
   Yeni bir simülasyon özelliği eklenince (yol bulma, muharebe, işgal, teslim, kayıt/yükleme…)
   `tests/sim/` altına yeni bir sınama dosyası eklenir ve `tests/calistirici.gd`'deki
   `SINAMA_SINIFLARI` listesine eklenir.

@@ -5,6 +5,7 @@ extends PanelContainer
 ## Üstte bölgenin adı, nüfusu ve başkent olup olmadığı; altında ülkenin adı, kıtası,
 ## toplam nüfusu ve GSYH'si yazar. "Komşuları göster" düğmesi haritada bölgenin
 ## komşularını vurgular. Oyuncu henüz ülkesini seçmediyse "Bu ülkeyle oyna" düğmesi de görünür.
+## Oyuncunun kendi bölgesinde "Tümen kur" ve "Fabrika kur" düğmeleri görünür.
 
 ## "Bu ülkeyle oyna" düğmesine basıldığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
 signal oyna_basildi(ulke_id: String)
@@ -14,11 +15,14 @@ signal komsular_degisti(acik: bool)
 signal savas_istendi(ulke_id: String)
 ## "Barış teklif et" düğmesine basıldığında, gösterilen bölgenin ülkesinin id'siyle yayılır.
 signal baris_istendi(ulke_id: String)
+## "Tümen kur" ("tumen") ya da "Fabrika kur" ("fabrika") düğmesine basıldığında yayılır.
+signal insa_istendi(tur: String)
 
 const KOMSU_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const OYNA_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const SAVAS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
 const BARIS_DUGMESI_BOYUTU: Vector2 = Vector2(350.0, 112.0)
+const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(300.0, 112.0)
 
 var _ulke_id: String = ""
 var _ulke_adi: String = ""
@@ -33,6 +37,8 @@ var _komsular: Button = null
 var _oyna: Button = null
 var _savas: Button = null
 var _savas_onayi: ConfirmationDialog = null
+var _tumen_kur: Button = null
+var _fabrika_kur: Button = null
 var _baris: Button = null
 
 
@@ -100,7 +106,7 @@ func _ready() -> void:
 	_savas.pressed.connect(_savas_basildi)
 	yatay.add_child(_savas)
 
-	_savas_onayi = ConfirmationDialog.new()
+	_savas_onayi = ArayuzTemasi.onay_penceresi_olustur()
 	_savas_onayi.confirmed.connect(func() -> void: savas_istendi.emit(_ulke_id))
 	add_child(_savas_onayi)
 
@@ -112,13 +118,20 @@ func _ready() -> void:
 	_baris.pressed.connect(func() -> void: baris_istendi.emit(_ulke_id))
 	yatay.add_child(_baris)
 
+	_tumen_kur = InsaDugmeleri.dugme_olustur("tumen", INSA_DUGMESI_BOYUTU, insa_istendi)
+	yatay.add_child(_tumen_kur)
+	_fabrika_kur = InsaDugmeleri.dugme_olustur("fabrika", INSA_DUGMESI_BOYUTU, insa_istendi)
+	yatay.add_child(_fabrika_kur)
+
 	_komsu_dugmesini_yenile()
 	hide()
 
 
 ## Bölgenin ve ülkesinin bilgilerini gösterir. Bölge null ise paneli gizler.
+## `insa_dugmeleri_gorunur`, bölge oyuncunun kendi bölgesiyse true verilir.
 func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
-		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false) -> void:
+		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false,
+		insa_dugmeleri_gorunur: bool = false) -> void:
 	if bolge == null:
 		_ulke_id = ""
 		hide()
@@ -137,6 +150,8 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	_oyna.visible = oyna_dugmesi_gorunur
 	_savas.visible = savas_dugmesi_gorunur
 	_baris.visible = baris_dugmesi_gorunur
+	_tumen_kur.visible = insa_dugmeleri_gorunur
+	_fabrika_kur.visible = insa_dugmeleri_gorunur
 	show()
 
 

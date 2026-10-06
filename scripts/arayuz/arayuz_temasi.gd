@@ -61,8 +61,23 @@ static func olustur() -> Theme:
 	for renk_adi: String in ["font_color", "font_hover_color", "font_focus_color",
 			"font_pressed_color", "font_hover_pressed_color"]:
 		tema.set_color(renk_adi, VURGULU_DUGME, KOYU_YAZI_RENGI)
+	# Onay pencereleri (Yeni oyun, Kaydı sil, Savaş ilan et): Godot'nun varsayılan düğmeleri
+	# 96 × 96 dokunma sınırının altında kalıyordu.
+	tema.set_constant("buttons_min_width", "AcceptDialog", int(DUGME_BOYUTU.x * 1.6))
+	tema.set_constant("buttons_min_height", "AcceptDialog", int(DUGME_BOYUTU.y))
+	tema.set_constant("buttons_separation", "AcceptDialog", 24)
 	_tema = tema
 	return tema
+
+
+## Türkçe yazılı bir onay penceresi kurar (Godot'nun varsayılanı "Please Confirm... /
+## OK / Cancel" yazıyordu). Metni çağıran `dialog_text` ile verir.
+static func onay_penceresi_olustur() -> ConfirmationDialog:
+	var pencere: ConfirmationDialog = ConfirmationDialog.new()
+	pencere.title = "Onay"
+	pencere.ok_button_text = "Evet"
+	pencere.cancel_button_text = "Vazgeç"
+	return pencere
 
 
 static func _kutu(renk: Color, kose: int) -> StyleBoxFlat:

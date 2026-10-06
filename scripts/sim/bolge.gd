@@ -5,8 +5,16 @@ extends RefCounted
 ## Örnek: "TUR_1"
 var id: String = ""
 var ad: String = ""
+## Herhangi bir bölgenin sahibi her değiştiğinde bir artar. Dunya.ulkenin_bolgeleri()
+## önbelleğini ne zaman yeniden kuracağını buradan anlar.
+static var sahiplik_surumu: int = 0
+
 ## Bölgenin şu anki sahibi olan ülkenin id'si. Oyun içinde değişebilir.
-var sahip: String = ""
+var sahip: String = "":
+	set(deger):
+		if deger != sahip:
+			sahip = deger
+			Bolge.sahiplik_surumu += 1
 ## Bu bölge, başlangıçtaki sahibinin başkenti mi?
 var baskent: bool = false
 var nufus: int = 0

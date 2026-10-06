@@ -7,8 +7,8 @@ extends RefCounted
 
 
 func _kayit_dosyasini_sil() -> void:
-	if FileAccess.file_exists(KayitYoneticisi.KAYIT_DOSYASI):
-		DirAccess.remove_absolute(KayitYoneticisi.KAYIT_DOSYASI)
+	if FileAccess.file_exists(KayitYoneticisi.kayit_dosyasi):
+		DirAccess.remove_absolute(KayitYoneticisi.kayit_dosyasi)
 
 
 func _kurulu_oyun() -> Oyun:
@@ -165,7 +165,7 @@ func sina_kaydedip_yuklemek_yz_yonetimini_korur() -> String:
 
 func sina_surum_uyusmazsa_yukle_bos_sozluk_doner() -> String:
 	_kayit_dosyasini_sil()
-	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.KAYIT_DOSYASI, FileAccess.WRITE)
+	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.kayit_dosyasi, FileAccess.WRITE)
 	dosya.store_string(JSON.stringify({"surum": 999, "oyuncu_ulkesi": "TUR"}))
 	dosya = null
 

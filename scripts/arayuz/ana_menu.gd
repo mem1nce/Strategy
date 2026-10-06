@@ -70,7 +70,7 @@ func kur() -> void:
 		_kok.hide()
 		devam_istendi.emit())
 
-	_yeni_oyun_onayi = ConfirmationDialog.new()
+	_yeni_oyun_onayi = ArayuzTemasi.onay_penceresi_olustur()
 	_yeni_oyun_onayi.dialog_text = "Mevcut kayıt silinip yeni bir oyuna başlanacak. Emin misin?"
 	_yeni_oyun_onayi.confirmed.connect(_yeni_oyun_onaylandi)
 	_kok.add_child(_yeni_oyun_onayi)
@@ -166,7 +166,7 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	_kaydi_sil = _dugme_ekle(dikey, "Kaydı sil")
 	_kaydi_sil.pressed.connect(func() -> void: _kaydi_sil_onayi.popup_centered())
 
-	_kaydi_sil_onayi = ConfirmationDialog.new()
+	_kaydi_sil_onayi = ArayuzTemasi.onay_penceresi_olustur()
 	_kaydi_sil_onayi.dialog_text = "Kayıtlı oyun silinecek. Emin misin?"
 	_kaydi_sil_onayi.confirmed.connect(_kaydi_silindi)
 	panel.add_child(_kaydi_sil_onayi)

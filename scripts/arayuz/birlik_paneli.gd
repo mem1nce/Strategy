@@ -4,12 +4,16 @@ extends PanelContainer
 ##
 ## Yalnızca oyuncunun kendi tümenlerinin olduğu bir bölgeye dokununca açılır (bkz. main.gd).
 ## "Yarısını ayır" düğmesi gösterilen tümenlerin yarısını ayırır; sonraki hedef seçimi
-## yalnızca ayrılan yarıyı yürütür.
+## yalnızca ayrılan yarıyı yürütür. "Tümen kur" ve "Fabrika kur" bu bölgede üretim sıralar.
 
 const AYIR_DUGMESI_BOYUTU: Vector2 = Vector2(260.0, 112.0)
 
 ## "Yarısını ayır" düğmesine basıldığında yayılır.
 signal yarisini_ayir_basildi
+## "Tümen kur" ("tumen") ya da "Fabrika kur" ("fabrika") düğmesine basıldığında yayılır.
+signal insa_istendi(tur: String)
+
+const INSA_DUGMESI_BOYUTU: Vector2 = Vector2(300.0, 112.0)
 
 var _renk_kutusu: ColorRect = null
 var _ad: Label = null
@@ -43,6 +47,9 @@ func _ready() -> void:
 	_ayir.focus_mode = Control.FOCUS_NONE
 	_ayir.pressed.connect(func() -> void: yarisini_ayir_basildi.emit())
 	yatay.add_child(_ayir)
+
+	yatay.add_child(InsaDugmeleri.dugme_olustur("tumen", INSA_DUGMESI_BOYUTU, insa_istendi))
+	yatay.add_child(InsaDugmeleri.dugme_olustur("fabrika", INSA_DUGMESI_BOYUTU, insa_istendi))
 
 	hide()
 

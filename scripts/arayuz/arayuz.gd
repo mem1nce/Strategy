@@ -8,6 +8,9 @@ extends CanvasLayer
 signal oyna_istendi(ulke_id: String)
 ## Oyuncu "Komşuları göster" düğmesini açıp kapadığında yayılır.
 signal komsular_degisti(acik: bool)
+## Oyuncu bölge ya da birlik panelinde "Tümen kur" / "Fabrika kur"a bastığında yayılır
+## (`tur`: "tumen" ya da "fabrika").
+signal insa_istendi(tur: String)
 ## Oyuncu birlik panelinde "Yarısını ayır" düğmesine bastığında yayılır.
 signal yarisini_ayir_istendi
 ## Oyuncu "Savaş ilan et" düğmesini onayladığında, hedef ülkenin id'siyle yayılır.
@@ -30,6 +33,9 @@ const KAYBETME_RENGI: Color = Color("#e05b5b")
 const KENAR_BOSLUGU: int = 20
 ## Bildirim kartlarının üst çubuğun altında kalması için üstten boşluk (piksel).
 const BILDIRIM_UST_BOSLUGU: float = 140.0
+## Sıralama panelinin üst çubuğa ve alt panele binmemesi için bırakılan boşluklar (piksel).
+const SIRALAMA_UST_BOSLUGU: float = 150.0
+const SIRALAMA_ALT_BOSLUGU: float = 250.0
 
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
@@ -76,10 +82,12 @@ func kur(dunya: Dunya) -> void:
 	_bolge_paneli.komsular_degisti.connect(func(acik: bool) -> void: komsular_degisti.emit(acik))
 	_bolge_paneli.savas_istendi.connect(func(ulke_id: String) -> void: savas_istendi.emit(ulke_id))
 	_bolge_paneli.baris_istendi.connect(func(ulke_id: String) -> void: baris_istendi.emit(ulke_id))
+	_bolge_paneli.insa_istendi.connect(func(tur: String) -> void: insa_istendi.emit(tur))
 
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
 	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
+	_birlik_paneli.insa_istendi.connect(func(tur: String) -> void: insa_istendi.emit(tur))
 
 	var sonuc_ortalayici: CenterContainer = CenterContainer.new()
 	sonuc_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -89,9 +97,13 @@ func kur(dunya: Dunya) -> void:
 	sonuc_ortalayici.add_child(_sonuc_paneli)
 	_sonuc_paneli.kapat_basildi.connect(func() -> void: sonuc_kapatildi.emit())
 
+	# Sıralama paneli üst çubukla alt panel arasındaki boşluğun ortasında durur; ekranın
+	# tam ortasında dursaydı alt panele biniyordu.
 	var siralama_ortalayici: CenterContainer = CenterContainer.new()
 	siralama_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	siralama_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	siralama_ortalayici.offset_top = SIRALAMA_UST_BOSLUGU
+	siralama_ortalayici.offset_bottom = -SIRALAMA_ALT_BOSLUGU
 	kok.add_child(siralama_ortalayici)
 	_siralama_paneli = SiralamaPaneli.new()
 	siralama_ortalayici.add_child(_siralama_paneli)
@@ -129,9 +141,11 @@ func kaybi_goster() -> void:
 
 ## Alt panelde verilen bölgeyi ve ülkesini gösterir. Null verilirse panel gizlenir.
 func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
-		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false) -> void:
+		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false,
+		insa_dugmeleri_gorunur: bool = false) -> void:
 	_birlik_paneli.hide()
-	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur)
+	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur,
+			insa_dugmeleri_gorunur)
 
 
 ## Alt panelde, verilen bölgedeki oyuncu tümenlerini gösterir (bölge paneli yerine).

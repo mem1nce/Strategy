@@ -25,6 +25,8 @@ var _bekleyen_kayit: Dictionary = {}
 ## Birlik kartı açıkken, kartta gösterilen (ve bir sonraki hedef seçiminde yürütülecek)
 ## tümenler; seçim yoksa boştur. "Yarısını ayır" bu listeyi küçültebilir.
 var _secili_birlikler: Array[Birlik] = []
+## Alt panelde gösterilen bölgenin id'si; "Tümen kur" / "Fabrika kur" bu bölgeye sıralanır.
+var _secili_bolge_id: String = ""
 
 
 func _ready() -> void:
@@ -70,6 +72,8 @@ func _ready() -> void:
 	_arayuz.oyna_istendi.connect(_oyun.oyuncuyu_sec)
 	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
+	_arayuz.insa_istendi.connect(_insa_istendi)
+	InsaDugmeleri.maliyetleri_ayarla(_oyun.tumen_maliyeti(), _oyun.fabrika_maliyeti())
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
@@ -152,13 +156,16 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	if not _secili_birlikler.is_empty() and bolge_id != "" and bolge_id != _secili_birlikler[0].bolge_id:
 		if _oyun.birlikleri_yurut(_secili_birlikler, bolge_id, Zaman.toplam_saat):
 			_secili_birlikler = []
+			_secili_bolge_id = ""
 			_harita.secimi_ayarla("")
 			_arayuz.bolgeyi_goster(null, false)
 			return
 
 	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
+	_secili_bolge_id = bolge_id if bolge != null else ""
 	_harita.secimi_ayarla(bolge_id)
-	if bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi:
+	var kendi_bolgen: bool = bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi
+	if kendi_bolgen:
 		var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge_id)
 		if not birlikler.is_empty():
 			_arayuz.birligi_goster(bolge, birlikler, _oyun.dunya.ulkeler[_oyun.oyuncu_ulkesi])
@@ -169,7 +176,26 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	var savasta: bool = yabanci_bolge and _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip)
 	var savas_dugmesi_gorunur: bool = yabanci_bolge and not savasta \
 			and _oyun.dunya.ulkeler_komsu_mu(_oyun.oyuncu_ulkesi, bolge.sahip)
-	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta)
+	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen)
+
+
+## Bölge ya da birlik panelinde "Tümen kur" / "Fabrika kur"a basıldı: seçili (kendi)
+## bölgede üretim sıralanır. Kabul edilmezse nedeni bildirim olarak gösterilir.
+func _insa_istendi(tur: String) -> void:
+	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	var tumen: bool = tur == "tumen"
+	var ad: String = "Tümen" if tumen else "Fabrika"
+	var bolge_adi: String = _oyun.dunya.bolgeler[_secili_bolge_id].ad
+	var kabul: bool = _oyun.tumen_sirala(ulke_id, _secili_bolge_id) if tumen 			else _oyun.fabrika_sirala(ulke_id, _secili_bolge_id)
+	if kabul:
+		_arayuz.bildirim_goster("%s sıraya alındı: %s." % [ad, bolge_adi], _secili_bolge_id)
+	elif _oyun.kuyruktaki_is_sayisi(ulke_id) >= Oyun.AZAMI_KUYRUK_UZUNLUGU:
+		_arayuz.bildirim_goster("İnşa kuyruğu dolu (en çok %d iş)." % Oyun.AZAMI_KUYRUK_UZUNLUGU, "")
+	else:
+		var maliyet: float = _oyun.tumen_maliyeti() if tumen else _oyun.fabrika_maliyeti()
+		_arayuz.bildirim_goster("Hazine yetmiyor (%s: %d)." % [ad, roundi(maliyet)], "")
 
 
 ## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.

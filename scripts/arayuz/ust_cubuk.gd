@@ -45,6 +45,8 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_ulke_sirasi.show()
 	_secim_yazisi.hide()
 	_hazine.show()
+	_yz_yonetimi.show()
+	_siralama.show()
 
 
 ## Oyuncunun hazinesini üst çubuğa yazar.
@@ -150,6 +152,11 @@ func _dugme_panelini_kur() -> void:
 	_siralama = _dugme_olustur("Sıralama", SIRALAMA_DUGMESI_BOYUTU)
 	_siralama.pressed.connect(_siralama_basildi)
 	sira.add_child(_siralama)
+
+	# Ülke seçilene kadar bu iki düğmenin işlevi yok; gizli kalırlar ki "Ülkeni seç" yazısıyla
+	# birlikte üst çubuk 16:9 ekrana da sığsın (sığmayınca alttaki paneli de genişletiyordu).
+	_yz_yonetimi.hide()
+	_siralama.hide()
 
 
 func _dugme_olustur(metin: String, boyut: Vector2) -> Button:

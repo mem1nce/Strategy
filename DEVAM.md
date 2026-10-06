@@ -510,15 +510,30 @@ baştan tarıyor; `_yapay_zekayi_isle`, `ulkenin_geliri`, `_teslimi_kontrol_et`,
 `_savastaki_ulke_dusun` gibi birçok yerden saatte/günde defalarca çağrılıyor. Henüz
 DOKUNULMADI (ölçüm/teşhis aşamasında kaldı, kod değişikliği yapılmadı).
 
+Windows test turu ve düzeltmeler (2026-10-06; ayrıntı TEST_RAPORU.md):
+- **Performans:** 5 yıllık tam YZ koşusu 196 sn'den 66,5 sn'ye indi. Ölçünce asıl
+  darboğazın `ulkenin_bolgeleri()` değil, her saat bütün tümenleri (~1400) tarayan iki
+  adım olduğu görüldü: `_muharebeleri_isle` artık önce yalnızca çekişmeli bölgeleri buluyor,
+  tümen listesini yalnızca onlar için kuruyor; yapay zekâ, bölgelere göre tümen dizinini
+  her ülke/bölge/komşu için ayrı ayrı taramak yerine saatte bir kez (yalnızca savaştaki bir
+  ülke düşünürken) kuruyor. `ulkenin_bolgeleri()` de yine önbelleğe alındı (Bolge.sahip
+  ayarlayıcısı `Bolge.sahiplik_surumu`'nu artırıyor; sınamalar sahibi doğrudan
+  değiştirdiğinde de önbellek doğru kalıyor).
+- **Sınamalar gerçek kaydı siliyordu:** `KayitYoneticisi.kayit_dosyasi` artık değişken;
+  `tests/calistirici.gd` onu `user://sinama_kayit.json` yapıyor.
+- **Arayüz:** tümen/fabrika kurma düğmeleri (bölge ve birlik panelinde), "Ordu: YZ" ve
+  "Sıralama" ülke seçilene kadar gizli (16:9'da üst çubuk taşıyor, aynı VBox'taki alt
+  paneli de genişletip "Bu ülkeyle oyna"yı ekran dışına itiyordu), sıralama paneli alt
+  panele binmiyor, onay pencereleri Türkçe ve büyük düğmeli, tümen kutuları birbirine
+  binmeyecek yer arıyor ve çarptıkları bölge adlarını gizliyor, seçili bölgenin adı uzaktan
+  ülke adının üstüne yazılmıyor.
+
 ## Sıradaki iş
 
 Kalan parçalar (hepsi bağımsız, küçük adımlara bölünebilir):
-1. **I) PERFORMANS'tan öne alınmalı:** `Dunya.ulkenin_bolgeleri()`'ni önbellekle (ör.
-   `Dictionary[String, Array[Bolge]]`, yalnızca `_bolgeyi_devret`/`_teslimi_kontrol_et`
-   bölge sahipliğini değiştirdiğinde güncellenir) — H)'nin kendi uzun koşu aracının
-   pratik olabilmesi için önce bu gerekiyor. Düzeltildikten sonra 30 günlük ölçüm
-   tekrarlanıp gerçekten hızlandığı doğrulanmalı, sonra 5 yıllık tam YZ sınaması
-   `zaman_testi.gd`'ye eklenmeli (CLAUDE.md'nin "büyütülmeli" notu).
+1. Uzun koşu artık 66,5 sn (hedef 120 sn altı). 5 yıllık tam YZ sınaması henüz
+   `zaman_testi.gd`'ye eklenmedi (CLAUDE.md'nin "büyütülmeli" notu); her sınama koşusuna
+   ~1 dakika ekleyeceği için ayrı bir "uzun sınama" seçeneği olarak düşünülmeli.
 2. H) DENGE'nin geri kalanı: 5 yıllık sınama çalışır hâle gelince sonuçlarına bakıp
    (kaç ülke hayatta kaldı, en büyüğü ne kadar büyüdü vb.) data/balance.json sayılarını
    gerekirse ayarlama.

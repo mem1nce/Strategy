@@ -91,6 +91,11 @@ const BIRLIK_KUTU_KENAR_KALINLIGI: float = 3.0
 const BIRLIK_YAZI_BOYUTU: int = 26
 ## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir.
 const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
+## Kutu, varsayılan yerinde başka bir kutuya çarpıyorsa sırayla bu yerler denenir
+## (bölge etiketine göre, ekran pikseli). Hiçbiri boş değilse varsayılan yer kullanılır.
+const BIRLIK_YEDEK_KONUMLARI: Array[Vector2] = [
+	Vector2(0.0, -46.0), Vector2(0.0, -92.0), Vector2(-76.0, -46.0), Vector2(76.0, -46.0),
+]
 ## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu. Yakınlıktan bağımsız her zaman görünür.
 const YOL_CIZGISI_RENGI: Color = Color(1.0, 0.95, 0.42, 0.85)
 const YOL_CIZGISI_KALINLIGI: float = 4.0
@@ -515,9 +520,13 @@ func _ust_katmani_ciz() -> void:
 	_cerceve_ciz(_secili_bolge_sinirlari, SECIM_RENGI, SECIM_KALINLIGI, olcek)
 	_yol_cizgilerini_ciz(olcek)
 
+	# Önce tümen kutularının yeri belirlenir; bölge adları kutulara çarpıyorsa yazılmaz
+	# (tümen bilgisi bölge adından önemlidir; ad yakınlaşınca yine görünür).
+	var kutu_alanlari: Array[Rect2] = []
+	var kutu_yerleri: Dictionary[String, Vector2] = _birlik_kutularini_yerlestir(gorunen, kutu_alanlari)
 	_ulke_adlarini_ciz(gorunen, olcek)
-	_bolge_adlarini_ciz(gorunen, olcek)
-	_birlikleri_ciz(gorunen, olcek)
+	_bolge_adlarini_ciz(gorunen, olcek, kutu_alanlari)
+	_birlikleri_ciz(gorunen, olcek, kutu_yerleri)
 	_ust_katman.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -621,27 +630,36 @@ func _bolge_adi_esiklerini_hesapla() -> void:
 		_bolge_adi_esigi[i] = esik
 
 
-## Bölge adlarını ve başkent yıldızlarını çizer. Uzaktan hiçbiri görünmez; yalnızca
-## ekrandaki bölgeler çizilir. Seçili bölgenin adı her yakınlıkta yazılır.
-func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float) -> void:
+## Bölge adlarını ve başkent yıldızlarını çizer. Uzaktan hiçbiri görünmez (seçili bölgeninki
+## de: uzaktan ülke adının üstüne biniyordu; seçimi sarı çerçeve ve alt panel zaten
+## gösteriyor). Yalnızca ekrandaki bölgeler çizilir. Yakından seçili bölgenin adı, eşiğe
+## bakılmadan yazılır. Bir tümen kutusuna (`kutu_alanlari`) çarpan ad yazılmaz.
+func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float, kutu_alanlari: Array[Rect2]) -> void:
 	var opaklik: float = _bolge_gorunurlugu()
+	if opaklik <= 0.0:
+		return
 	for i: int in _dunya.bolge_listesi.size():
 		var bolge: Bolge = _dunya.bolge_listesi[i]
 		var secili: bool = bolge.id == _secili_bolge
-		if opaklik <= 0.0 and not secili:
-			continue
 		if not gorunen.has_point(bolge.etiket):
 			continue
 		var ad_gorunur: bool = secili or _yakinlik >= _bolge_adi_esigi[i]
+		var taban_y: float = YILDIZ_YARICAPI * 0.6 + BOLGE_ADI_BOYUTU if bolge.baskent else BOLGE_ADI_BOYUTU * 0.35
+		if ad_gorunur and not secili:
+			var genislik: float = _bolge_adi_genisligi[i]
+			var ad_alani: Rect2 = Rect2(bolge.etiket * _yakinlik + Vector2(-genislik * 0.5, taban_y - BOLGE_ADI_BOYUTU * 0.8),
+					Vector2(genislik, BOLGE_ADI_BOYUTU))
+			for kutu: Rect2 in kutu_alanlari:
+				if kutu.intersects(ad_alani):
+					ad_gorunur = false
+					break
 		if not ad_gorunur and not bolge.baskent:
 			continue
 		var oge_opakligi: float = 1.0 if secili else opaklik
 
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
-		var taban_y: float = BOLGE_ADI_BOYUTU * 0.35
 		if bolge.baskent:
 			_yildiz_ciz(Vector2(0.0, -YILDIZ_YARICAPI * 0.6), oge_opakligi)
-			taban_y = YILDIZ_YARICAPI * 0.6 + BOLGE_ADI_BOYUTU
 		if ad_gorunur:
 			_yazi_ciz(bolge.ad, Vector2(-_bolge_adi_genisligi[i] * 0.5, taban_y), BOLGE_ADI_BOYUTU, oge_opakligi)
 
@@ -669,7 +687,8 @@ func _yol_cizgilerini_ciz(olcek: float) -> void:
 ## Aynı bölgedeki tümenleri tek kutuda, toplam güçleriyle çizer. Bölge sınırları ve adları
 ## gibi yalnızca yakınlaşınca görünür; uzaktan dünya genelinde yüzlerce kutu dünyayı
 ## karmaşıklaştırmasın diye.
-func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
+## `kutu_yerleri`, _birlik_kutularini_yerlestir()'in seçtiği yerlerdir.
+func _birlikleri_ciz(gorunen: Rect2, olcek: float, kutu_yerleri: Dictionary[String, Vector2]) -> void:
 	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
 		return
 	var toplam_guc: Dictionary[String, float] = {}
@@ -686,17 +705,55 @@ func _birlikleri_ciz(gorunen: Rect2, olcek: float) -> void:
 			continue
 		var sahip: Ulke = _dunya.bolgenin_sahibi(bolge_id)
 		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
+		var yer: Vector2 = kutu_yerleri.get(bolge_id, BIRLIK_KONUM_PAYI)
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
-		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id])
+		_birlik_kutusu_ciz(renk, toplam_guc[bolge_id], yer)
 		if sahipler[bolge_id].size() > 1:
-			_muharebe_isareti_ciz()
+			_muharebe_isareti_ciz(yer)
+
+
+## Ekrandaki tümen kutularına, birbirlerinin üstüne binmeyecek yerler seçer: güçlü bölgeden
+## zayıfa, her kutu için BIRLIK_YEDEK_KONUMLARI sırayla denenir. Seçilen yerleri (bölge id'si
+## -> etikete göre ekran pikseli) döndürür; kutuların kapladığı alanları da `kutu_alanlari`na
+## (kamera kaymasından bağımsız, yalnızca yakınlığa bağlı koordinatlarla) ekler.
+func _birlik_kutularini_yerlestir(gorunen: Rect2, kutu_alanlari: Array[Rect2]) -> Dictionary[String, Vector2]:
+	var yerler: Dictionary[String, Vector2] = {}
+	if _oyun == null or _bolge_gorunurlugu() <= 0.0:
+		return yerler
+	var toplam_guc: Dictionary[String, float] = {}
+	for birlik: Birlik in _oyun.birlikler:
+		toplam_guc[birlik.bolge_id] = toplam_guc.get(birlik.bolge_id, 0.0) + birlik.guc
+	var bolge_idleri: Array[String] = []
+	for bolge_id: String in toplam_guc:
+		var bolge: Bolge = _dunya.bolgeler.get(bolge_id)
+		if bolge != null and gorunen.has_point(bolge.etiket):
+			bolge_idleri.append(bolge_id)
+	bolge_idleri.sort_custom(func(a: String, b: String) -> bool: return toplam_guc[a] > toplam_guc[b])
+
+	# Muharebe işareti kutunun sağında durduğu için alan sağa doğru biraz geniş tutulur.
+	var boyut: Vector2 = BIRLIK_KUTU_BOYUTU + Vector2(MUHAREBE_ISARETI_YARICAPI * 2.0 + 10.0, 0.0)
+	for bolge_id: String in bolge_idleri:
+		var temel: Vector2 = _dunya.bolgeler[bolge_id].etiket * _yakinlik
+		var secilen: Vector2 = BIRLIK_KONUM_PAYI
+		for aday: Vector2 in BIRLIK_YEDEK_KONUMLARI:
+			var alan: Rect2 = Rect2(temel + aday - BIRLIK_KUTU_BOYUTU * 0.5, boyut).grow(YAZI_ARALIGI * 0.5)
+			var carpiyor: bool = false
+			for dolu: Rect2 in kutu_alanlari:
+				if dolu.intersects(alan):
+					carpiyor = true
+					break
+			if not carpiyor:
+				secilen = aday
+				break
+		yerler[bolge_id] = secilen
+		kutu_alanlari.append(Rect2(temel + secilen - BIRLIK_KUTU_BOYUTU * 0.5, boyut))
+	return yerler
 
 
 ## `konum` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
 ## yakınlıktan bağımsız olarak bölge etiketine göre hep aynı ekran uzaklığında kalsın
 ## (konum dönüşüm köküne eklenseydi, kamera yakınlığıyla birlikte ekranda büyürdü).
-func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
-	var merkez: Vector2 = BIRLIK_KONUM_PAYI
+func _birlik_kutusu_ciz(renk: Color, guc: float, merkez: Vector2 = BIRLIK_KONUM_PAYI) -> void:
 	var yarim: Vector2 = BIRLIK_KUTU_BOYUTU * 0.5
 	var kose: PackedVector2Array = PackedVector2Array([
 		merkez + Vector2(-yarim.x, -yarim.y), merkez + Vector2(yarim.x, -yarim.y),
@@ -713,8 +770,8 @@ func _birlik_kutusu_ciz(renk: Color, guc: float) -> void:
 
 ## Tümen kutusunun sağına, birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen
 ## kırmızı bir daire çizer. `_birlik_kutusu_ciz` ile aynı ölçeklenmiş yerel çerçevede çalışır.
-func _muharebe_isareti_ciz() -> void:
-	var merkez: Vector2 = BIRLIK_KONUM_PAYI + Vector2(BIRLIK_KUTU_BOYUTU.x * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
+func _muharebe_isareti_ciz(kutu_merkezi: Vector2 = BIRLIK_KONUM_PAYI) -> void:
+	var merkez: Vector2 = kutu_merkezi + Vector2(BIRLIK_KUTU_BOYUTU.x * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
 	_ust_katman.draw_circle(merkez, MUHAREBE_ISARETI_YARICAPI, MUHAREBE_ISARETI_RENGI)
 	_ust_katman.draw_arc(merkez, MUHAREBE_ISARETI_YARICAPI, 0.0, TAU, 24, Color.WHITE, 2.0)
 

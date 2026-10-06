@@ -275,12 +275,16 @@ Menü kapanınca (Yeni oyun ya da Devam et) aşağıdaki ülke seçimi akışı 
 **Üst çubuk:** solda oyuncunun ülkesi, tarih-saat, hazine ve (varsa) **üretim göstergesi**
 ("İnşa: Tümen (45 sa)", birden fazla iş kuyrukta beklerse "+N" eklenir — bkz.
 `Oyun.onde_ki_is()`/`kuyruktaki_is_sayisi()`, her saat ve kuyruk değiştiğinde güncellenir);
-sağda durdur/devam düğmesi ve üç hız düğmesi. Etkin hız ve durdurulmuş hâl sarı renkle
-vurgulanır.
+sağda durdur/devam düğmesi, üç hız düğmesi, "Ordu: YZ" ve "Sıralama". Etkin hız ve
+durdurulmuş hâl sarı renkle vurgulanır. "Ordu: YZ" ve "Sıralama" ülke seçilene kadar gizlidir
+(o anda işlevleri yok; gizli olmaları "Ülkeni seç" yazısıyla birlikte üst çubuğun 16:9
+ekrana sığmasını sağlar).
 
 - Dokunulabilir her öğe en az **96 × 96 px**. Düğmeler şu an 132 × 104 px ve daha büyüktür.
 - Arayüz yazıları en az 36 px, harita yazıları en az 24 px.
 - Arayüz, çentik ve yuvarlak köşelerin dışında, güvenli alanın (safe area) içinde kalır.
+- Onay pencereleri (Yeni oyun, Kaydı sil, Savaş ilan et) Türkçedir ("Onay", "Evet",
+  "Vazgeç") ve düğmeleri de bu sınırlara uyar (`ArayuzTemasi.onay_penceresi_olustur()`).
 
 ## 6. Zaman
 
@@ -406,8 +410,10 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
   `bakim_birim_maliyeti` hazinesinden düşülür. Hazine yetmezse 0'da kalır ve açık, o
   ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak yansıtılır (muharebedeki
   `_guc_azalt` ile aynı mekanizma); güç `ASGARI_GUC` altına düşen tümen silinir.
-- Arayüz: şimdilik yok — tümen/fabrika sıralama yalnızca sim katmanında (`Oyun`) var;
-  düğmeler G) ARAYÜZ aşamasında (ya da öncesinde küçük bir ek adımda) eklenecek.
+- Arayüz: oyuncunun kendi bölgesine dokununca açılan bölge ya da birlik panelinde
+  **"Tümen kur (50)"** ve **"Fabrika kur (500)"** düğmeleri vardır (maliyetler
+  data/balance.json'dan gelir); iş o bölgeye sıralanır. Sıralanamazsa (hazine yetmiyor ya
+  da kuyruk dolu) nedeni bildirim kartında yazar; sıralanınca da kısa bir bildirim çıkar.
 
 ## 10. Yapay zekâ
 

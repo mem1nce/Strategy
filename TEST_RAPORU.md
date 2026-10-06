@@ -115,6 +115,24 @@ yerleşim hataları ekran oranına bağlı; Mac'te de 16:9 pencerede aynı çık
    DEVAM.md'deki teşhisle (önbelleksiz `Dunya.ulkenin_bolgeleri()`) uyumlu, yeni bir
    bulgu değil.
 
+## Düzeltmeler (6 Ekim 2026, aynı gün)
+
+Yukarıdaki hataların hepsi düzeltildi. Düzeltmelerden sonra: 99/99 sınama geçti, headless
+açılış hatasız, 16:9 ve 20:9 ekran turu yeniden alınıp incelendi, gerçek kayıt dosyası
+sınamalardan sonra yerinde ve değişmemiş.
+
+| # | Hata | Düzeltme |
+|---|---|---|
+| 1 | "Bu ülkeyle oyna" 16:9'da taşıyor | Asıl neden üst çubuktu: ülke seçilmeden önce 2106 px genişliğindeydi ve aynı dikey kutudaki alt paneli de o genişliğe çekiyordu. "Ordu: YZ" ve "Sıralama" ülke seçilene kadar gizli; üst çubuk ve panel artık sığıyor. |
+| 2 | Sınamalar gerçek kaydı siliyor | `KayitYoneticisi.kayit_dosyasi` değişken oldu; sınama çalıştırıcısı ayrı bir dosya (`user://sinama_kayit.json`) kullanıyor ve sonunda siliyor. |
+| 3 | Üretim arayüzü yok | Kendi bölgende bölge ya da birlik panelinde "Tümen kur (50)" ve "Fabrika kur (500)" düğmeleri. Sıralanınca ya da sıralanamayınca (hazine/kuyruk) bildirim kartı çıkıyor. |
+| 4 | "Sıralama" görünmüyor | 1 numarayla aynı düzeltme. |
+| 5 | Sıralama paneli alt panele değiyor | Panel, üst çubukla alt panel arasındaki boşluğa ortalanıyor. |
+| 6 | Tümen kutuları üst üste | Kutular güçlüden zayıfa yerleştiriliyor, çarpışınca dört yedek yerden boş olanı alıyor; kutuya çarpan bölge adı yazılmıyor (yakınlaşınca görünüyor). |
+| 7 | Onay penceresi düğmeleri küçük | Düğmeler 211 × 104 taban px. Pencereler ayrıca İngilizce yazıyordu ("Please Confirm... / OK / Cancel"); artık "Onay / Evet / Vazgeç". |
+| 8 | Seçili bölge adı ülke adının üstünde | Seçili bölgenin adı uzaktan yazılmıyor; sarı çerçeve ve alt panel seçimi gösteriyor. Yakından eskisi gibi her zaman yazılıyor. |
+| 9 | Uzun koşu yavaş | 196 sn → **66,5 sn**. Darboğaz, her saat bütün tümenleri baştan tarayan muharebe ve yapay zekâ adımlarıydı (ölçümle bulundu); ikisi de yalnızca gereken tümenlere bakıyor. `ulkenin_bolgeleri()` da önbelleğe alındı. |
+
 ## Not
 
 - Testlerin bu bilgisayarda bıraktığı kalıntı yok: kayıt dosyası eski hâline getirildi
