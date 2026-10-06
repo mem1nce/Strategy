@@ -561,7 +561,14 @@ Adımlar (her biri ayrı commit):
    açılınca bölge seçimi kalkar, bölge seçilince panel kapanır (ikisi aynı yeri kaplıyor).
    Üst çubuk 16:9'a sığsın diye daraltıldı (sol panel 480, hız düğmeleri 104).
    16:9 (1600×900) ve 20:9 (1924×900) ekran görüntüleriyle denetlendi. 124/124.
-3. ⬜ Denge: uzun koşu raporu (teslim sayısı, en büyük ülke payı, tür üretim payları, süre).
+3. ✅ Denge: `tests/uzun_kosu.gd` (ayrı betik, sınama takımında değil:
+   `Godot --headless --path . --script res://tests/uzun_kosu.gd -- --tohum 1`) bütün
+   ülkeleri YZ'ye yönettirip 5 yıl ilerletir, hedefleri [tamam]/[TUTMADI] diye yazar.
+   İlk koşuda piyade %88 çıktı: YZ her gün rastgele tür seçip parası yetmezse vazgeçiyordu,
+   ucuz piyade hep önce alınıyordu. Düzeltme: `_yz_bekleyen_tur` — YZ seçtiği türün parası
+   birikene kadar kararını korur (yeni sınama). Sonuç (tohum 1/2/3): teslim 12/10/8, en
+   büyük ülke %5,6/%5,4/%5,8, piyade ~%42, zırhlı ~%36, topçu ~%22, süre ~71 sn.
+   balance.json sayılarına dokunmak gerekmedi. 125/125.
 4. ⬜ Belgeler: Nasıl oynanır, TASARIM.md, TEST_LISTESI.md.
 
 ## Kararlar

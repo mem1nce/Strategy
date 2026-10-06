@@ -140,6 +140,24 @@ func sina_zirhlinin_bakimi_piyadeden_yuksektir() -> String:
 	return ""
 
 
+func sina_yz_pahali_tur_icin_para_biriktirir() -> String:
+	var oyun: Oyun = _kurulu_oyun()
+	var ulke_id: String = "DEU"
+	oyun._yz_fabrika_olasiligi = 0.0
+	oyun._yz_bekleyen_tur[ulke_id] = "zirhli"
+	# Piyadeye yeter ama zırhlıya yetmez: hiçbir şey kurmamalı, kararını korumalı.
+	oyun.hazineler[ulke_id] = BirlikTurleri.maliyet("piyade") + 1.0
+	oyun._baristaki_ulke_dusun(ulke_id, 0)
+	if oyun.kuyruktaki_is_sayisi(ulke_id) != 0 or oyun._yz_bekleyen_tur.get(ulke_id, "") != "zirhli":
+		return "Parası yetmeyen yapay zekâ ucuz türe geçmemeli, zırhlı için beklemeli."
+	oyun.hazineler[ulke_id] = BirlikTurleri.maliyet("zirhli") + 1.0
+	oyun._baristaki_ulke_dusun(ulke_id, 0)
+	var kuyruk: Array = oyun.insa_kuyruklari.get(ulke_id, [])
+	if kuyruk.size() != 1 or (kuyruk[0] as InsaIsi).birlik_turu != "zirhli" or oyun._yz_bekleyen_tur.has(ulke_id):
+		return "Para birikince bekleyen zırhlı sıralanmalı."
+	return ""
+
+
 func sina_yz_komsunun_cok_kullandigi_ture_karsi_tur_secer() -> String:
 	var oyun: Oyun = _kurulu_oyun()
 	var komsu: String = oyun.dunya.ulkeler["TUR"].komsular[0]

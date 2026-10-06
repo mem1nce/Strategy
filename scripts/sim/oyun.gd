@@ -107,6 +107,10 @@ var _dusunme_saatleri: Dictionary[String, int] = {}
 ## Ülke id'si -> {tür: toplam güç}; her oyun günü başında bir kez hesaplanır, yapay zekânın
 ## tür seçimi için (bkz. _yz_tur_sec).
 var _ulke_tur_gucleri: Dictionary[String, Dictionary] = {}
+## Ülke id'si -> yapay zekânın kurmaya karar verdiği ama henüz parası yetmeyen tümen türü.
+## Para birikene kadar karar değişmez; yoksa ucuz piyade hep önce alınır, pahalı türler
+## neredeyse hiç kurulmazdı. Kaydedilmez (yüklenince yeniden seçilir).
+var _yz_bekleyen_tur: Dictionary[String, String] = {}
 
 ## Ülke id'si -> {dal: seviye} (bkz. Teknoloji). Kaydı olmayan dal 0. seviyededir.
 var teknolojiler: Dictionary[String, Dictionary] = {}
@@ -931,8 +935,9 @@ func _savastaki_ulke_dusun(ulke_id: String, su_anki_saat: int, birlik_dizini: Di
 				break
 
 
-## Barıştaki ülke, gelirinin elverdiği ve kuyruğunda yer olduğu sürece tümen kurar;
-## ara sıra (yz_fabrika_olasiligi) bunun yerine fabrika kurar. Hangisi olursa olsun,
+## Barıştaki ülke, gelirinin elverdiği ve kuyruğunda yer olduğu sürece tümen kurar (seçtiği
+## türün parası birikene kadar bekler, bkz. _yz_bekleyen_tur); ara sıra (yz_fabrika_olasiligi)
+## bunun yerine fabrika kurar. Hangisi olursa olsun,
 ## başkente ya da bir sınır bölgesine (rastgele) kurulur.
 func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 	var kuyruk: Array = insa_kuyruklari.get(ulke_id, [])
@@ -950,9 +955,13 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 	if _rng.randf() < _yz_fabrika_olasiligi and hazine >= _fabrika_maliyeti:
 		fabrika_sirala(ulke_id, hedef_bolge_id)
 		return
-	var tur: String = _yz_tur_sec(ulke_id)
-	if hazine >= BirlikTurleri.maliyet(tur):
-		tumen_sirala(ulke_id, hedef_bolge_id, tur)
+	var tur: String = _yz_bekleyen_tur.get(ulke_id, "")
+	if tur == "":
+		tur = _yz_tur_sec(ulke_id)
+	if hazine >= BirlikTurleri.maliyet(tur) and tumen_sirala(ulke_id, hedef_bolge_id, tur):
+		_yz_bekleyen_tur.erase(ulke_id)
+	else:
+		_yz_bekleyen_tur[ulke_id] = tur
 
 
 ## Yapay zekânın kuracağı tümen türü: taban ağırlıklara (karışık ordu) göre rastgele seçilir;
