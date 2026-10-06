@@ -34,7 +34,9 @@ except ImportError:
 
 KOK = Path(__file__).resolve().parent.parent
 ULKE_KAYNAGI = KOK / "tools" / "kaynak" / "ne_110m_admin_0_countries.geojson"
-SEHIR_KAYNAGI = KOK / "tools" / "kaynak" / "ne_50m_populated_places.geojson"
+SEHIR_KAYNAGI = KOK / "tools" / "kaynak" / "ne_10m_populated_places.geojson"
+# Bölge sayısı formülünün ve tohum seçiminin ayarları (elle değiştirilebilir).
+AYAR_DOSYASI = KOK / "tools" / "bolge_ayarlari.json"
 DUNYA_CIKTISI = KOK / "data" / "world.json"
 BOLGE_CIKTISI = KOK / "data" / "regions.json"
 
@@ -57,14 +59,13 @@ RENK_SAYISI = 9
 SIVRI_UC_ESIGI = 0.02
 
 # --- Bölgeler ---------------------------------------------------------------
-# İki tohum şehir arasındaki en az uzaklık (harita birimi).
-TOHUM_ARALIGI = 25.0
-# Bir ülkedeki en çok bölge sayısı.
-AZAMI_BOLGE = 14
-# Hedef bölge sayısı = karekök(ülke alanı) / bu değer. Büyüdükçe bölge sayısı azalır.
-BOLGE_BUYUKLUGU = 20.0
-# Şehir seçerken nüfusun ağırlığı. 0 olursa yalnızca uzaklığa, büyüdükçe daha çok nüfusa bakılır.
-NUFUS_AGIRLIGI = 0.35
+# Bölge sayısı formülü ve tohum seçimi ayarları tools/bolge_ayarlari.json dosyasındadır.
+with open(AYAR_DOSYASI, encoding="utf-8") as _dosya:
+    AYARLAR = json.load(_dosya)
+# Tohum aralığı gevşetilirken inilebilecek en düşük oran (aralik_orani'nın katı).
+ARALIK_GEVSEME_SINIRI = 0.3
+# Gerçek yüzölçümü hesabı için Dünya'nın yarıçapı (km).
+DUNYA_YARICAPI_KM = 6371.0
 # Kaba kıyı çizgisi yüzünden ülke çokgeninin dışına düşen şehir, çokgene en çok
 # bu kadar uzaksa yine o ülkenin şehri sayılır (harita birimi).
 KIYI_PAYI = 4.0
@@ -74,11 +75,9 @@ KIRPINTI_ALANI = 4.0
 DENIZ_YOLU_AZAMI_UZAKLIK = 220.0
 # Bir kıyı bölgesi için tutulan en yakın deniz yolu sayısı (karşı taraf için de geçerlidir).
 DENIZ_YOLU_AZAMI_SAYI = 3
-# Bir bölge ülke alanının bu oranını geçerse (ve ülkede yeterli bölge varsa) uyarı verilir.
-BUYUK_BOLGE_ORANI = 0.40
 # Şehir verisindeki ülke kodu ülke verisindekinden farklıysa buradan çevrilir.
 ULKE_KODU_ESLEMESI = {"SSD": "SDS"}
-ATLANAN_SEHIR_SINIFLARI = {"Scientific station", "Historic place"}
+ATLANAN_SEHIR_SINIFLARI = {"Scientific station", "Historic place", "Meteorological Station"}
 
 KITALAR = {
     "Africa": "Afrika",
@@ -169,6 +168,12 @@ def alan(noktalar):
     return abs(toplam) / 2.0
 
 
+def gercek_alan_km2(dis_halka):
+    """Halkanın gerçek yüzölçümü (km²): eşit alanlı silindirik izdüşümde (x = boylam, y = sin enlem)."""
+    noktalar = [(math.radians(b), math.sin(math.radians(e))) for b, e in (n[:2] for n in dis_halka)]
+    return alan(noktalar) * DUNYA_YARICAPI_KM ** 2
+
+
 def cokgene_cevir(dis_halka):
     """Dış halkayı düzleme çevirir, art arda tekrar eden noktaları ve kapanış noktasını atar."""
     noktalar = []
@@ -227,6 +232,7 @@ def ulkeleri_oku(kaynak_yolu):
             raise ValueError("Aynı id iki kez geçiyor: %s" % ulke_id)
 
         cokgenler = []
+        gercek_alan = 0.0
         for cokgen_halkalari in halkalar(kayit["geometry"]):
             # Komşuluk için delikler de sayılır: Güney Afrika, Lesotho'ya deliğinden komşudur.
             for halka in cokgen_halkalari:
@@ -237,6 +243,7 @@ def ulkeleri_oku(kaynak_yolu):
             if len(noktalar) < 3 or alan(noktalar) < ASGARI_ALAN:
                 continue
             cokgenler.append(noktalar)
+            gercek_alan += gercek_alan_km2(cokgen_halkalari[0])
         if not cokgenler:
             print("  uyarı: %s için çizilecek çokgen kalmadı, ülke atlandı." % ulke_id)
             continue
@@ -261,6 +268,7 @@ def ulkeleri_oku(kaynak_yolu):
             "etiket": list(etiket),
             "komsular": [],
             "cokgenler": cokgenler,
+            "_alan_km2": gercek_alan,
         }
 
     # Ülke komşuluğu: ortak sınır noktası paylaşan ülkeler komşudur.
@@ -346,6 +354,81 @@ def parcalari_hazirla(ulkeler):
     return parcalar
 
 
+def hedef_bolge_sayisi(ulke):
+    """Ülkenin hedef bölge sayısı: gerçek yüzölçümü ve nüfusun kareköklerinden (bkz. bolge_ayarlari.json)."""
+    a = AYARLAR["bolge_sayisi"]
+    deger = (a["sabit"]
+             + a["alan_katsayisi"] * math.sqrt(ulke["_alan_km2"] / a["alan_birimi_km2"])
+             + a["nufus_katsayisi"] * math.sqrt(ulke["nufus"] / a["nufus_birimi"]))
+    return max(a["en_az"], min(a["en_cok"], round(deger)))
+
+
+def en_iyi_aday(liste, secilen, aralik):
+    """Seçilmişlere en az `aralik` uzaktaki şehirlerden, uzaklık × nüfus^ağırlık puanı en yüksek olanı."""
+    en_iyi = None
+    en_iyi_puan = 0.0
+    for sehir in liste:
+        if sehir in secilen:
+            continue
+        en_yakin = min(uzaklik(sehir["konum"], s["konum"]) for s in secilen)
+        if en_yakin < aralik:
+            continue
+        puan = en_yakin * max(sehir["nufus"], 1000) ** AYARLAR["tohum"]["nufus_agirligi"]
+        if puan > en_iyi_puan:
+            en_iyi = sehir
+            en_iyi_puan = puan
+    return en_iyi
+
+
+def hucre_alanlari(ulke_parcalari, secilen):
+    """Tohumların ülke içindeki yaklaşık Voronoi hücrelerinin alanları (tohum sırasıyla)."""
+    alanlar = [0.0] * len(secilen)
+    hucre_geometrileri = [None] * len(secilen)
+    if len(secilen) == 1:
+        return [sum(p["geo"].area for p in ulke_parcalari)], [shapely.union_all([p["geo"] for p in ulke_parcalari])]
+    noktalar = [Point(t["konum"]) for t in secilen]
+    ulke_geo = shapely.union_all([p["geo"] for p in ulke_parcalari])
+    hucreler = shapely.get_parts(voronoi_diagram(MultiPoint(noktalar), envelope=ulke_geo.buffer(50.0).envelope))
+    for hucre in hucreler:
+        ic = shapely.intersection(hucre, ulke_geo)
+        if ic.is_empty:
+            continue
+        sira = next((i for i, n in enumerate(noktalar) if hucre.covers(n)), None)
+        if sira is None:
+            continue
+        alanlar[sira] += ic.area
+        hucre_geometrileri[sira] = ic
+    return alanlar, hucre_geometrileri
+
+
+def pay_sinirini_uygula(ulke_parcalari, liste, secilen, harita_alani):
+    """En büyük hücre ülke alanının azami_bolge_payi'nı geçtiği sürece o hücreye bir tohum ekler."""
+    sinir = AYARLAR["tohum"]["azami_bolge_payi"] * harita_alani
+    en_cok = AYARLAR["bolge_sayisi"]["en_cok"]
+    denenen = set()
+    while len(secilen) < en_cok:
+        alanlar, hucre_geometrileri = hucre_alanlari(ulke_parcalari, secilen)
+        buyukler = [i for i in range(len(secilen)) if alanlar[i] > sinir and i not in denenen]
+        if not buyukler:
+            return
+        i = max(buyukler, key=lambda k: alanlar[k])
+        hucre = hucre_geometrileri[i]
+        # Hücrenin içindeki, tohumlara en uzak şehir (nüfusu ne olursa olsun).
+        en_iyi = None
+        en_iyi_uzaklik = 0.0
+        for sehir in liste:
+            if sehir in secilen or not hucre.covers(Point(sehir["konum"])):
+                continue
+            d = min(uzaklik(sehir["konum"], t["konum"]) for t in secilen)
+            if d > en_iyi_uzaklik:
+                en_iyi = sehir
+                en_iyi_uzaklik = d
+        if en_iyi is None:
+            denenen.add(i)
+            continue
+        secilen.append(en_iyi)
+
+
 def tohumlari_sec(ulkeler, parcalar, sehirler):
     """Her ülke için bölge tohumu olacak şehirleri seçer.
 
@@ -384,29 +467,27 @@ def tohumlari_sec(ulkeler, parcalar, sehirler):
         if not liste:
             tohumlar[ulke_id] = []
             continue
-        ulke_alani = sum(p["geo"].area for p in ulke_parcalari[ulke_id])
-        hedef = max(1, min(AZAMI_BOLGE, round(math.sqrt(ulke_alani) / BOLGE_BUYUKLUGU)))
-
+        harita_alani = sum(p["geo"].area for p in ulke_parcalari[ulke_id])
+        hedef = hedef_bolge_sayisi(ulke)
+        ulke["_hedef"] = hedef
         baskent = max(liste, key=baskent_puani)
         secilen = [baskent]
-        # Her adımda, seçilmişlere en uzak ve en kalabalık şehir eklenir. Uzaklık ülkeye
-        # yayılmayı, nüfus büyük şehirlerin öne geçmesini sağlar.
+        # Tohumlar arası en az uzaklık ülkenin büyüklüğüne göredir: küçük ülkede kısa, büyükte uzun.
+        aralik = AYARLAR["tohum"]["aralik_orani"] * math.sqrt(harita_alani / hedef)
+        taban = aralik * ARALIK_GEVSEME_SINIRI
         while len(secilen) < hedef:
-            en_iyi = None
-            en_iyi_puan = 0.0
-            for sehir in liste:
-                if sehir in secilen:
-                    continue
-                en_yakin = min(uzaklik(sehir["konum"], s["konum"]) for s in secilen)
-                if en_yakin < TOHUM_ARALIGI:
-                    continue
-                puan = en_yakin * max(sehir["nufus"], 1000) ** NUFUS_AGIRLIGI
-                if puan > en_iyi_puan:
-                    en_iyi = sehir
-                    en_iyi_puan = puan
+            en_iyi = en_iyi_aday(liste, secilen, aralik)
             if en_iyi is None:
-                break
+                # Yeterince uzak şehir kalmadıysa aralık gevşetilir (ama tabanın altına inilmez).
+                if aralik <= taban:
+                    break
+                aralik = max(taban, aralik * 0.8)
+                continue
             secilen.append(en_iyi)
+        # Büyük ülkelerde hiçbir bölge ülke alanının azami_bolge_payi'ndan büyük kalmasın:
+        # büyük kalan hücredeki, tohumlara en uzak kasaba da tohum yapılır.
+        if hedef >= AYARLAR["tohum"]["pay_denetimi_asgari_bolge"]:
+            pay_sinirini_uygula(ulke_parcalari[ulke_id], liste, secilen, harita_alani)
         tohumlar[ulke_id] = secilen
     return tohumlar, adaylar
 
@@ -512,6 +593,55 @@ def kirpintilari_kat(yuzler):
             break
         if not degisti:
             return tasinan
+
+
+def kucuk_bolgeleri_kat(yuzler, tohumlar):
+    """Alanı ülkesindeki ortalama bölge alanının `ortalama_orani`ndan küçük kalan, başkent
+    olmayan bölgeyi, en uzun sınırı paylaştığı aynı ülkeden bölgeye katar. Katılan bölge
+    sayısını döndürür. Hiçbir bölgeye değmeyen (ör. ada) küçük bölge olduğu gibi kalır."""
+    oran = AYARLAR["kucuk_bolge"]["ortalama_orani"]
+    katilan = 0
+    while True:
+        bolge_alanlari = {}
+        for yuz in yuzler:
+            anahtar = (yuz["ulke"], yuz["bolge"])
+            bolge_alanlari[anahtar] = bolge_alanlari.get(anahtar, 0.0) + yuz["geo"].area
+        ulke_toplam = {}
+        ulke_sayi = {}
+        for (ulke_id, _), a in bolge_alanlari.items():
+            ulke_toplam[ulke_id] = ulke_toplam.get(ulke_id, 0.0) + a
+            ulke_sayi[ulke_id] = ulke_sayi.get(ulke_id, 0) + 1
+        adaylar = sorted(
+            (a, k) for k, a in bolge_alanlari.items()
+            if k[1] != 0 and ulke_sayi[k[0]] > 1 and a < oran * ulke_toplam[k[0]] / ulke_sayi[k[0]])
+        if not adaylar:
+            return katilan
+        kenarlar = kenar_sozlugu(yuzler)
+        katildi = False
+        for _, (ulke_id, sira) in adaylar:
+            paylasim = {}
+            for yuz_sira, yuz in enumerate(yuzler):
+                if yuz["ulke"] != ulke_id or yuz["bolge"] != sira:
+                    continue
+                for halka in [yuz["geo"].exterior] + list(yuz["geo"].interiors):
+                    noktalar = halka_noktalari(halka)
+                    for i in range(len(noktalar)):
+                        p, q = noktalar[i], noktalar[(i + 1) % len(noktalar)]
+                        for diger_sira in kenarlar[kenar_anahtari(p, q)]:
+                            diger = yuzler[diger_sira]
+                            if diger["ulke"] == ulke_id and diger["bolge"] != sira:
+                                paylasim[diger["bolge"]] = paylasim.get(diger["bolge"], 0.0) + uzaklik(p, q)
+            if not paylasim:
+                continue
+            hedef = max(paylasim, key=paylasim.get)
+            for yuz in yuzler:
+                if yuz["ulke"] == ulke_id and yuz["bolge"] == sira:
+                    yuz["bolge"] = hedef
+            katilan += 1
+            katildi = True
+            break
+        if not katildi:
+            return katilan
 
 
 # =============================================================================
@@ -872,14 +1002,14 @@ def dogrula(ulkeler, parcalar, bolgeler, tohumlar):
         hatalar.append("Dünyada ulaşılamayan %d bölge var: %s" % (
             len(kayip), ", ".join(sorted(kayip)[:8])))
 
-    # 5. Yeterli bölgesi olduğu hâlde bir bölgesi çok büyük kalan ülkeler (uyarı).
+    # 5. Büyük ülkelerde bir bölgesi ülke alanının azami_bolge_payi'nı geçen ülkeler (uyarı).
     for ulke_id in sorted(ulkeler):
         ulke_bolgeleri = [b for b in bolgeler.values() if b["sahip"] == ulke_id]
-        if len(ulke_bolgeleri) < 3:
+        if len(ulke_bolgeleri) < AYARLAR["tohum"]["pay_denetimi_asgari_bolge"]:
             continue
         toplam = sum(b["_alan"] for b in ulke_bolgeleri)
         en_buyuk = max(ulke_bolgeleri, key=lambda b: b["_alan"])
-        if en_buyuk["_alan"] > BUYUK_BOLGE_ORANI * toplam:
+        if en_buyuk["_alan"] > AYARLAR["tohum"]["azami_bolge_payi"] * toplam:
             uyarilar.append("%s (%s): %d bölgesi var ama '%s' bölgesi ülke alanının %%%d'i" % (
                 ulkeler[ulke_id]["ad"], ulke_id, len(ulke_bolgeleri), en_buyuk["ad"],
                 round(100.0 * en_buyuk["_alan"] / toplam)))
@@ -984,6 +1114,7 @@ def donustur():
     tohumlar, adaylar = tohumlari_sec(ulkeler, parcalar, sehirler)
     yuzler = bolgelere_ayir(ulkeler, parcalar, tohumlar)
     tasinan = kirpintilari_kat(yuzler)
+    katilan = kucuk_bolgeleri_kat(yuzler, tohumlar)
     bolgeler, sinirlar, nokta_komsuluklari, baglanan = bolgeleri_kur(ulkeler, yuzler, tohumlar, adaylar)
     hatalar, uyarilar = dogrula(ulkeler, parcalar, bolgeler, tohumlar)
 
@@ -997,7 +1128,16 @@ def donustur():
     print("Bölge  : %d   Çokgen: %d   Nokta: %d   Katılan kırpıntı: %d" % (
         len(bolgeler), sum(len(b["cokgenler"]) for b in bolgeler.values()),
         sum(len(c) for b in bolgeler.values() for c in b["cokgenler"]), tasinan))
-    print("Tek bölgeli ülke: %d" % sum(1 for u in ulkeler if sum(1 for b in bolgeler.values() if b["sahip"] == u) == 1))
+    print("Tek bölgeli ülke: %d   Komşusuna katılan küçük bölge: %d" % (
+        sum(1 for u in ulkeler if sum(1 for b in bolgeler.values() if b["sahip"] == u) == 1), katilan))
+    sayilar = {}
+    for b in bolgeler.values():
+        sayilar[b["sahip"]] = sayilar.get(b["sahip"], 0) + 1
+    print("En çok bölgeli 30 ülke (bölge / hedef):")
+    for u in sorted(sayilar, key=lambda k: -sayilar[k])[:30]:
+        print("  %-4s %-32s %2d / %2d   (%.0f bin km², %.1f milyon)" % (
+            u, ulkeler[u]["ad"], sayilar[u], ulkeler[u].get("_hedef", 1),
+            ulkeler[u]["_alan_km2"] / 1000.0, ulkeler[u]["nufus"] / 1e6))
     print("Sınır  : %d çizgi   Kıyı bölgesi: %d   Kara komşuluğu: %d   Deniz yolu: %d" % (
         len(sinirlar), kiyi, kara, deniz))
 
@@ -1021,7 +1161,7 @@ def donustur():
 
 
 if __name__ == "__main__":
-    for yol in (ULKE_KAYNAGI, SEHIR_KAYNAGI):
+    for yol in (ULKE_KAYNAGI, SEHIR_KAYNAGI, AYAR_DOSYASI):
         if not yol.exists():
             sys.exit("Kaynak dosya bulunamadı: %s" % yol)
     try:

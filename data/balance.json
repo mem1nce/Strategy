@@ -16,7 +16,9 @@
 		"kisi_basi_gsyh_ust": 50000
 	},
 	"hareket": {
-		"kara_saat": 24,
+		"kara_saat_birim_basi": 0.33,
+		"kara_asgari_saat": 8,
+		"kara_azami_saat": 48,
 		"deniz_taban_saat": 48,
 		"deniz_saat_birim_basi": 1.5
 	},
@@ -95,7 +97,7 @@
 	"tahkimat": {
 		"azami_seviye": 3,
 		"seviye_avantaji": 0.15,
-		"taban_maliyet": 80,
+		"taban_maliyet": 40,
 		"sure_saat": 240
 	}
 }

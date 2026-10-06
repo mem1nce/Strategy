@@ -95,7 +95,8 @@ func _ready() -> void:
 	_ana_menu.kur()
 	_ana_menu.yeni_oyun_istendi.connect(_yeni_oyun_secildi)
 	_ana_menu.devam_istendi.connect(_devam_secildi)
-	_ana_menu.goster(not _bekleyen_kayit.is_empty())
+	_ana_menu.goster(not _bekleyen_kayit.is_empty(),
+			_bekleyen_kayit.is_empty() and KayitYoneticisi.eski_kayit_mi())
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),

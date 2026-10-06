@@ -38,6 +38,8 @@ const NASIL_OYNANIR_METNI_BICIMI: String = (
 var _kok: Control = null
 var _kayit_var: bool = false
 var _devam: Button = null
+## Kayıt dosyası eski bir sürüme aitse (açılamaz) başlığın altında görünen uyarı.
+var _eski_kayit_yazisi: Label = null
 var _kaydi_sil: Button = null
 var _yeni_oyun_onayi: ConfirmationDialog = null
 var _kaydi_sil_onayi: ConfirmationDialog = null
@@ -72,6 +74,13 @@ func kur() -> void:
 	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dikey.add_child(baslik)
 
+	_eski_kayit_yazisi = Label.new()
+	_eski_kayit_yazisi.text = "Bu kayıt eski bir sürüme ait.\nYeni oyun başlat."
+	_eski_kayit_yazisi.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
+	_eski_kayit_yazisi.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_eski_kayit_yazisi.hide()
+	dikey.add_child(_eski_kayit_yazisi)
+
 	var yeni_oyun: Button = _dugme_ekle(dikey, "Yeni oyun")
 	yeni_oyun.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
 	yeni_oyun.pressed.connect(_yeni_oyun_basildi)
@@ -99,9 +108,14 @@ func kur() -> void:
 
 
 ## Menüyü gösterir. `kayit_var`, "Devam et" ve "Kaydı sil" düğmelerinin başlangıç durumunu
-## belirler (main.gd, KayitYoneticisi.kayit_var_mi() ile çağırır).
-func goster(kayit_var: bool) -> void:
+## belirler (main.gd, açılabilen bir kayıt bulunca true verir). `eski_kayit` true ise kayıt
+## dosyası var ama eski bir sürüme ait: "Devam et" kapalı kalır, uyarı yazısı görünür ve
+## "Yeni oyun" onay sormadan eski kaydı silip yeni oyuna başlar.
+func goster(kayit_var: bool, eski_kayit: bool = false) -> void:
 	_kayit_var_ayarla(kayit_var)
+	_eski_kayit_yazisi.visible = eski_kayit
+	if eski_kayit:
+		_kaydi_sil.disabled = false
 	_kok.show()
 
 
@@ -213,3 +227,4 @@ func _yeni_oyun_onaylandi() -> void:
 func _kaydi_silindi() -> void:
 	KayitYoneticisi.sil()
 	_kayit_var_ayarla(false)
+	_eski_kayit_yazisi.hide()

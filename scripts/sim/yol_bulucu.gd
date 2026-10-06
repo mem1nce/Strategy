@@ -2,8 +2,9 @@ class_name YolBulucu
 extends AStar2D
 ## Bölgeler arasında, saat cinsinden süreye göre en hızlı yolu bulur.
 ##
-## Kara komşuluğu geçişi sabit bir süre alır. Deniz yolu, aradaki mesafeyle orantılı ve
-## belirgin biçimde daha yavaştır (bkz. TASARIM.md 7. Birlikler, data/balance.json → "hareket").
+## Kara komşuluğu geçişi, iki bölgenin etiket noktaları arasındaki mesafeyle orantılıdır
+## (alt ve üst sınırla); böylece sık bölgeli ülkelerde yürümek anlamsızca yavaşlamaz. Deniz
+## yolu da mesafeyle orantılıdır ama taban süresi yüzünden belirgin biçimde daha yavaştır (bkz. TASARIM.md 7. Birlikler, data/balance.json → "hareket").
 ## Yalnızca coğrafyaya bakar; "savaşta olmadığın ülkeye giremezsin" gibi kurallar bunun
 ## üstüne, hareket emrini veren kod tarafından uygulanır (henüz yok).
 
@@ -17,7 +18,9 @@ var _saat: Dictionary[Vector2i, float] = {}
 
 static func kur(dunya: Dunya) -> YolBulucu:
 	var ayarlar: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("hareket", {})
-	var kara_saat: float = float(ayarlar.get("kara_saat", 24.0))
+	var kara_saat_birim_basi: float = float(ayarlar.get("kara_saat_birim_basi", 0.33))
+	var kara_asgari_saat: float = float(ayarlar.get("kara_asgari_saat", 8.0))
+	var kara_azami_saat: float = float(ayarlar.get("kara_azami_saat", 48.0))
 	var deniz_taban_saat: float = float(ayarlar.get("deniz_taban_saat", 48.0))
 	var deniz_saat_birim_basi: float = float(ayarlar.get("deniz_saat_birim_basi", 1.5))
 
@@ -31,7 +34,9 @@ static func kur(dunya: Dunya) -> YolBulucu:
 	for bolge: Bolge in dunya.bolge_listesi:
 		var a: int = yb._bolge_id[bolge.id]
 		for komsu_id: String in bolge.kara_komsulari:
-			yb._baglanti_ekle(a, yb._bolge_id[komsu_id], kara_saat)
+			var mesafe: float = bolge.etiket.distance_to(dunya.bolgeler[komsu_id].etiket)
+			yb._baglanti_ekle(a, yb._bolge_id[komsu_id],
+					clampf(mesafe * kara_saat_birim_basi, kara_asgari_saat, kara_azami_saat))
 		for komsu_id: String in bolge.deniz_gecisleri:
 			var komsu: Bolge = dunya.bolgeler[komsu_id]
 			var uzaklik: float = bolge.etiket.distance_to(komsu.etiket)
@@ -78,6 +83,6 @@ func _compute_cost(from_id: int, to_id: int) -> float:
 
 ## Her zaman 0 döner: kıyaslama için kullanılan tahmini maliyet gerçek maliyeti hiçbir
 ## zaman aşmamalı (admissible heuristic); saatler coğrafi uzaklıkla orantılı olmadığından
-## (kara komşuluğu sabit, deniz yolu değişken) güvenli tek seçenek budur.
+## (alt sınır ve deniz yolunun taban süresi yüzünden) güvenli tek seçenek budur.
 func _estimate_cost(_from_id: int, _to_id: int) -> float:
 	return 0.0

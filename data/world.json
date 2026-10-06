@@ -15,7 +15,7 @@
 			"anakara_kutusu": [2736.68, 859.03, 166.45, 117.32],
 			"komsular": ["CHN", "IRN", "PAK", "TJK", "TKM", "UZB"],
 			"baskent_bolgesi": "AFG_1",
-			"bolgeler": ["AFG_1", "AFG_2", "AFG_3", "AFG_4"]
+			"bolgeler": ["AFG_1", "AFG_2", "AFG_3", "AFG_4", "AFG_5", "AFG_6", "AFG_7", "AFG_8", "AFG_9"]
 		},
 		{
 			"id": "AGO",
@@ -28,7 +28,7 @@
 			"anakara_kutusu": [2180.44, 1386.45, 141.54, 139.38],
 			"komsular": ["COD", "COG", "NAM", "ZMB"],
 			"baskent_bolgesi": "AGO_1",
-			"bolgeler": ["AGO_1", "AGO_2", "AGO_3", "AGO_4", "AGO_5", "AGO_6"]
+			"bolgeler": ["AGO_1", "AGO_2", "AGO_3", "AGO_4", "AGO_5", "AGO_6", "AGO_7", "AGO_8", "AGO_9", "AGO_10", "AGO_11"]
 		},
 		{
 			"id": "ALB",
@@ -41,7 +41,7 @@
 			"anakara_kutusu": [2267.64, 802.35, 19.52, 41.53],
 			"komsular": ["GRC", "KOS", "MKD", "MNE"],
 			"baskent_bolgesi": "ALB_1",
-			"bolgeler": ["ALB_1"]
+			"bolgeler": ["ALB_1", "ALB_2"]
 		},
 		{
 			"id": "ARE",
@@ -54,7 +54,7 @@
 			"anakara_kutusu": [2634.86, 1016.44, 54.81, 42.93],
 			"komsular": ["OMN", "SAU"],
 			"baskent_bolgesi": "ARE_1",
-			"bolgeler": ["ARE_1"]
+			"bolgeler": ["ARE_1", "ARE_2", "ARE_3"]
 		},
 		{
 			"id": "ARG",
@@ -67,7 +67,7 @@
 			"anakara_kutusu": [1212.7, 1572.0, 225.13, 404.73],
 			"komsular": ["BOL", "BRA", "CHL", "PRY", "URY"],
 			"baskent_bolgesi": "ARG_1",
-			"bolgeler": ["ARG_1", "ARG_2", "ARG_3", "ARG_4", "ARG_5", "ARG_6", "ARG_7", "ARG_8", "ARG_9", "ARG_10"]
+			"bolgeler": ["ARG_1", "ARG_2", "ARG_3", "ARG_4", "ARG_5", "ARG_6", "ARG_7", "ARG_8", "ARG_9", "ARG_10", "ARG_11", "ARG_12", "ARG_13", "ARG_14", "ARG_15", "ARG_16"]
 		},
 		{
 			"id": "ARM",
@@ -106,7 +106,7 @@
 			"anakara_kutusu": [3337.55, 1441.49, 457.73, 346.08],
 			"komsular": [],
 			"baskent_bolgesi": "AUS_1",
-			"bolgeler": ["AUS_1", "AUS_2", "AUS_3", "AUS_4", "AUS_5", "AUS_6", "AUS_7", "AUS_8", "AUS_9", "AUS_10", "AUS_11", "AUS_12", "AUS_13", "AUS_14"]
+			"bolgeler": ["AUS_1", "AUS_2", "AUS_3", "AUS_4", "AUS_5", "AUS_6", "AUS_7", "AUS_8", "AUS_9", "AUS_10", "AUS_11", "AUS_12", "AUS_13", "AUS_14", "AUS_15", "AUS_16", "AUS_17", "AUS_18", "AUS_19", "AUS_20", "AUS_21", "AUS_22", "AUS_23", "AUS_24", "AUS_25"]
 		},
 		{
 			"id": "AUT",
@@ -119,7 +119,7 @@
 			"anakara_kutusu": [2155.86, 712.17, 85.33, 37.75],
 			"komsular": ["CHE", "CZE", "DEU", "HUN", "ITA", "SVK", "SVN"],
 			"baskent_bolgesi": "AUT_1",
-			"bolgeler": ["AUT_1"]
+			"bolgeler": ["AUT_1", "AUT_2", "AUT_3"]
 		},
 		{
 			"id": "AZE",
@@ -132,7 +132,7 @@
 			"anakara_kutusu": [2559.69, 813.68, 61.67, 48.21],
 			"komsular": ["ARM", "GEO", "IRN", "RUS", "TUR"],
 			"baskent_bolgesi": "AZE_1",
-			"bolgeler": ["AZE_1"]
+			"bolgeler": ["AZE_1", "AZE_2", "AZE_3"]
 		},
 		{
 			"id": "BDI",
@@ -145,7 +145,7 @@
 			"anakara_kutusu": [2378.24, 1346.38, 19.65, 24.51],
 			"komsular": ["COD", "RWA", "TZA"],
 			"baskent_bolgesi": "BDI_1",
-			"bolgeler": ["BDI_1"]
+			"bolgeler": ["BDI_1", "BDI_2"]
 		},
 		{
 			"id": "BEL",
@@ -158,7 +158,7 @@
 			"anakara_kutusu": [2076.6, 675.88, 41.45, 29.07],
 			"komsular": ["DEU", "FRA", "LUX", "NLD"],
 			"baskent_bolgesi": "BEL_1",
-			"bolgeler": ["BEL_1"]
+			"bolgeler": ["BEL_1", "BEL_2"]
 		},
 		{
 			"id": "BEN",
@@ -171,7 +171,7 @@
 			"anakara_kutusu": [2056.79, 1179.76, 34.41, 69.93],
 			"komsular": ["BFA", "NER", "NGA", "TGO"],
 			"baskent_bolgesi": "BEN_1",
-			"bolgeler": ["BEN_1", "BEN_2"]
+			"bolgeler": ["BEN_1", "BEN_2", "BEN_3", "BEN_4"]
 		},
 		{
 			"id": "BFA",
@@ -184,7 +184,7 @@
 			"anakara_kutusu": [1985.76, 1146.38, 87.01, 63.6],
 			"komsular": ["BEN", "CIV", "GHA", "MLI", "NER", "TGO"],
 			"baskent_bolgesi": "BFA_1",
-			"bolgeler": ["BFA_1", "BFA_2"]
+			"bolgeler": ["BFA_1", "BFA_2", "BFA_3", "BFA_4", "BFA_5"]
 		},
 		{
 			"id": "BGD",
@@ -197,7 +197,7 @@
 			"anakara_kutusu": [3050.2, 1011.67, 52.21, 69.46],
 			"komsular": ["IND", "MMR"],
 			"baskent_bolgesi": "BGD_1",
-			"bolgeler": ["BGD_1"]
+			"bolgeler": ["BGD_1", "BGD_2", "BGD_3", "BGD_4", "BGD_5", "BGD_6", "BGD_7"]
 		},
 		{
 			"id": "BGR",
@@ -210,7 +210,7 @@
 			"anakara_kutusu": [2302.64, 780.93, 70.29, 41.27],
 			"komsular": ["GRC", "MKD", "ROU", "SRB", "TUR"],
 			"baskent_bolgesi": "BGR_1",
-			"bolgeler": ["BGR_1"]
+			"bolgeler": ["BGR_1", "BGR_2", "BGR_3"]
 		},
 		{
 			"id": "BHS",
@@ -236,7 +236,7 @@
 			"anakara_kutusu": [2227.2, 766.92, 43.8, 35.95],
 			"komsular": ["HRV", "MNE", "SRB"],
 			"baskent_bolgesi": "BIH_1",
-			"bolgeler": ["BIH_1"]
+			"bolgeler": ["BIH_1", "BIH_2"]
 		},
 		{
 			"id": "BLR",
@@ -249,7 +249,7 @@
 			"anakara_kutusu": [2311.96, 602.75, 108.02, 75.48],
 			"komsular": ["LTU", "LVA", "POL", "RUS", "UKR"],
 			"baskent_bolgesi": "BLR_1",
-			"bolgeler": ["BLR_1", "BLR_2"]
+			"bolgeler": ["BLR_1", "BLR_2", "BLR_3", "BLR_4"]
 		},
 		{
 			"id": "BLZ",
@@ -275,7 +275,7 @@
 			"anakara_kutusu": [1256.22, 1431.07, 137.58, 153.37],
 			"komsular": ["ARG", "BRA", "CHL", "PER", "PRY"],
 			"baskent_bolgesi": "BOL_1",
-			"bolgeler": ["BOL_1", "BOL_2", "BOL_3", "BOL_4", "BOL_5", "BOL_6"]
+			"bolgeler": ["BOL_1", "BOL_2", "BOL_3", "BOL_4", "BOL_5", "BOL_6", "BOL_7", "BOL_8", "BOL_9", "BOL_10"]
 		},
 		{
 			"id": "BRA",
@@ -288,7 +288,7 @@
 			"anakara_kutusu": [1206.19, 1259.93, 446.66, 459.02],
 			"komsular": ["ARG", "BOL", "COL", "FRA", "GUY", "PER", "PRY", "SUR", "URY", "VEN"],
 			"baskent_bolgesi": "BRA_1",
-			"bolgeler": ["BRA_1", "BRA_2", "BRA_3", "BRA_4", "BRA_5", "BRA_6", "BRA_7", "BRA_8", "BRA_9", "BRA_10", "BRA_11", "BRA_12", "BRA_13", "BRA_14"]
+			"bolgeler": ["BRA_1", "BRA_2", "BRA_3", "BRA_4", "BRA_5", "BRA_6", "BRA_7", "BRA_8", "BRA_9", "BRA_10", "BRA_11", "BRA_12", "BRA_13", "BRA_14", "BRA_15", "BRA_16", "BRA_17", "BRA_18", "BRA_19", "BRA_20", "BRA_21", "BRA_22", "BRA_23", "BRA_24", "BRA_25", "BRA_26", "BRA_27", "BRA_28", "BRA_29"]
 		},
 		{
 			"id": "BRN",
@@ -327,7 +327,7 @@
 			"anakara_kutusu": [2274.37, 1522.68, 108.5, 109.63],
 			"komsular": ["NAM", "ZAF", "ZMB", "ZWE"],
 			"baskent_bolgesi": "BWA_1",
-			"bolgeler": ["BWA_1", "BWA_2"]
+			"bolgeler": ["BWA_1", "BWA_2", "BWA_3", "BWA_4", "BWA_5", "BWA_6", "BWA_7"]
 		},
 		{
 			"id": "CAF",
@@ -340,7 +340,7 @@
 			"anakara_kutusu": [2212.52, 1192.37, 146.94, 101.48],
 			"komsular": ["CMR", "COD", "COG", "SDN", "SDS", "TCD"],
 			"baskent_bolgesi": "CAF_1",
-			"bolgeler": ["CAF_1", "CAF_2", "CAF_3", "CAF_4"]
+			"bolgeler": ["CAF_1", "CAF_2", "CAF_3", "CAF_4", "CAF_5", "CAF_6", "CAF_7"]
 		},
 		{
 			"id": "CAN",
@@ -353,7 +353,7 @@
 			"anakara_kutusu": [443.76, 314.11, 970.69, 502.1],
 			"komsular": ["USA"],
 			"baskent_bolgesi": "CAN_1",
-			"bolgeler": ["CAN_1", "CAN_2", "CAN_3", "CAN_4", "CAN_5", "CAN_6", "CAN_7", "CAN_8", "CAN_9", "CAN_10", "CAN_11", "CAN_12", "CAN_13", "CAN_14"]
+			"bolgeler": ["CAN_1", "CAN_2", "CAN_3", "CAN_4", "CAN_5", "CAN_6", "CAN_7", "CAN_8", "CAN_9", "CAN_10", "CAN_11", "CAN_12", "CAN_13", "CAN_14", "CAN_15", "CAN_16", "CAN_17", "CAN_18", "CAN_19", "CAN_20", "CAN_21", "CAN_22", "CAN_23", "CAN_24", "CAN_25"]
 		},
 		{
 			"id": "CHE",
@@ -366,7 +366,7 @@
 			"anakara_kutusu": [2116.52, 729.8, 50.29, 29.44],
 			"komsular": ["AUT", "DEU", "FRA", "ITA"],
 			"baskent_bolgesi": "CHE_1",
-			"bolgeler": ["CHE_1"]
+			"bolgeler": ["CHE_1", "CHE_2"]
 		},
 		{
 			"id": "CHL",
@@ -379,7 +379,7 @@
 			"anakara_kutusu": [1187.33, 1521.72, 98.53, 478.25],
 			"komsular": ["ARG", "BOL", "PER"],
 			"baskent_bolgesi": "CHL_1",
-			"bolgeler": ["CHL_1", "CHL_2", "CHL_3", "CHL_4", "CHL_5", "CHL_6"]
+			"bolgeler": ["CHL_1", "CHL_2", "CHL_3", "CHL_4", "CHL_5", "CHL_6", "CHL_7", "CHL_8", "CHL_9", "CHL_10", "CHL_11"]
 		},
 		{
 			"id": "CHN",
@@ -392,7 +392,7 @@
 			"anakara_kutusu": [2886.26, 645.52, 698.04, 440.22],
 			"komsular": ["AFG", "BTN", "IND", "KAZ", "KGZ", "LAO", "MMR", "MNG", "NPL", "PAK", "PRK", "RUS", "TJK", "VNM"],
 			"baskent_bolgesi": "CHN_1",
-			"bolgeler": ["CHN_1", "CHN_2", "CHN_3", "CHN_4", "CHN_5", "CHN_6", "CHN_7", "CHN_8", "CHN_9", "CHN_10", "CHN_11", "CHN_12", "CHN_13", "CHN_14"]
+			"bolgeler": ["CHN_1", "CHN_2", "CHN_3", "CHN_4", "CHN_5", "CHN_6", "CHN_7", "CHN_8", "CHN_9", "CHN_10", "CHN_11", "CHN_12", "CHN_13", "CHN_14", "CHN_15", "CHN_16", "CHN_17", "CHN_18", "CHN_19", "CHN_20", "CHN_21", "CHN_22", "CHN_23", "CHN_24", "CHN_25", "CHN_26", "CHN_27", "CHN_28", "CHN_29", "CHN_30", "CHN_31", "CHN_32", "CHN_33", "CHN_34", "CHN_35", "CHN_36"]
 		},
 		{
 			"id": "CIV",
@@ -405,7 +405,7 @@
 			"anakara_kutusu": [1950.12, 1199.48, 68.73, 70.79],
 			"komsular": ["BFA", "GHA", "GIN", "LBR", "MLI"],
 			"baskent_bolgesi": "CIV_1",
-			"bolgeler": ["CIV_1", "CIV_2"]
+			"bolgeler": ["CIV_1", "CIV_2", "CIV_3", "CIV_4", "CIV_5", "CIV_6"]
 		},
 		{
 			"id": "CMR",
@@ -418,7 +418,7 @@
 			"anakara_kutusu": [2144.58, 1172.55, 85.61, 127.45],
 			"komsular": ["CAF", "COG", "GAB", "GNQ", "NER", "NGA", "TCD"],
 			"baskent_bolgesi": "CMR_1",
-			"bolgeler": ["CMR_1", "CMR_2", "CMR_3"]
+			"bolgeler": ["CMR_1", "CMR_2", "CMR_3", "CMR_4", "CMR_5", "CMR_6", "CMR_7"]
 		},
 		{
 			"id": "COD",
@@ -431,7 +431,7 @@
 			"anakara_kutusu": [2186.61, 1259.8, 216.08, 211.56],
 			"komsular": ["AGO", "BDI", "CAF", "COG", "RWA", "SDS", "TZA", "UGA", "ZMB"],
 			"baskent_bolgesi": "COD_1",
-			"bolgeler": ["COD_1", "COD_2", "COD_3", "COD_4", "COD_5", "COD_6", "COD_7", "COD_8"]
+			"bolgeler": ["COD_1", "COD_2", "COD_3", "COD_4", "COD_5", "COD_6", "COD_7", "COD_8", "COD_9", "COD_10", "COD_11", "COD_12", "COD_13", "COD_14", "COD_15"]
 		},
 		{
 			"id": "COG",
@@ -444,7 +444,7 @@
 			"anakara_kutusu": [2174.22, 1277.22, 83.73, 99.8],
 			"komsular": ["AGO", "CAF", "CMR", "COD", "GAB"],
 			"baskent_bolgesi": "COG_1",
-			"bolgeler": ["COG_1", "COG_2"]
+			"bolgeler": ["COG_1", "COG_2", "COG_3", "COG_4", "COG_5"]
 		},
 		{
 			"id": "COL",
@@ -457,7 +457,7 @@
 			"anakara_kutusu": [1149.26, 1177.43, 137.84, 191.16],
 			"komsular": ["BRA", "ECU", "PAN", "PER", "VEN"],
 			"baskent_bolgesi": "COL_1",
-			"bolgeler": ["COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6"]
+			"bolgeler": ["COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7", "COL_8", "COL_9", "COL_10", "COL_11"]
 		},
 		{
 			"id": "CRI",
@@ -470,7 +470,7 @@
 			"anakara_kutusu": [1070.17, 1191.5, 38.64, 34.37],
 			"komsular": ["NIC", "PAN"],
 			"baskent_bolgesi": "CRI_1",
-			"bolgeler": ["CRI_1"]
+			"bolgeler": ["CRI_1", "CRI_2"]
 		},
 		{
 			"id": "CUB",
@@ -483,7 +483,7 @@
 			"anakara_kutusu": [1081.17, 1051.09, 122.85, 39.7],
 			"komsular": [],
 			"baskent_bolgesi": "CUB_1",
-			"bolgeler": ["CUB_1", "CUB_2"]
+			"bolgeler": ["CUB_1", "CUB_2", "CUB_3"]
 		},
 		{
 			"id": "CYN",
@@ -522,7 +522,7 @@
 			"anakara_kutusu": [2187.27, 681.28, 75.24, 37.98],
 			"komsular": ["AUT", "DEU", "POL", "SVK"],
 			"baskent_bolgesi": "CZE_1",
-			"bolgeler": ["CZE_1"]
+			"bolgeler": ["CZE_1", "CZE_2", "CZE_3"]
 		},
 		{
 			"id": "DEU",
@@ -535,7 +535,7 @@
 			"anakara_kutusu": [2116.14, 621.66, 102.72, 115.78],
 			"komsular": ["AUT", "BEL", "CHE", "CZE", "DNK", "FRA", "LUX", "NLD", "POL"],
 			"baskent_bolgesi": "DEU_1",
-			"bolgeler": ["DEU_1", "DEU_2", "DEU_3", "DEU_4"]
+			"bolgeler": ["DEU_1", "DEU_2", "DEU_3", "DEU_4", "DEU_5", "DEU_6", "DEU_7", "DEU_8", "DEU_9"]
 		},
 		{
 			"id": "DJI",
@@ -561,7 +561,7 @@
 			"anakara_kutusu": [2140.05, 577.38, 32.11, 46.68],
 			"komsular": ["DEU"],
 			"baskent_bolgesi": "DNK_1",
-			"bolgeler": ["DNK_1"]
+			"bolgeler": ["DNK_1", "DNK_2"]
 		},
 		{
 			"id": "DOM",
@@ -574,7 +574,7 @@
 			"anakara_kutusu": [1229.42, 1090.45, 41.27, 26.93],
 			"komsular": ["HTI"],
 			"baskent_bolgesi": "DOM_1",
-			"bolgeler": ["DOM_1"]
+			"bolgeler": ["DOM_1", "DOM_2"]
 		},
 		{
 			"id": "DZA",
@@ -587,7 +587,7 @@
 			"anakara_kutusu": [1949.19, 877.05, 235.34, 223.17],
 			"komsular": ["LBY", "MAR", "MLI", "MRT", "NER", "SAH", "TUN"],
 			"baskent_bolgesi": "DZA_1",
-			"bolgeler": ["DZA_1", "DZA_2", "DZA_3", "DZA_4", "DZA_5"]
+			"bolgeler": ["DZA_1", "DZA_2", "DZA_3", "DZA_4", "DZA_5", "DZA_6", "DZA_7", "DZA_8", "DZA_9", "DZA_10", "DZA_11", "DZA_12", "DZA_13", "DZA_14"]
 		},
 		{
 			"id": "ECU",
@@ -600,7 +600,7 @@
 			"anakara_kutusu": [1126.77, 1303.94, 65.24, 72.18],
 			"komsular": ["COL", "PER"],
 			"baskent_bolgesi": "ECU_1",
-			"bolgeler": ["ECU_1", "ECU_2"]
+			"bolgeler": ["ECU_1", "ECU_2", "ECU_3", "ECU_4", "ECU_5"]
 		},
 		{
 			"id": "EGY",
@@ -613,7 +613,7 @@
 			"anakara_kutusu": [2329.03, 948.03, 138.43, 117.28],
 			"komsular": ["ISR", "LBY", "SDN"],
 			"baskent_bolgesi": "EGY_1",
-			"bolgeler": ["EGY_1", "EGY_2", "EGY_3"]
+			"bolgeler": ["EGY_1", "EGY_2", "EGY_3", "EGY_4", "EGY_5", "EGY_6", "EGY_7", "EGY_8", "EGY_9", "EGY_10", "EGY_11", "EGY_12", "EGY_13"]
 		},
 		{
 			"id": "ERI",
@@ -626,7 +626,7 @@
 			"anakara_kutusu": [2461.28, 1112.68, 76.89, 64.54],
 			"komsular": ["DJI", "ETH", "SDN"],
 			"baskent_bolgesi": "ERI_1",
-			"bolgeler": ["ERI_1", "ERI_2"]
+			"bolgeler": ["ERI_1", "ERI_2", "ERI_3"]
 		},
 		{
 			"id": "ESP",
@@ -639,7 +639,7 @@
 			"anakara_kutusu": [1941.13, 787.7, 141.45, 104.62],
 			"komsular": ["FRA", "PRT"],
 			"baskent_bolgesi": "ESP_1",
-			"bolgeler": ["ESP_1", "ESP_2", "ESP_3", "ESP_4", "ESP_5"]
+			"bolgeler": ["ESP_1", "ESP_2", "ESP_3", "ESP_4", "ESP_5", "ESP_6", "ESP_7", "ESP_8", "ESP_9"]
 		},
 		{
 			"id": "EST",
@@ -652,7 +652,7 @@
 			"anakara_kutusu": [2313.56, 546.03, 54.52, 35.54],
 			"komsular": ["LVA", "RUS"],
 			"baskent_bolgesi": "EST_1",
-			"bolgeler": ["EST_1"]
+			"bolgeler": ["EST_1", "EST_2"]
 		},
 		{
 			"id": "ETH",
@@ -665,7 +665,7 @@
 			"anakara_kutusu": [2422.95, 1148.2, 168.79, 132.51],
 			"komsular": ["DJI", "ERI", "KEN", "SDN", "SDS", "SOL", "SOM"],
 			"baskent_bolgesi": "ETH_1",
-			"bolgeler": ["ETH_1", "ETH_2", "ETH_3", "ETH_4"]
+			"bolgeler": ["ETH_1", "ETH_2", "ETH_3", "ETH_4", "ETH_5", "ETH_6", "ETH_7", "ETH_8", "ETH_9", "ETH_10", "ETH_11", "ETH_12"]
 		},
 		{
 			"id": "FIN",
@@ -678,7 +678,7 @@
 			"anakara_kutusu": [2282.9, 350.64, 123.68, 191.41],
 			"komsular": ["NOR", "RUS", "SWE"],
 			"baskent_bolgesi": "FIN_1",
-			"bolgeler": ["FIN_1", "FIN_2", "FIN_3", "FIN_4"]
+			"bolgeler": ["FIN_1", "FIN_2", "FIN_3", "FIN_4", "FIN_5"]
 		},
 		{
 			"id": "FJI",
@@ -717,7 +717,7 @@
 			"anakara_kutusu": [1995.75, 680.81, 144.4, 126.27],
 			"komsular": ["BEL", "BRA", "CHE", "DEU", "ESP", "ITA", "LUX", "SUR"],
 			"baskent_bolgesi": "FRA_1",
-			"bolgeler": ["FRA_1", "FRA_2", "FRA_3", "FRA_4", "FRA_5"]
+			"bolgeler": ["FRA_1", "FRA_2", "FRA_3", "FRA_4", "FRA_5", "FRA_6", "FRA_7", "FRA_8", "FRA_9", "FRA_10"]
 		},
 		{
 			"id": "GAB",
@@ -730,7 +730,7 @@
 			"anakara_kutusu": [2148.1, 1293.18, 64.03, 71.77],
 			"komsular": ["CMR", "COG", "GNQ"],
 			"baskent_bolgesi": "GAB_1",
-			"bolgeler": ["GAB_1", "GAB_2"]
+			"bolgeler": ["GAB_1", "GAB_2", "GAB_3", "GAB_4"]
 		},
 		{
 			"id": "GBR",
@@ -743,7 +743,7 @@
 			"anakara_kutusu": [1978.03, 562.41, 89.1, 136.17],
 			"komsular": ["IRL"],
 			"baskent_bolgesi": "GBR_1",
-			"bolgeler": ["GBR_1", "GBR_2", "GBR_3", "GBR_4"]
+			"bolgeler": ["GBR_1", "GBR_2", "GBR_3", "GBR_4", "GBR_5", "GBR_6"]
 		},
 		{
 			"id": "GEO",
@@ -769,7 +769,7 @@
 			"anakara_kutusu": [2011.09, 1192.87, 48.97, 73.15],
 			"komsular": ["BFA", "CIV", "TGO"],
 			"baskent_bolgesi": "GHA_1",
-			"bolgeler": ["GHA_1"]
+			"bolgeler": ["GHA_1", "GHA_2", "GHA_3", "GHA_4", "GHA_5"]
 		},
 		{
 			"id": "GIN",
@@ -782,7 +782,7 @@
 			"anakara_kutusu": [1875.85, 1175.71, 83.04, 60.64],
 			"komsular": ["CIV", "GNB", "LBR", "MLI", "SEN", "SLE"],
 			"baskent_bolgesi": "GIN_1",
-			"bolgeler": ["GIN_1", "GIN_2", "GIN_3"]
+			"bolgeler": ["GIN_1", "GIN_2", "GIN_3", "GIN_4", "GIN_5"]
 		},
 		{
 			"id": "GMB",
@@ -808,7 +808,7 @@
 			"anakara_kutusu": [1858.25, 1175.22, 33.87, 18.32],
 			"komsular": ["GIN", "SEN"],
 			"baskent_bolgesi": "GNB_1",
-			"bolgeler": ["GNB_1"]
+			"bolgeler": ["GNB_1", "GNB_2"]
 		},
 		{
 			"id": "GNQ",
@@ -834,7 +834,7 @@
 			"anakara_kutusu": [2277.26, 814.14, 73.44, 72.16],
 			"komsular": ["ALB", "BGR", "MKD", "TUR"],
 			"baskent_bolgesi": "GRC_1",
-			"bolgeler": ["GRC_1", "GRC_2"]
+			"bolgeler": ["GRC_1", "GRC_2", "GRC_3", "GRC_4"]
 		},
 		{
 			"id": "GRL",
@@ -847,7 +847,7 @@
 			"anakara_kutusu": [1214.04, 25.16, 695.05, 513.66],
 			"komsular": [],
 			"baskent_bolgesi": "GRL_1",
-			"bolgeler": ["GRL_1", "GRL_2", "GRL_3", "GRL_4"]
+			"bolgeler": ["GRL_1", "GRL_2", "GRL_3", "GRL_4", "GRL_5", "GRL_6", "GRL_7", "GRL_8", "GRL_9", "GRL_10"]
 		},
 		{
 			"id": "GTM",
@@ -860,7 +860,7 @@
 			"anakara_kutusu": [998.64, 1114.79, 45.56, 47.62],
 			"komsular": ["BLZ", "HND", "MEX", "SLV"],
 			"baskent_bolgesi": "GTM_1",
-			"bolgeler": ["GTM_1"]
+			"bolgeler": ["GTM_1", "GTM_2", "GTM_3", "GTM_4"]
 		},
 		{
 			"id": "GUY",
@@ -873,7 +873,7 @@
 			"anakara_kutusu": [1349.29, 1224.24, 55.42, 80.99],
 			"komsular": ["BRA", "SUR", "VEN"],
 			"baskent_bolgesi": "GUY_1",
-			"bolgeler": ["GUY_1"]
+			"bolgeler": ["GUY_1", "GUY_2", "GUY_3", "GUY_4"]
 		},
 		{
 			"id": "HND",
@@ -886,7 +886,7 @@
 			"anakara_kutusu": [1031.36, 1136.01, 70.61, 35.09],
 			"komsular": ["GTM", "NIC", "SLV"],
 			"baskent_bolgesi": "HND_1",
-			"bolgeler": ["HND_1"]
+			"bolgeler": ["HND_1", "HND_2", "HND_3"]
 		},
 		{
 			"id": "HRV",
@@ -899,7 +899,7 @@
 			"anakara_kutusu": [2203.39, 748.89, 65.23, 56.32],
 			"komsular": ["BIH", "HUN", "MNE", "SRB", "SVN"],
 			"baskent_bolgesi": "HRV_1",
-			"bolgeler": ["HRV_1"]
+			"bolgeler": ["HRV_1", "HRV_2"]
 		},
 		{
 			"id": "HTI",
@@ -912,7 +912,7 @@
 			"anakara_kutusu": [1200.83, 1090.08, 32.24, 22.22],
 			"komsular": ["DOM"],
 			"baskent_bolgesi": "HTI_1",
-			"bolgeler": ["HTI_1"]
+			"bolgeler": ["HTI_1", "HTI_2"]
 		},
 		{
 			"id": "HUN",
@@ -925,7 +925,7 @@
 			"anakara_kutusu": [2232.35, 718.26, 74.05, 41.22],
 			"komsular": ["AUT", "HRV", "ROU", "SRB", "SVK", "SVN", "UKR"],
 			"baskent_bolgesi": "HUN_1",
-			"bolgeler": ["HUN_1"]
+			"bolgeler": ["HUN_1", "HUN_2", "HUN_3"]
 		},
 		{
 			"id": "IDN",
@@ -938,7 +938,7 @@
 			"anakara_kutusu": [3287.64, 1270.63, 114.28, 95.78],
 			"komsular": ["MYS", "PNG", "TLS"],
 			"baskent_bolgesi": "IDN_1",
-			"bolgeler": ["IDN_1", "IDN_2", "IDN_3", "IDN_4", "IDN_5", "IDN_6", "IDN_7"]
+			"bolgeler": ["IDN_1", "IDN_2", "IDN_3", "IDN_4", "IDN_5", "IDN_6", "IDN_7", "IDN_8", "IDN_9", "IDN_10", "IDN_11", "IDN_12", "IDN_13", "IDN_14", "IDN_15", "IDN_16"]
 		},
 		{
 			"id": "IND",
@@ -951,7 +951,7 @@
 			"anakara_kutusu": [2823.7, 898.19, 332.52, 330.65],
 			"komsular": ["BGD", "BTN", "CHN", "MMR", "NPL", "PAK"],
 			"baskent_bolgesi": "IND_1",
-			"bolgeler": ["IND_1", "IND_2", "IND_3", "IND_4", "IND_5", "IND_6", "IND_7", "IND_8", "IND_9", "IND_10"]
+			"bolgeler": ["IND_1", "IND_2", "IND_3", "IND_4", "IND_5", "IND_6", "IND_7", "IND_8", "IND_9", "IND_10", "IND_11", "IND_12", "IND_13", "IND_14", "IND_15", "IND_16", "IND_17", "IND_18", "IND_19", "IND_20", "IND_21", "IND_22", "IND_23", "IND_24", "IND_25", "IND_26"]
 		},
 		{
 			"id": "IRL",
@@ -964,7 +964,7 @@
 			"anakara_kutusu": [1934.48, 619.31, 44.88, 53.63],
 			"komsular": ["GBR"],
 			"baskent_bolgesi": "IRL_1",
-			"bolgeler": ["IRL_1"]
+			"bolgeler": ["IRL_1", "IRL_2"]
 		},
 		{
 			"id": "IRN",
@@ -977,7 +977,7 @@
 			"anakara_kutusu": [2549.86, 842.7, 218.54, 185.6],
 			"komsular": ["AFG", "ARM", "AZE", "IRQ", "PAK", "TKM", "TUR"],
 			"baskent_bolgesi": "IRN_1",
-			"bolgeler": ["IRN_1", "IRN_2", "IRN_3", "IRN_4", "IRN_5", "IRN_6", "IRN_7"]
+			"bolgeler": ["IRN_1", "IRN_2", "IRN_3", "IRN_4", "IRN_5", "IRN_6", "IRN_7", "IRN_8", "IRN_9", "IRN_10", "IRN_11", "IRN_12", "IRN_13"]
 		},
 		{
 			"id": "IRQ",
@@ -990,7 +990,7 @@
 			"anakara_kutusu": [2489.37, 873.55, 111.23, 105.52],
 			"komsular": ["IRN", "JOR", "KWT", "SAU", "SYR", "TUR"],
 			"baskent_bolgesi": "IRQ_1",
-			"bolgeler": ["IRQ_1", "IRQ_2", "IRQ_3"]
+			"bolgeler": ["IRQ_1", "IRQ_2", "IRQ_3", "IRQ_4", "IRQ_5", "IRQ_6", "IRQ_7"]
 		},
 		{
 			"id": "ISL",
@@ -1003,7 +1003,7 @@
 			"anakara_kutusu": [1771.22, 422.26, 121.93, 56.03],
 			"komsular": [],
 			"baskent_bolgesi": "ISL_1",
-			"bolgeler": ["ISL_1"]
+			"bolgeler": ["ISL_1", "ISL_2"]
 		},
 		{
 			"id": "ISR",
@@ -1016,7 +1016,7 @@
 			"anakara_kutusu": [2437.86, 926.62, 17.88, 47.46],
 			"komsular": ["EGY", "JOR", "LBN", "PSX", "SYR"],
 			"baskent_bolgesi": "ISR_1",
-			"bolgeler": ["ISR_1"]
+			"bolgeler": ["ISR_1", "ISR_2"]
 		},
 		{
 			"id": "ITA",
@@ -1029,7 +1029,7 @@
 			"anakara_kutusu": [2124.8, 740.13, 133.46, 126.53],
 			"komsular": ["AUT", "CHE", "FRA", "SVN"],
 			"baskent_bolgesi": "ITA_1",
-			"bolgeler": ["ITA_1", "ITA_2", "ITA_3", "ITA_4"]
+			"bolgeler": ["ITA_1", "ITA_2", "ITA_3", "ITA_4", "ITA_5", "ITA_6", "ITA_7"]
 		},
 		{
 			"id": "JAM",
@@ -1055,7 +1055,7 @@
 			"anakara_kutusu": [2445.34, 925.34, 48.62, 52.51],
 			"komsular": ["IRQ", "ISR", "PSX", "SAU", "SYR"],
 			"baskent_bolgesi": "JOR_1",
-			"bolgeler": ["JOR_1"]
+			"bolgeler": ["JOR_1", "JOR_2", "JOR_3"]
 		},
 		{
 			"id": "JPN",
@@ -1068,7 +1068,7 @@
 			"anakara_kutusu": [3520.38, 820.25, 142.29, 134.76],
 			"komsular": [],
 			"baskent_bolgesi": "JPN_1",
-			"bolgeler": ["JPN_1", "JPN_2", "JPN_3", "JPN_4"]
+			"bolgeler": ["JPN_1", "JPN_2", "JPN_3", "JPN_4", "JPN_5", "JPN_6", "JPN_7", "JPN_8", "JPN_9", "JPN_10"]
 		},
 		{
 			"id": "KAZ",
@@ -1081,7 +1081,7 @@
 			"anakara_kutusu": [2576.68, 615.28, 465.28, 214.66],
 			"komsular": ["CHN", "KGZ", "RUS", "TKM", "UZB"],
 			"baskent_bolgesi": "KAZ_1",
-			"bolgeler": ["KAZ_1", "KAZ_2", "KAZ_3", "KAZ_4", "KAZ_5", "KAZ_6", "KAZ_7", "KAZ_8", "KAZ_9", "KAZ_10", "KAZ_11"]
+			"bolgeler": ["KAZ_1", "KAZ_2", "KAZ_3", "KAZ_4", "KAZ_5", "KAZ_6", "KAZ_7", "KAZ_8", "KAZ_9", "KAZ_10", "KAZ_11", "KAZ_12", "KAZ_13", "KAZ_14", "KAZ_15"]
 		},
 		{
 			"id": "KEN",
@@ -1094,7 +1094,7 @@
 			"anakara_kutusu": [2433.63, 1256.95, 90.59, 115.95],
 			"komsular": ["ETH", "SDS", "SOM", "TZA", "UGA"],
 			"baskent_bolgesi": "KEN_1",
-			"bolgeler": ["KEN_1", "KEN_2", "KEN_3"]
+			"bolgeler": ["KEN_1", "KEN_2", "KEN_3", "KEN_4", "KEN_5", "KEN_6", "KEN_7", "KEN_8", "KEN_9"]
 		},
 		{
 			"id": "KGZ",
@@ -1107,7 +1107,7 @@
 			"anakara_kutusu": [2838.36, 793.94, 122.82, 54.55],
 			"komsular": ["CHN", "KAZ", "TJK", "UZB"],
 			"baskent_bolgesi": "KGZ_1",
-			"bolgeler": ["KGZ_1"]
+			"bolgeler": ["KGZ_1", "KGZ_2", "KGZ_3", "KGZ_4"]
 		},
 		{
 			"id": "KHM",
@@ -1120,7 +1120,7 @@
 			"anakara_kutusu": [3212.49, 1152.72, 59.92, 47.19],
 			"komsular": ["LAO", "THA", "VNM"],
 			"baskent_bolgesi": "KHM_1",
-			"bolgeler": ["KHM_1", "KHM_2"]
+			"bolgeler": ["KHM_1", "KHM_2", "KHM_3", "KHM_4"]
 		},
 		{
 			"id": "KOR",
@@ -1133,7 +1133,7 @@
 			"anakara_kutusu": [3482.94, 857.36, 38.12, 55.05],
 			"komsular": ["PRK"],
 			"baskent_bolgesi": "KOR_1",
-			"bolgeler": ["KOR_1", "KOR_2"]
+			"bolgeler": ["KOR_1", "KOR_2", "KOR_3", "KOR_4"]
 		},
 		{
 			"id": "KOS",
@@ -1172,7 +1172,7 @@
 			"anakara_kutusu": [3187.1, 1059.76, 84.75, 100.96],
 			"komsular": ["CHN", "KHM", "MMR", "THA", "VNM"],
 			"baskent_bolgesi": "LAO_1",
-			"bolgeler": ["LAO_1"]
+			"bolgeler": ["LAO_1", "LAO_2", "LAO_3", "LAO_4"]
 		},
 		{
 			"id": "LBN",
@@ -1198,7 +1198,7 @@
 			"anakara_kutusu": [1917.85, 1222.25, 44.36, 47.82],
 			"komsular": ["CIV", "GIN", "SLE"],
 			"baskent_bolgesi": "LBR_1",
-			"bolgeler": ["LBR_1"]
+			"bolgeler": ["LBR_1", "LBR_2", "LBR_3"]
 		},
 		{
 			"id": "LBY",
@@ -1211,7 +1211,7 @@
 			"anakara_kutusu": [2154.03, 928.41, 180.29, 165.64],
 			"komsular": ["DZA", "EGY", "NER", "SDN", "TCD", "TUN"],
 			"baskent_bolgesi": "LBY_1",
-			"bolgeler": ["LBY_1", "LBY_2", "LBY_3", "LBY_4"]
+			"bolgeler": ["LBY_1", "LBY_2", "LBY_3", "LBY_4", "LBY_5", "LBY_6", "LBY_7", "LBY_8", "LBY_9", "LBY_10", "LBY_11", "LBY_12"]
 		},
 		{
 			"id": "LKA",
@@ -1224,7 +1224,7 @@
 			"anakara_kutusu": [2954.75, 1207.53, 23.82, 44.14],
 			"komsular": [],
 			"baskent_bolgesi": "LKA_1",
-			"bolgeler": ["LKA_1"]
+			"bolgeler": ["LKA_1", "LKA_2", "LKA_3"]
 		},
 		{
 			"id": "LSO",
@@ -1250,7 +1250,7 @@
 			"anakara_kutusu": [2287.57, 599.47, 62.95, 39.1],
 			"komsular": ["BLR", "LVA", "POL", "RUS"],
 			"baskent_bolgesi": "LTU_1",
-			"bolgeler": ["LTU_1"]
+			"bolgeler": ["LTU_1", "LTU_2"]
 		},
 		{
 			"id": "LUX",
@@ -1276,7 +1276,7 @@
 			"anakara_kutusu": [2287.57, 573.43, 81.02, 38.19],
 			"komsular": ["BLR", "EST", "LTU", "RUS"],
 			"baskent_bolgesi": "LVA_1",
-			"bolgeler": ["LVA_1"]
+			"bolgeler": ["LVA_1", "LVA_2"]
 		},
 		{
 			"id": "MAR",
@@ -1289,7 +1289,7 @@
 			"anakara_kutusu": [1854.35, 894.74, 180.86, 177.48],
 			"komsular": ["DZA", "SAH"],
 			"baskent_bolgesi": "MAR_1",
-			"bolgeler": ["MAR_1", "MAR_2", "MAR_3", "MAR_4"]
+			"bolgeler": ["MAR_1", "MAR_2", "MAR_3", "MAR_4", "MAR_5", "MAR_6", "MAR_7", "MAR_8"]
 		},
 		{
 			"id": "MDA",
@@ -1302,7 +1302,7 @@
 			"anakara_kutusu": [2350.87, 720.55, 38.74, 42.77],
 			"komsular": ["ROU", "UKR"],
 			"baskent_bolgesi": "MDA_1",
-			"bolgeler": ["MDA_1"]
+			"bolgeler": ["MDA_1", "MDA_2"]
 		},
 		{
 			"id": "MDG",
@@ -1315,7 +1315,7 @@
 			"anakara_kutusu": [2540.14, 1457.3, 82.17, 160.05],
 			"komsular": [],
 			"baskent_bolgesi": "MDG_1",
-			"bolgeler": ["MDG_1", "MDG_2", "MDG_3", "MDG_4"]
+			"bolgeler": ["MDG_1", "MDG_2", "MDG_3", "MDG_4", "MDG_5", "MDG_6", "MDG_7", "MDG_8"]
 		},
 		{
 			"id": "MEX",
@@ -1328,7 +1328,7 @@
 			"anakara_kutusu": [715.35, 933.69, 344.92, 219.4],
 			"komsular": ["BLZ", "GTM", "USA"],
 			"baskent_bolgesi": "MEX_1",
-			"bolgeler": ["MEX_1", "MEX_2", "MEX_3", "MEX_4", "MEX_5", "MEX_6", "MEX_7", "MEX_8"]
+			"bolgeler": ["MEX_1", "MEX_2", "MEX_3", "MEX_4", "MEX_5", "MEX_6", "MEX_7", "MEX_8", "MEX_9", "MEX_10", "MEX_11", "MEX_12", "MEX_13", "MEX_14", "MEX_15"]
 		},
 		{
 			"id": "MKD",
@@ -1354,7 +1354,7 @@
 			"anakara_kutusu": [1909.52, 1029.56, 187.07, 174.84],
 			"komsular": ["BFA", "CIV", "DZA", "GIN", "MRT", "NER", "SEN"],
 			"baskent_bolgesi": "MLI_1",
-			"bolgeler": ["MLI_1", "MLI_2", "MLI_3", "MLI_4", "MLI_5"]
+			"bolgeler": ["MLI_1", "MLI_2", "MLI_3", "MLI_4", "MLI_5", "MLI_6", "MLI_7", "MLI_8", "MLI_9", "MLI_10"]
 		},
 		{
 			"id": "MMR",
@@ -1367,7 +1367,7 @@
 			"anakara_kutusu": [3098.21, 988.5, 100.99, 217.78],
 			"komsular": ["BGD", "CHN", "IND", "LAO", "THA"],
 			"baskent_bolgesi": "MMR_1",
-			"bolgeler": ["MMR_1", "MMR_2", "MMR_3", "MMR_4"]
+			"bolgeler": ["MMR_1", "MMR_2", "MMR_3", "MMR_4", "MMR_5", "MMR_6", "MMR_7", "MMR_8", "MMR_9", "MMR_10", "MMR_11"]
 		},
 		{
 			"id": "MNE",
@@ -1393,7 +1393,7 @@
 			"anakara_kutusu": [3046.41, 667.2, 364.34, 150.07],
 			"komsular": ["CHN", "RUS"],
 			"baskent_bolgesi": "MNG_1",
-			"bolgeler": ["MNG_1", "MNG_2", "MNG_3", "MNG_4", "MNG_5"]
+			"bolgeler": ["MNG_1", "MNG_2", "MNG_3", "MNG_4", "MNG_5", "MNG_6", "MNG_7", "MNG_8", "MNG_9", "MNG_10", "MNG_11"]
 		},
 		{
 			"id": "MOZ",
@@ -1406,7 +1406,7 @@
 			"anakara_kutusu": [2391.38, 1437.45, 120.55, 193.8],
 			"komsular": ["MWI", "SWZ", "TZA", "ZAF", "ZMB", "ZWE"],
 			"baskent_bolgesi": "MOZ_1",
-			"bolgeler": ["MOZ_1", "MOZ_2", "MOZ_3", "MOZ_4", "MOZ_5"]
+			"bolgeler": ["MOZ_1", "MOZ_2", "MOZ_3", "MOZ_4", "MOZ_5", "MOZ_6", "MOZ_7", "MOZ_8", "MOZ_9"]
 		},
 		{
 			"id": "MRT",
@@ -1419,7 +1419,7 @@
 			"anakara_kutusu": [1853.86, 1000.06, 138.12, 152.12],
 			"komsular": ["DZA", "MLI", "SAH", "SEN"],
 			"baskent_bolgesi": "MRT_1",
-			"bolgeler": ["MRT_1", "MRT_2", "MRT_3", "MRT_4"]
+			"bolgeler": ["MRT_1", "MRT_2", "MRT_3", "MRT_4", "MRT_5", "MRT_6", "MRT_7", "MRT_8"]
 		},
 		{
 			"id": "MWI",
@@ -1432,7 +1432,7 @@
 			"anakara_kutusu": [2419.92, 1424.97, 35.08, 87.63],
 			"komsular": ["MOZ", "TZA", "ZMB"],
 			"baskent_bolgesi": "MWI_1",
-			"bolgeler": ["MWI_1", "MWI_2"]
+			"bolgeler": ["MWI_1", "MWI_2", "MWI_3", "MWI_4"]
 		},
 		{
 			"id": "MYS",
@@ -1445,7 +1445,7 @@
 			"anakara_kutusu": [3295.72, 1240.71, 108.31, 70.15],
 			"komsular": ["BRN", "IDN", "THA"],
 			"baskent_bolgesi": "MYS_1",
-			"bolgeler": ["MYS_1", "MYS_2", "MYS_3"]
+			"bolgeler": ["MYS_1", "MYS_2", "MYS_3", "MYS_4", "MYS_5", "MYS_6"]
 		},
 		{
 			"id": "NAM",
@@ -1458,7 +1458,7 @@
 			"anakara_kutusu": [2181.51, 1514.23, 151.9, 145.35],
 			"komsular": ["AGO", "BWA", "ZAF", "ZMB"],
 			"baskent_bolgesi": "NAM_1",
-			"bolgeler": ["NAM_1", "NAM_2", "NAM_3", "NAM_4", "NAM_5"]
+			"bolgeler": ["NAM_1", "NAM_2", "NAM_3", "NAM_4", "NAM_5", "NAM_6", "NAM_7"]
 		},
 		{
 			"id": "NCL",
@@ -1484,7 +1484,7 @@
 			"anakara_kutusu": [2051.36, 1047.69, 177.58, 138.71],
 			"komsular": ["BEN", "BFA", "CMR", "DZA", "LBY", "MLI", "NGA", "TCD"],
 			"baskent_bolgesi": "NER_1",
-			"bolgeler": ["NER_1", "NER_2", "NER_3", "NER_4"]
+			"bolgeler": ["NER_1", "NER_2", "NER_3", "NER_4", "NER_5", "NER_6", "NER_7", "NER_8", "NER_9"]
 		},
 		{
 			"id": "NGA",
@@ -1497,7 +1497,7 @@
 			"anakara_kutusu": [2078.63, 1160.9, 135.23, 110.48],
 			"komsular": ["BEN", "CMR", "NER"],
 			"baskent_bolgesi": "NGA_1",
-			"bolgeler": ["NGA_1", "NGA_2", "NGA_3", "NGA_4", "NGA_5"]
+			"bolgeler": ["NGA_1", "NGA_2", "NGA_3", "NGA_4", "NGA_5", "NGA_6", "NGA_7", "NGA_8", "NGA_9", "NGA_10", "NGA_11", "NGA_12"]
 		},
 		{
 			"id": "NIC",
@@ -1510,7 +1510,7 @@
 			"anakara_kutusu": [1050.53, 1147.54, 51.44, 49.61],
 			"komsular": ["CRI", "HND"],
 			"baskent_bolgesi": "NIC_1",
-			"bolgeler": ["NIC_1"]
+			"bolgeler": ["NIC_1", "NIC_2", "NIC_3"]
 		},
 		{
 			"id": "NLD",
@@ -1523,7 +1523,7 @@
 			"anakara_kutusu": [2085.72, 644.72, 42.97, 41.27],
 			"komsular": ["BEL", "DEU"],
 			"baskent_bolgesi": "NLD_1",
-			"bolgeler": ["NLD_1"]
+			"bolgeler": ["NLD_1", "NLD_2", "NLD_3"]
 		},
 		{
 			"id": "NOR",
@@ -1549,7 +1549,7 @@
 			"anakara_kutusu": [2959.23, 962.61, 92.0, 49.66],
 			"komsular": ["CHN", "IND"],
 			"baskent_bolgesi": "NPL_1",
-			"bolgeler": ["NPL_1"]
+			"bolgeler": ["NPL_1", "NPL_2", "NPL_3", "NPL_4", "NPL_5"]
 		},
 		{
 			"id": "NZL",
@@ -1562,7 +1562,7 @@
 			"anakara_kutusu": [3942.5, 1807.1, 88.06, 85.28],
 			"komsular": [],
 			"baskent_bolgesi": "NZL_1",
-			"bolgeler": ["NZL_1", "NZL_2", "NZL_3"]
+			"bolgeler": ["NZL_1", "NZL_2", "NZL_3", "NZL_4", "NZL_5"]
 		},
 		{
 			"id": "OMN",
@@ -1575,7 +1575,7 @@
 			"anakara_kutusu": [2639.64, 1030.16, 88.84, 98.31],
 			"komsular": ["ARE", "SAU", "YEM"],
 			"baskent_bolgesi": "OMN_1",
-			"bolgeler": ["OMN_1"]
+			"bolgeler": ["OMN_1", "OMN_2", "OMN_3", "OMN_4", "OMN_5"]
 		},
 		{
 			"id": "PAK",
@@ -1588,7 +1588,7 @@
 			"anakara_kutusu": [2740.61, 876.86, 193.01, 168.18],
 			"komsular": ["AFG", "CHN", "IND", "IRN"],
 			"baskent_bolgesi": "PAK_1",
-			"bolgeler": ["PAK_1", "PAK_2", "PAK_3", "PAK_4", "PAK_5"]
+			"bolgeler": ["PAK_1", "PAK_2", "PAK_3", "PAK_4", "PAK_5", "PAK_6", "PAK_7", "PAK_8", "PAK_9", "PAK_10", "PAK_11", "PAK_12"]
 		},
 		{
 			"id": "PAN",
@@ -1601,7 +1601,7 @@
 			"anakara_kutusu": [1104.03, 1209.97, 65.12, 27.39],
 			"komsular": ["COL", "CRI"],
 			"baskent_bolgesi": "PAN_1",
-			"bolgeler": ["PAN_1"]
+			"bolgeler": ["PAN_1", "PAN_2", "PAN_3"]
 		},
 		{
 			"id": "PER",
@@ -1614,7 +1614,7 @@
 			"anakara_kutusu": [1121.72, 1320.31, 145.02, 210.43],
 			"komsular": ["BOL", "BRA", "CHL", "COL", "ECU"],
 			"baskent_bolgesi": "PER_1",
-			"bolgeler": ["PER_1", "PER_2", "PER_3", "PER_4", "PER_5", "PER_6"]
+			"bolgeler": ["PER_1", "PER_2", "PER_3", "PER_4", "PER_5", "PER_6", "PER_7", "PER_8", "PER_9", "PER_10", "PER_11", "PER_12"]
 		},
 		{
 			"id": "PHL",
@@ -1627,7 +1627,7 @@
 			"anakara_kutusu": [3412.01, 1106.72, 48.9, 69.56],
 			"komsular": [],
 			"baskent_bolgesi": "PHL_1",
-			"bolgeler": ["PHL_1", "PHL_2", "PHL_3"]
+			"bolgeler": ["PHL_1", "PHL_2", "PHL_3", "PHL_4", "PHL_5", "PHL_6", "PHL_7"]
 		},
 		{
 			"id": "PNG",
@@ -1640,7 +1640,7 @@
 			"anakara_kutusu": [3652.27, 1349.25, 111.52, 92.06],
 			"komsular": ["IDN"],
 			"baskent_bolgesi": "PNG_1",
-			"bolgeler": ["PNG_1", "PNG_2", "PNG_3", "PNG_4"]
+			"bolgeler": ["PNG_1", "PNG_2", "PNG_3", "PNG_4", "PNG_5", "PNG_6"]
 		},
 		{
 			"id": "POL",
@@ -1653,7 +1653,7 @@
 			"anakara_kutusu": [2208.14, 623.73, 113.27, 88.62],
 			"komsular": ["BLR", "CZE", "DEU", "LTU", "RUS", "SVK", "UKR"],
 			"baskent_bolgesi": "POL_1",
-			"bolgeler": ["POL_1", "POL_2", "POL_3"]
+			"bolgeler": ["POL_1", "POL_2", "POL_3", "POL_4", "POL_5", "POL_6"]
 		},
 		{
 			"id": "PRI",
@@ -1679,7 +1679,7 @@
 			"anakara_kutusu": [3461.87, 798.26, 74.12, 71.56],
 			"komsular": ["CHN", "KOR", "RUS"],
 			"baskent_bolgesi": "PRK_1",
-			"bolgeler": ["PRK_1"]
+			"bolgeler": ["PRK_1", "PRK_2", "PRK_3", "PRK_4"]
 		},
 		{
 			"id": "PRT",
@@ -1692,7 +1692,7 @@
 			"anakara_kutusu": [1939.61, 807.94, 35.7, 72.77],
 			"komsular": ["ESP"],
 			"baskent_bolgesi": "PRT_1",
-			"bolgeler": ["PRT_1"]
+			"bolgeler": ["PRT_1", "PRT_2", "PRT_3"]
 		},
 		{
 			"id": "PRY",
@@ -1705,7 +1705,7 @@
 			"anakara_kutusu": [1334.78, 1542.46, 95.49, 98.66],
 			"komsular": ["ARG", "BOL", "BRA"],
 			"baskent_bolgesi": "PRY_1",
-			"bolgeler": ["PRY_1", "PRY_2"]
+			"bolgeler": ["PRY_1", "PRY_2", "PRY_3", "PRY_4", "PRY_5", "PRY_6"]
 		},
 		{
 			"id": "PSX",
@@ -1744,7 +1744,7 @@
 			"anakara_kutusu": [2278.06, 724.14, 107.02, 64.39],
 			"komsular": ["BGR", "HUN", "MDA", "SRB", "UKR"],
 			"baskent_bolgesi": "ROU_1",
-			"bolgeler": ["ROU_1", "ROU_2", "ROU_3"]
+			"bolgeler": ["ROU_1", "ROU_2", "ROU_3", "ROU_4", "ROU_5"]
 		},
 		{
 			"id": "RUS",
@@ -1757,7 +1757,7 @@
 			"anakara_kutusu": [2358.48, 183.0, 1737.52, 640.33],
 			"komsular": ["AZE", "BLR", "CHN", "EST", "FIN", "GEO", "KAZ", "LTU", "LVA", "MNG", "NOR", "POL", "PRK", "UKR"],
 			"baskent_bolgesi": "RUS_1",
-			"bolgeler": ["RUS_1", "RUS_2", "RUS_3", "RUS_4", "RUS_5", "RUS_6", "RUS_7", "RUS_8", "RUS_9", "RUS_10", "RUS_11", "RUS_12", "RUS_13", "RUS_14"]
+			"bolgeler": ["RUS_1", "RUS_2", "RUS_3", "RUS_4", "RUS_5", "RUS_6", "RUS_7", "RUS_8", "RUS_9", "RUS_10", "RUS_11", "RUS_12", "RUS_13", "RUS_14", "RUS_15", "RUS_16", "RUS_17", "RUS_18", "RUS_19", "RUS_20", "RUS_21", "RUS_22", "RUS_23", "RUS_24", "RUS_25", "RUS_26", "RUS_27", "RUS_28", "RUS_29", "RUS_30", "RUS_31", "RUS_32", "RUS_33", "RUS_34", "RUS_35"]
 		},
 		{
 			"id": "RWA",
@@ -1770,7 +1770,7 @@
 			"anakara_kutusu": [2378.24, 1332.57, 20.38, 20.29],
 			"komsular": ["BDI", "COD", "TZA", "UGA"],
 			"baskent_bolgesi": "RWA_1",
-			"bolgeler": ["RWA_1"]
+			"bolgeler": ["RWA_1", "RWA_2"]
 		},
 		{
 			"id": "SAH",
@@ -1796,7 +1796,7 @@
 			"anakara_kutusu": [2442.04, 940.78, 239.32, 191.24],
 			"komsular": ["ARE", "IRQ", "JOR", "KWT", "OMN", "QAT", "YEM"],
 			"baskent_bolgesi": "SAU_1",
-			"bolgeler": ["SAU_1", "SAU_2", "SAU_3", "SAU_4"]
+			"bolgeler": ["SAU_1", "SAU_2", "SAU_3", "SAU_4", "SAU_5", "SAU_6", "SAU_7", "SAU_8", "SAU_9", "SAU_10", "SAU_11", "SAU_12", "SAU_13"]
 		},
 		{
 			"id": "SDN",
@@ -1809,7 +1809,7 @@
 			"anakara_kutusu": [2297.59, 1065.31, 187.43, 156.03],
 			"komsular": ["CAF", "EGY", "ERI", "ETH", "LBY", "SDS", "TCD"],
 			"baskent_bolgesi": "SDN_1",
-			"bolgeler": ["SDN_1", "SDN_2", "SDN_3", "SDN_4", "SDN_5", "SDN_6", "SDN_7"]
+			"bolgeler": ["SDN_1", "SDN_2", "SDN_3", "SDN_4", "SDN_5", "SDN_6", "SDN_7", "SDN_8", "SDN_9", "SDN_10", "SDN_11", "SDN_12", "SDN_13"]
 		},
 		{
 			"id": "SDS",
@@ -1822,7 +1822,7 @@
 			"anakara_kutusu": [2319.78, 1179.62, 129.83, 100.09],
 			"komsular": ["CAF", "COD", "ETH", "KEN", "SDN", "UGA"],
 			"baskent_bolgesi": "SDS_1",
-			"bolgeler": ["SDS_1", "SDS_2", "SDS_3"]
+			"bolgeler": ["SDS_1", "SDS_2", "SDS_3", "SDS_4", "SDS_5", "SDS_6", "SDS_7"]
 		},
 		{
 			"id": "SEN",
@@ -1835,7 +1835,7 @@
 			"anakara_kutusu": [1847.47, 1129.09, 70.05, 49.56],
 			"komsular": ["GIN", "GMB", "GNB", "MLI", "MRT"],
 			"baskent_bolgesi": "SEN_1",
-			"bolgeler": ["SEN_1", "SEN_2"]
+			"bolgeler": ["SEN_1", "SEN_2", "SEN_3", "SEN_4", "SEN_5"]
 		},
 		{
 			"id": "SLB",
@@ -1861,7 +1861,7 @@
 			"anakara_kutusu": [1897.28, 1204.97, 34.32, 37.36],
 			"komsular": ["GIN", "LBR"],
 			"baskent_bolgesi": "SLE_1",
-			"bolgeler": ["SLE_1"]
+			"bolgeler": ["SLE_1", "SLE_2", "SLE_3"]
 		},
 		{
 			"id": "SLV",
@@ -1874,7 +1874,7 @@
 			"anakara_kutusu": [1022.91, 1154.42, 26.99, 14.78],
 			"komsular": ["GTM", "HND"],
 			"baskent_bolgesi": "SLV_1",
-			"bolgeler": ["SLV_1"]
+			"bolgeler": ["SLV_1", "SLV_2"]
 		},
 		{
 			"id": "SOL",
@@ -1887,7 +1887,7 @@
 			"anakara_kutusu": [2532.22, 1188.68, 72.7, 39.8],
 			"komsular": ["DJI", "ETH", "SOM"],
 			"baskent_bolgesi": "SOL_1",
-			"bolgeler": ["SOL_1"]
+			"bolgeler": ["SOL_1", "SOL_2", "SOL_3", "SOL_4"]
 		},
 		{
 			"id": "SOM",
@@ -1900,7 +1900,7 @@
 			"anakara_kutusu": [2514.27, 1182.19, 115.52, 156.62],
 			"komsular": ["ETH", "KEN", "SOL"],
 			"baskent_bolgesi": "SOM_1",
-			"bolgeler": ["SOM_1"]
+			"bolgeler": ["SOM_1", "SOM_2", "SOM_3", "SOM_4", "SOM_5", "SOM_6"]
 		},
 		{
 			"id": "SRB",
@@ -1913,7 +1913,7 @@
 			"anakara_kutusu": [2262.24, 753.63, 47.29, 54.8],
 			"komsular": ["BGR", "BIH", "HRV", "HUN", "KOS", "MKD", "MNE", "ROU"],
 			"baskent_bolgesi": "SRB_1",
-			"bolgeler": ["SRB_1"]
+			"bolgeler": ["SRB_1", "SRB_2", "SRB_3"]
 		},
 		{
 			"id": "SUR",
@@ -1926,7 +1926,7 @@
 			"anakara_kutusu": [1387.58, 1251.02, 46.5, 47.95],
 			"komsular": ["BRA", "FRA", "GUY"],
 			"baskent_bolgesi": "SUR_1",
-			"bolgeler": ["SUR_1", "SUR_2"]
+			"bolgeler": ["SUR_1", "SUR_2", "SUR_3"]
 		},
 		{
 			"id": "SVK",
@@ -1939,7 +1939,7 @@
 			"anakara_kutusu": [2240.06, 704.33, 64.6, 26.52],
 			"komsular": ["AUT", "CZE", "HUN", "POL", "UKR"],
 			"baskent_bolgesi": "SVK_1",
-			"bolgeler": ["SVK_1"]
+			"bolgeler": ["SVK_1", "SVK_2"]
 		},
 		{
 			"id": "SVN",
@@ -1965,7 +1965,7 @@
 			"anakara_kutusu": [2173.47, 372.01, 146.5, 243.64],
 			"komsular": ["FIN", "NOR"],
 			"baskent_bolgesi": "SWE_1",
-			"bolgeler": ["SWE_1", "SWE_2", "SWE_3", "SWE_4"]
+			"bolgeler": ["SWE_1", "SWE_2", "SWE_3", "SWE_4", "SWE_5", "SWE_6"]
 		},
 		{
 			"id": "SWZ",
@@ -1991,7 +1991,7 @@
 			"anakara_kutusu": [2454.2, 875.59, 75.64, 63.27],
 			"komsular": ["IRQ", "ISR", "JOR", "LBN", "TUR"],
 			"baskent_bolgesi": "SYR_1",
-			"bolgeler": ["SYR_1", "SYR_2"]
+			"bolgeler": ["SYR_1", "SYR_2", "SYR_3", "SYR_4"]
 		},
 		{
 			"id": "TCD",
@@ -2004,7 +2004,7 @@
 			"anakara_kutusu": [2202.06, 1048.43, 117.72, 186.63],
 			"komsular": ["CAF", "CMR", "LBY", "NER", "SDN"],
 			"baskent_bolgesi": "TCD_1",
-			"bolgeler": ["TCD_1", "TCD_2", "TCD_3"]
+			"bolgeler": ["TCD_1", "TCD_2", "TCD_3", "TCD_4", "TCD_5", "TCD_6", "TCD_7", "TCD_8", "TCD_9", "TCD_10", "TCD_11"]
 		},
 		{
 			"id": "TGO",
@@ -2017,7 +2017,7 @@
 			"anakara_kutusu": [2047.43, 1193.79, 21.79, 58.33],
 			"komsular": ["BEN", "BFA", "GHA"],
 			"baskent_bolgesi": "TGO_1",
-			"bolgeler": ["TGO_1"]
+			"bolgeler": ["TGO_1", "TGO_2", "TGO_3"]
 		},
 		{
 			"id": "THA",
@@ -2030,7 +2030,7 @@
 			"anakara_kutusu": [3155.92, 1084.13, 93.45, 170.7],
 			"komsular": ["KHM", "LAO", "MMR", "MYS"],
 			"baskent_bolgesi": "THA_1",
-			"bolgeler": ["THA_1", "THA_2", "THA_3"]
+			"bolgeler": ["THA_1", "THA_2", "THA_3", "THA_4", "THA_5", "THA_6", "THA_7", "THA_8"]
 		},
 		{
 			"id": "TJK",
@@ -2043,7 +2043,7 @@
 			"anakara_kutusu": [2815.34, 825.92, 85.77, 56.1],
 			"komsular": ["AFG", "CHN", "KGZ", "UZB"],
 			"baskent_bolgesi": "TJK_1",
-			"bolgeler": ["TJK_1"]
+			"bolgeler": ["TJK_1", "TJK_2", "TJK_3", "TJK_4"]
 		},
 		{
 			"id": "TKM",
@@ -2056,7 +2056,7 @@
 			"anakara_kutusu": [2645.36, 801.48, 159.79, 99.59],
 			"komsular": ["AFG", "IRN", "KAZ", "UZB"],
 			"baskent_bolgesi": "TKM_1",
-			"bolgeler": ["TKM_1", "TKM_2", "TKM_3", "TKM_4"]
+			"bolgeler": ["TKM_1", "TKM_2", "TKM_3", "TKM_4", "TKM_5", "TKM_6"]
 		},
 		{
 			"id": "TLS",
@@ -2095,7 +2095,7 @@
 			"anakara_kutusu": [2133.61, 874.01, 45.11, 90.04],
 			"komsular": ["DZA", "LBY"],
 			"baskent_bolgesi": "TUN_1",
-			"bolgeler": ["TUN_1"]
+			"bolgeler": ["TUN_1", "TUN_2", "TUN_3", "TUN_4"]
 		},
 		{
 			"id": "TUR",
@@ -2108,7 +2108,7 @@
 			"anakara_kutusu": [2345.77, 811.23, 211.89, 82.72],
 			"komsular": ["ARM", "AZE", "BGR", "GEO", "GRC", "IRN", "IRQ", "SYR"],
 			"baskent_bolgesi": "TUR_1",
-			"bolgeler": ["TUR_1", "TUR_2", "TUR_3", "TUR_4", "TUR_5", "TUR_6"]
+			"bolgeler": ["TUR_1", "TUR_2", "TUR_3", "TUR_4", "TUR_5", "TUR_6", "TUR_7", "TUR_8", "TUR_9", "TUR_10"]
 		},
 		{
 			"id": "TWN",
@@ -2121,7 +2121,7 @@
 			"anakara_kutusu": [3414.54, 1025.67, 20.99, 39.99],
 			"komsular": [],
 			"baskent_bolgesi": "TWN_1",
-			"bolgeler": ["TWN_1"]
+			"bolgeler": ["TWN_1", "TWN_2", "TWN_3"]
 		},
 		{
 			"id": "TZA",
@@ -2134,7 +2134,7 @@
 			"anakara_kutusu": [2381.82, 1330.47, 124.89, 123.14],
 			"komsular": ["BDI", "COD", "KEN", "MOZ", "MWI", "RWA", "UGA", "ZMB"],
 			"baskent_bolgesi": "TZA_1",
-			"bolgeler": ["TZA_1", "TZA_2", "TZA_3", "TZA_4", "TZA_5"]
+			"bolgeler": ["TZA_1", "TZA_2", "TZA_3", "TZA_4", "TZA_5", "TZA_6", "TZA_7", "TZA_8", "TZA_9", "TZA_10"]
 		},
 		{
 			"id": "UGA",
@@ -2147,7 +2147,7 @@
 			"anakara_kutusu": [2384.55, 1271.27, 62.08, 64.81],
 			"komsular": ["COD", "KEN", "RWA", "SDS", "TZA"],
 			"baskent_bolgesi": "UGA_1",
-			"bolgeler": ["UGA_1", "UGA_2", "UGA_3"]
+			"bolgeler": ["UGA_1", "UGA_2", "UGA_3", "UGA_4", "UGA_5", "UGA_6"]
 		},
 		{
 			"id": "UKR",
@@ -2160,7 +2160,7 @@
 			"anakara_kutusu": [2299.29, 662.81, 204.74, 103.27],
 			"komsular": ["BLR", "HUN", "MDA", "POL", "ROU", "RUS", "SVK"],
 			"baskent_bolgesi": "UKR_1",
-			"bolgeler": ["UKR_1", "UKR_2", "UKR_3", "UKR_4", "UKR_5"]
+			"bolgeler": ["UKR_1", "UKR_2", "UKR_3", "UKR_4", "UKR_5", "UKR_6", "UKR_7", "UKR_8"]
 		},
 		{
 			"id": "URY",
@@ -2173,7 +2173,7 @@
 			"anakara_kutusu": [1383.23, 1672.8, 59.36, 61.34],
 			"komsular": ["ARG", "BRA"],
 			"baskent_bolgesi": "URY_1",
-			"bolgeler": ["URY_1"]
+			"bolgeler": ["URY_1", "URY_2", "URY_3", "URY_4"]
 		},
 		{
 			"id": "USA",
@@ -2186,7 +2186,7 @@
 			"anakara_kutusu": [629.34, 707.02, 656.75, 321.26],
 			"komsular": ["CAN", "MEX"],
 			"baskent_bolgesi": "USA_1",
-			"bolgeler": ["USA_1", "USA_2", "USA_3", "USA_4", "USA_5", "USA_6", "USA_7", "USA_8", "USA_9", "USA_10", "USA_11", "USA_12", "USA_13", "USA_14"]
+			"bolgeler": ["USA_1", "USA_2", "USA_3", "USA_4", "USA_5", "USA_6", "USA_7", "USA_8", "USA_9", "USA_10", "USA_11", "USA_12", "USA_13", "USA_14", "USA_15", "USA_16", "USA_17", "USA_18", "USA_19", "USA_20", "USA_21", "USA_22", "USA_23", "USA_24", "USA_25", "USA_26", "USA_27", "USA_28", "USA_29", "USA_30", "USA_31", "USA_32", "USA_33"]
 		},
 		{
 			"id": "UZB",
@@ -2199,7 +2199,7 @@
 			"anakara_kutusu": [2684.35, 761.93, 194.86, 114.77],
 			"komsular": ["AFG", "KAZ", "KGZ", "TJK", "TKM"],
 			"baskent_bolgesi": "UZB_1",
-			"bolgeler": ["UZB_1", "UZB_2", "UZB_3", "UZB_4"]
+			"bolgeler": ["UZB_1", "UZB_2", "UZB_3", "UZB_4", "UZB_5", "UZB_6", "UZB_7"]
 		},
 		{
 			"id": "VEN",
@@ -2212,7 +2212,7 @@
 			"anakara_kutusu": [1213.95, 1180.61, 154.13, 130.8],
 			"komsular": ["BRA", "COL", "GUY"],
 			"baskent_bolgesi": "VEN_1",
-			"bolgeler": ["VEN_1", "VEN_2", "VEN_3", "VEN_4", "VEN_5"]
+			"bolgeler": ["VEN_1", "VEN_2", "VEN_3", "VEN_4", "VEN_5", "VEN_6", "VEN_7", "VEN_8", "VEN_9", "VEN_10", "VEN_11"]
 		},
 		{
 			"id": "VNM",
@@ -2225,7 +2225,7 @@
 			"anakara_kutusu": [3210.47, 1049.12, 81.52, 172.45],
 			"komsular": ["CHN", "KHM", "LAO"],
 			"baskent_bolgesi": "VNM_1",
-			"bolgeler": ["VNM_1", "VNM_2", "VNM_3"]
+			"bolgeler": ["VNM_1", "VNM_2", "VNM_3", "VNM_4", "VNM_5", "VNM_6", "VNM_7", "VNM_8", "VNM_9", "VNM_10"]
 		},
 		{
 			"id": "VUT",
@@ -2251,7 +2251,7 @@
 			"anakara_kutusu": [2532.75, 1100.9, 119.51, 74.81],
 			"komsular": ["OMN", "SAU"],
 			"baskent_bolgesi": "YEM_1",
-			"bolgeler": ["YEM_1", "YEM_2"]
+			"bolgeler": ["YEM_1", "YEM_2", "YEM_3", "YEM_4", "YEM_5", "YEM_6", "YEM_7"]
 		},
 		{
 			"id": "ZAF",
@@ -2264,7 +2264,7 @@
 			"anakara_kutusu": [2233.97, 1575.09, 187.56, 157.33],
 			"komsular": ["BWA", "LSO", "MOZ", "NAM", "SWZ", "ZWE"],
 			"baskent_bolgesi": "ZAF_1",
-			"bolgeler": ["ZAF_1", "ZAF_2", "ZAF_3", "ZAF_4", "ZAF_5", "ZAF_6"]
+			"bolgeler": ["ZAF_1", "ZAF_2", "ZAF_3", "ZAF_4", "ZAF_5", "ZAF_6", "ZAF_7", "ZAF_8", "ZAF_9", "ZAF_10", "ZAF_11", "ZAF_12"]
 		},
 		{
 			"id": "ZMB",
@@ -2277,7 +2277,7 @@
 			"anakara_kutusu": [2297.04, 1413.6, 131.95, 112.59],
 			"komsular": ["AGO", "BWA", "COD", "MOZ", "MWI", "NAM", "TZA", "ZWE"],
 			"baskent_bolgesi": "ZMB_1",
-			"bolgeler": ["ZMB_1", "ZMB_2", "ZMB_3", "ZMB_4"]
+			"bolgeler": ["ZMB_1", "ZMB_2", "ZMB_3", "ZMB_4", "ZMB_5", "ZMB_6", "ZMB_7", "ZMB_8", "ZMB_9"]
 		},
 		{
 			"id": "ZWE",
@@ -2290,7 +2290,7 @@
 			"anakara_kutusu": [2335.45, 1497.5, 86.31, 79.74],
 			"komsular": ["BWA", "MOZ", "ZAF", "ZMB"],
 			"baskent_bolgesi": "ZWE_1",
-			"bolgeler": ["ZWE_1", "ZWE_2"]
+			"bolgeler": ["ZWE_1", "ZWE_2", "ZWE_3", "ZWE_4", "ZWE_5", "ZWE_6"]
 		}
 	]
 }

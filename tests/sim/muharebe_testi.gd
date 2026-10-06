@@ -15,8 +15,15 @@ func _carpismayi_kur(oyun: Oyun, savunan_guc: float, saldiran_guc: float, saldir
 	var savunan_sahibi: String = oyun.dunya.bolgeler[bolge_id].sahip
 	var saldiran_sahibi: String = "FRA" if savunan_sahibi != "FRA" else "DEU"
 	oyun.savas_ilan_et(savunan_sahibi, saldiran_sahibi, 0)
+	# Bölgede tek bir piyade savunan kalsın ki sonuç başlangıç ordusunun dağılımına bağlı olmasın.
 	for birlik: Birlik in oyun.bolgedeki_birlikler(bolge_id):
-		birlik.guc = savunan_guc
+		birlik.guc = 0.0
+	oyun._olenleri_temizle(oyun.bolgedeki_birlikler(bolge_id))
+	var savunan: Birlik = Birlik.new()
+	savunan.sahip = savunan_sahibi
+	savunan.bolge_id = bolge_id
+	savunan.guc = savunan_guc
+	oyun.birlikler.append(savunan)
 	var saldiran: Birlik = Birlik.new()
 	saldiran.sahip = saldiran_sahibi
 	saldiran.bolge_id = bolge_id
@@ -45,7 +52,7 @@ func sina_savunan_avantajiyla_esit_guctekiler_arasinda_kazanir() -> String:
 	var oyun: Oyun = _kurulu_oyun()
 	var bolge_id: String = "TUR_1"
 	var savunan_sahibi: String = oyun.dunya.bolgeler[bolge_id].sahip
-	_carpismayi_kur(oyun, 50.0, 100.0, false)
+	_carpismayi_kur(oyun, 100.0, 100.0, false)
 
 	for tur: int in 2000:
 		if oyun.dunya.bolgeler[bolge_id].sahip != savunan_sahibi:

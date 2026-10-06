@@ -20,7 +20,9 @@ kaybetme koşulları vardır; ana menü ve Android dışa aktarma henüz yoktur
 
 - **Kaynaklar** (Natural Earth, kamu malı), `tools/kaynak/` altında:
   - `ne_110m_admin_0_countries.geojson`: ülkeler (1:110 milyon ölçek, 177 kayıt)
-  - `ne_50m_populated_places.geojson`: şehirler (1251 kayıt)
+  - `ne_10m_populated_places.geojson`: şehirler ve kasabalar (7342 kayıt)
+- **Ayarlar:** `tools/bolge_ayarlari.json` bölge sayısı formülünün katsayılarını ve tohum
+  seçiminin sayılarını tutar; değiştirip dönüştürücüyü yeniden çalıştırmak yeterlidir.
 - **Dönüştürücü:** `tools/dunya_donustur.py` kaynakları `data/world.json` ve
   `data/regions.json` dosyalarına çevirir. Çalıştırmak için proje klasöründe:
 
@@ -48,16 +50,29 @@ kaybetme koşulları vardır; ana menü ve Android dışa aktarma henüz yoktur
 
 Her bölge bir şehrin çevresidir ve o şehrin adını taşır.
 
+- **Bölge sayısı:** hedef = sabit + a × karekök(yüzölçümü km² / 1000) + b × karekök(nüfus /
+  1 milyon), yuvarlanır, en az 1, en çok 40. Yüzölçümü projeksiyondan bağımsız gerçek alandır
+  (eşit alanlı izdüşümle hesaplanır; Miller'ın kutuplara doğru büyütmesi sayıyı şişirmez).
+  Şu anki katsayılar: sabit −0,5, a = 0,27, b = 0,32. Sonuç: Rusya, ABD, Çin, Kanada, Brezilya,
+  Hindistan, Avustralya 25-36; Türkiye, Fransa, Almanya, İran, Meksika, Mısır 9-15;
+  Yunanistan, Hollanda, Portekiz, Suriye 3-4; çok küçük ülkeler 1-2.
 - **Tohum şehirler:** Her ülkede başkent her zaman seçilir. Sonra, seçilmişlere en uzak
   ve en kalabalık şehir eklenerek devam edilir (puan = en yakın tohuma uzaklık × nüfus^0,35);
-  böylece bölgeler ülkenin her yanına yayılır. İki tohum arası en az 25 birimdir.
-- **Bölge sayısı:** hedef = karekök(ülke alanı) / 20, en az 1, en çok 14. Küçük ülkeler tek
-  bölgedir. Verisinde şehri olmayan ülke de tek bölgedir ve ülkenin adını taşır.
+  böylece bölgeler ülkenin her yanına yayılır. İki tohum arasındaki en az uzaklık ülkenin
+  büyüklüğüne göredir: 0,5 × karekök(ülkenin harita alanı / hedef bölge sayısı). Yeterince
+  uzak şehir kalmazsa bu aralık adım adım (en çok %30'una kadar) gevşetilir.
+- **Büyük bölge sınırı:** en az 8 bölgeli ülkelerde hiçbir bölge ülke alanının %20'sini
+  geçmemelidir. Geçen bölgedeki, tohumlara en uzak kasaba (nüfusu ne olursa olsun) da tohum
+  yapılır; Sibirya, Sahra, Kuzey Kanada ve Avustralya'nın içi böyle bölünür. Bölgede hiç
+  yerleşim yoksa (Libya'nın, Nijer'in, Mali'nin çölü, Grönland'ın kuzeyi) uyarı verilir.
+- Verisinde şehri olmayan ülke tek bölgedir ve ülkenin adını taşır.
 - Şehir, kaba kıyı çizgisi yüzünden ülke çokgeninin dışına düşse bile çokgene en çok
   4 birim uzaktaysa ülke koduna göre o ülkenin şehri sayılır.
 - **Bölme:** Her ülke çokgeni, içindeki tohumlara göre "en yakın tohum" kuralıyla (Voronoi)
   bölünür. Tohumu olmayan çokgen (ada) bütünüyle en yakın tohumun bölgesine girer. Bir bölge
   birden çok çokgenden oluşabilir.
+- **Küçük bölgeler:** alanı, ülkesindeki ortalama bölge alanının %20'sinden küçük kalan
+  (başkent olmayan) bölge, en uzun sınırı paylaştığı aynı ülkeden bölgeye katılır.
 - Bütün köşeler 0,01 birimlik ızgaraya oturtulur; komşu bölgeler sınırlarındaki noktaları
   birebir paylaşır. Bölgenin ana gövdesinden kopuk, 4 birim kareden küçük kırpıntılar
   sınırdaş olduğu bölgeye katılır.
@@ -81,8 +96,8 @@ Her bölge bir şehrin çevresidir ve o şehrin adını taşır.
 - **Sınır çizgileri:** İki bölge arasındaki ya da bölge ile deniz arasındaki her kesintisiz
   çizgi ayrıca yazılır. Harita sınırları bunlardan çizer.
 
-Şu anki sonuç: **516 bölge**, 85 tek bölgeli ülke, 1121 kara komşuluğu (sayılar deniz yolu
-kuralı değiştiği için yeniden üretimde güncellenir).
+Şu anki sonuç: **1095 bölge**, 32 tek bölgeli ülke, 2580 kara komşuluğu, 538 kıyı bölgesi,
+881 deniz yolu.
 
 ### Doğrulama
 
@@ -97,8 +112,8 @@ Dönüştürücü her çalıştığında şunları denetler; hata varsa dosya ya
 6. Kara komşuluğu ve deniz yollarının birleşimiyle dünyadaki her bölgeye her bölgeden
    ulaşılabilir (bağlantı tamamlama adımı bunu zaten garanti eder; bu denetim onu doğrular).
 
-En az üç bölgesi olduğu hâlde bir bölgesi ülke alanının %40'ını geçen ülkeler **uyarı**
-olarak listelenir (şehir verisinin seyrek olduğu yerler).
+En az 8 bölgesi olduğu hâlde bir bölgesi ülke alanının %20'sini geçen ülkeler **uyarı**
+olarak listelenir (hiç yerleşimi olmayan çöller).
 
 ### `data/world.json`
 
@@ -174,9 +189,10 @@ Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik
   Batı Sahra, Kuzey Kıbrıs, Somaliland, Kosova, Tayvan, Filistin, Falkland Adaları,
   Grönland, Porto Riko, Yeni Kaledonya, Fransız Güney Toprakları.
 - Adlar kaynaktaki `NAME_TR` alanından gelir (ör. "Çin Halk Cumhuriyeti", "Beyaz Rusya").
-- Şehir verisi seyrektir (ör. Türkiye için 7 şehir, doğuda hiç şehir yok). Bu yüzden bazı
-  bölgeler adını taşıdığı şehirden çok uzağa uzanır (Samsun bölgesi İran sınırına kadar).
-  Daha ayrıntılı şehir verisi (`ne_10m_populated_places`) bunu düzeltir.
+- Şehir verisi 1:10 milyon ölçektedir (ör. Türkiye için 83 yerleşim). Şehir nüfusları
+  kaynaktaki `POP_MAX` alanıdır. Tohum seçimi ülkeye yayılmayı nüfustan önde tuttuğu için
+  bazen büyük bir şehir yerine diğer tohumlardan daha uzaktaki komşusu seçilir (Türkiye'de
+  Adana yerine Tarsus, Bursa ve Konya hiç seçilmez).
 
 ## 3. Harita görünümü
 
@@ -321,7 +337,7 @@ vardır (`sim/birlik_turleri.gd`, sayılar data/balance.json → "birlik_turleri
   `ustunluk_bonusu` (+%50) fazla hasar verir. Karışık bir yığında bonus, karşı tarafın
   gücünün o türdeki payıyla orantılıdır (yarısı piyade olan yığına zırhlı +%25).
 - Karışık yığın tek muharebede çözülür; yığın en yavaş türünün hızıyla yürür.
-- Eski (1. sürüm) kayıtlardaki ve türü bilinmeyen tümenler piyade sayılır.
+- Türü bilinmeyen tümenler piyade sayılır.
 
 - **Başlangıç ordusu:** ülke başına tümen sayısı nüfus ve GSYH'den basit bir puanla çıkar:
   `puan = (sqrt(nufus / nufus_bolen) + sqrt(gsyh_milyon_dolar / gsyh_bolen)) / 2`, yuvarlanıp
@@ -341,7 +357,10 @@ vardır (`sim/birlik_turleri.gd`, sayılar data/balance.json → "birlik_turleri
   tümen sayısı türlere göre yazar ("Tümen: 6 (Piyade 3 · Zırhlı 2 · Topçu 1)").
 - **Seçme ve emir:** oyuncunun kendi tümenlerinin olduğu bölgeye dokununca birlik kartı
   açılır. Kart açıkken başka bir bölgeye dokunmak hareket emridir: tümenler
-  `YolBulucu`nun bulduğu sürede (kara 24 saat, deniz daha yavaş) hedefe yürür; yürürken
+  `YolBulucu`nun bulduğu sürede hedefe yürür. Kara komşuluğu, iki bölgenin etiket noktaları
+  arasındaki mesafe × `hareket.kara_saat_birim_basi` (0,33) saat sürer, en az 8 en çok 48
+  saat (eski haritadaki ortalama komşu uzaklığı 74 birim ≈ 24 saat); böylece sık bölgeli
+  ülkelerde yürümek anlamsızca yavaşlamaz. Deniz yolu daha yavaştır; yürürken
   kaynak-hedef arası sarı bir çizgi görünür. Savaş henüz olmadığından yalnızca kendi
   toprağın içinde hareket edilebilir.
 - **Yarısını ayır:** birlik kartındaki düğme, gösterilen tümenleri yarıya ayırır (tek
@@ -500,7 +519,8 @@ Dört dal, her biri 3 seviye (`sim/teknoloji.gd`, sayılar data/balance.json →
 
 - Oyuncu kendi bölgesinde "Tahkimat" düğmesiyle bir seviye tahkimat sıralar (inşa kuyruğuna
   girer). En çok `tahkimat.azami_seviye` (3) seviye; kuyrukta bekleyenler de sayılır.
-  Seviye n'nin maliyeti `taban_maliyet` × n (80, 160, 240), süresi `sure_saat` (240 saat).
+  Seviye n'nin maliyeti `taban_maliyet` × n (40, 80, 120), süresi `sure_saat` (240 saat).
+  Bölgeler ~2 kat sıklaşınca bölge başına gelir yarıya indiği için maliyet de yarıya indi.
 - Savunanın verdiği hasar seviye başına `seviye_avantaji` (+%15) artar.
 - Bölge el değiştirince tahkimatı 1 seviye düşer.
 - **Arayüz:** haritada tahkimatlı bölgenin adının solunda gri bir kule ve içinde seviyesi;
@@ -518,10 +538,11 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
   hazineler; inşa kuyrukları; teknoloji seviyeleri ve süren araştırmalar.
   Zaman durumu (`Zaman.durumu_al()`) ayrıca eklenir; `KayitYoneticisi` Zaman autoload'ına
   bağlı olmasın diye bu, çağıran taraftan (main.gd) parametre olarak verilir.
-- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`, şu an 2). 1. sürüm
-  kayıtlar da açılır: tümenler piyade sayılır, teknoloji ve tahkimat sıfırdan başlar.
-  Bilinmeyen bir sürüm yok sayılır, oyun sıfırdan başlar — eski bir kayıt sessizce bozuk
-  davranışa yol açmaz.
+- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`, şu an 3). 3. sürümde
+  bölgeler yeniden üretildi ve bölge kimlikleri değişti; bu yüzden yalnızca 3. sürüm açılır.
+  Daha eski bir kayıt bulunursa ana menüde "Bu kayıt eski bir sürüme ait. Yeni oyun başlat."
+  yazar, "Devam et" kapalı kalır, "Yeni oyun" onay sormadan eski kaydı silip başlar. Oyun
+  çökmez; eski bir kayıt sessizce bozuk davranışa yol açmaz.
 - **Otomatik kayıt:** her oyun günü başında (`Zaman.gun_basladi`) ve uygulama arka plana
   geçince ya da kapatılmak istenince (`NOTIFICATION_APPLICATION_PAUSED`,
   `NOTIFICATION_WM_CLOSE_REQUEST`). Oyuncu henüz ülkesini seçmediyse kaydedilmez (henüz

@@ -577,7 +577,33 @@ Adımlar (her biri ayrı commit):
 
 Paket tamam. Kalan iş "Sıradaki iş" bölümündedir (Android dışa aktarma vb.).
 
+## Paket: daha gerçekçi bölgeler (2026-10-06)
+
+Adımlar (her biri ayrı commit):
+1. ✅ Veri ve bağlı sistemler: şehirler `ne_10m_populated_places` (7342 yer); bölge sayısı
+   = −0,5 + 0,27·√(km²/1000) + 0,32·√(nüfus/1 milyon), 1-40 (katsayılar
+   `tools/bolge_ayarlari.json`'da); tohum aralığı ülke büyüklüğüne göre; ≥8 bölgeli ülkede
+   %20'yi geçen bölgeye en uzak kasaba tohum eklenir; küçük bölgeler komşuya katılır.
+   Sonuç 1095 bölge (eski 516), 2580 kara komşuluğu, 881 deniz yolu; doğrulama geçti
+   (uyarı: LBY, NER, MLI, GRL'de yerleşimsiz çöl/kutup hücresi %20'yi aşıyor). Kayıt sürümü 3,
+   eski kayıtta ana menü "Bu kayıt eski bir sürüme ait" der. Kara hareketi mesafeyle orantılı
+   (0,33 sa/birim, 8-48 sa). Tahkimat taban maliyeti 80 → 40. Kırılan iki sınama (muharebe,
+   YZ savaş) başlangıç ordusundan bağımsız hâle getirildi. 127/127.
+2. ⬜ Görünüm: yakınlaşma eşikleri, tümen kutusu çakışması, ekran görüntüleri.
+3. ⬜ Denge ve performans: üç tohumla uzun koşu, harita akıcılığı.
+4. ⬜ Belgeler: TEST_LISTESI.md.
+
 ## Kararlar
+
+- 2026-10-06: Bölge sayısı ayarları `data/balance.json` yerine `tools/bolge_ayarlari.json`'da:
+  oyun bunları okumaz, yalnızca dönüştürücü okur (CLAUDE.md: "oyun kaynak dosyaları okumaz").
+- 2026-10-06: İstenen gruplar (büyük 25-40, orta 9-15, küçük 3-6) ile toplam 800-1100'ü
+  aynı anda tutan katsayılar arandı; sabit −0,5, alan 0,27, nüfus 0,32 seçildi. Bu kalıpta
+  pozitif sabitle gruplar tutunca toplam ~1150'ye çıkıyordu; negatif sabit küçük ülkeleri
+  1'de sınırlayarak toplamı indiriyor.
+- 2026-10-06: Fabrika maliyeti değişmedi: fabrika bölgeye sabit bir sanayi (+2) ekler, ülkenin
+  toplam gelirine göre değeri bölge sayısından bağımsızdır. Tahkimat ise bölge başınadır ve
+  bir ülkeyi savunmak artık ~2 kat bölge tahkim etmeyi gerektirdiği için yarıya indi.
 
 - 2026-10-06: Kullanıcı yeni sayıların `data/denge.json`'a yazılmasını istedi; ama projenin
   denge dosyası zaten `data/balance.json` (CLAUDE.md: data/ altındaki dosyalar İngilizce

@@ -58,8 +58,19 @@ func sina_zayif_sinir_bolgesi_saldirmaz() -> String:
 
 	for birlik: Birlik in oyun.bolgedeki_birlikler(kendi_id):
 		birlik.guc = 10.0
-	for birlik: Birlik in oyun.bolgedeki_birlikler(dusman_id):
-		birlik.guc = 100.0  # 10 < 1.3 * 100, saldırmamalı.
+	# Bölgenin bu düşmana ait BÜTÜN komşuları güçlü olmalı; yoksa boş bir komşuya saldırabilir.
+	for komsu: Bolge in oyun.dunya.bolgenin_komsulari(kendi_id):
+		if komsu.sahip != dusman_sahibi:
+			continue
+		var dusmanlar: Array[Birlik] = oyun.bolgedeki_birlikler(komsu.id)
+		if dusmanlar.is_empty():
+			var yeni: Birlik = Birlik.new()
+			yeni.sahip = dusman_sahibi
+			yeni.bolge_id = komsu.id
+			oyun.birlikler.append(yeni)
+			dusmanlar.append(yeni)
+		for birlik: Birlik in dusmanlar:
+			birlik.guc = 100.0  # 10 < 1.3 * 100, saldırmamalı.
 
 	oyun._savastaki_ulke_dusun("TUR", 0)
 	for birlik: Birlik in oyun.bolgedeki_birlikler(kendi_id):

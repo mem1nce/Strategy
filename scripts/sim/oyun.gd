@@ -184,7 +184,7 @@ func bolgedeki_birlikler(bolge_id: String) -> Array[Birlik]:
 
 
 ## Verilen tümenleri (hepsi aynı bölgede olmalı) hedef bölgeye yürütür. Süre, YolBulucu'dan
-## (kara komşuluğu 24 saat, deniz yolu daha yavaş) gelir. Hedef kendi toprağın değilse,
+## (kara komşuluğu mesafeyle orantılı, deniz yolu daha yavaş) gelir. Hedef kendi toprağın değilse,
 ## yalnızca hedefin sahibiyle savaştaysan kabul edilir. `su_anki_saat`, Zaman.toplam_saat
 ## değeridir; Oyun'un Zaman autoload'ına bağlı olmadan sınanabilmesi için parametre olarak
 ## alınır. `tasinacaklar` boşsa ya da yürütme kabul edilmezse false döner.

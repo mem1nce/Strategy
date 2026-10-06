@@ -176,47 +176,41 @@ func sina_surum_uyusmazsa_yukle_bos_sozluk_doner() -> String:
 	return ""
 
 
-## 1. sürüm kaydında tümen türü, tahkimat ve teknoloji yoktu: açılınca çökmemeli ve
-## bütün tümenler piyade olmalı.
-func sina_eski_surum_kaydi_piyade_olarak_acilir() -> String:
+## Bölge kimlikleri 3. sürümde değişti: 1. ve 2. sürüm kayıtlar açılmamalı (çökmeden boş
+## dönmeli) ve "eski kayıt" sayılmalı ki ana menü uyarı gösterip yeni oyuna yönlendirsin.
+func sina_eski_surum_kaydi_acilmaz_ve_eski_sayilir() -> String:
+	for eski_surum: int in [1, 2]:
+		_kayit_dosyasini_sil()
+		var oyun: Oyun = _kurulu_oyun()
+		oyun.oyuncuyu_sec("TUR")
+		KayitYoneticisi.kaydet(oyun, {"toplam_saat": 10})
+		var veri: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(KayitYoneticisi.kayit_dosyasi))
+		veri["surum"] = eski_surum
+		var dosya: FileAccess = FileAccess.open(KayitYoneticisi.kayit_dosyasi, FileAccess.WRITE)
+		dosya.store_string(JSON.stringify(veri))
+		dosya.close()
+
+		var acildi: bool = not KayitYoneticisi.yukle().is_empty()
+		var eski: bool = KayitYoneticisi.eski_kayit_mi()
+		_kayit_dosyasini_sil()
+		if acildi:
+			return "%d. sürüm kayıt açılmamalı (bölge kimlikleri değişti)." % eski_surum
+		if not eski:
+			return "%d. sürüm kayıt eski kayıt sayılmalı." % eski_surum
+	return ""
+
+
+func sina_guncel_kayit_eski_sayilmaz() -> String:
 	_kayit_dosyasini_sil()
+	if KayitYoneticisi.eski_kayit_mi():
+		return "Kayıt yokken eski_kayit_mi() false dönmeli."
 	var oyun: Oyun = _kurulu_oyun()
 	oyun.oyuncuyu_sec("TUR")
-	oyun.hazineler["TUR"] = 1000.0
-	oyun.tumen_sirala("TUR", "TUR_1")
-	KayitYoneticisi.kaydet(oyun, {"toplam_saat": 10})
-	# Yeni anahtarları silip dosyayı 1. sürüm kaydı gibi yeniden yaz.
-	var veri: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(KayitYoneticisi.kayit_dosyasi))
-	veri["surum"] = 1
-	veri.erase("teknolojiler")
-	veri.erase("arastirmalar")
-	for b: Dictionary in (veri["bolgeler"] as Array):
-		b.erase("tahkimat")
-	for b: Dictionary in (veri["birlikler"] as Array):
-		b.erase("tur")
-	for kuyruk: Array in (veri["insa_kuyruklari"] as Dictionary).values():
-		for is_verisi: Dictionary in kuyruk:
-			is_verisi.erase("birlik_turu")
-	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.kayit_dosyasi, FileAccess.WRITE)
-	dosya.store_string(JSON.stringify(veri))
-	dosya = null
-
-	var kayit: Dictionary = KayitYoneticisi.yukle()
+	KayitYoneticisi.kaydet(oyun, {})
+	var eski: bool = KayitYoneticisi.eski_kayit_mi()
 	_kayit_dosyasini_sil()
-	if kayit.is_empty():
-		return "1. sürüm kayıt açılabilmeli."
-	var yeni_oyun: Oyun = _kurulu_oyun()
-	yeni_oyun.kayittan_yukle(kayit["oyun_verisi"])
-	if yeni_oyun.birlikler.size() != oyun.birlikler.size():
-		return "Eski kayıttaki bütün tümenler yüklenmeli."
-	for birlik: Birlik in yeni_oyun.birlikler:
-		if birlik.tur != "piyade":
-			return "Eski kayıttaki tümenler piyade olmalı, geldi: %s" % birlik.tur
-	var kuyruk: Array = yeni_oyun.insa_kuyruklari.get("TUR", [])
-	if kuyruk.size() != 1 or (kuyruk[0] as InsaIsi).birlik_turu != "piyade":
-		return "Eski kayıttaki tümen işi piyade işi olarak yüklenmeli."
-	if yeni_oyun.teknoloji_seviyesi("TUR", "silah") != 0 or yeni_oyun.dunya.bolgeler["TUR_1"].tahkimat != 0:
-		return "Eski kayıtta teknoloji ve tahkimat sıfırdan başlamalı."
+	if eski:
+		return "Güncel sürüm kayıt eski sayılmamalı."
 	return ""
 
 

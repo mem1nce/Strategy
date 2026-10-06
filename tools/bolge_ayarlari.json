@@ -1,0 +1,24 @@
+{
+	"_aciklama": "tools/dunya_donustur.py'nin bölge üretim ayarları. Değiştirdikten sonra 'python tools/dunya_donustur.py' çalıştırılır.",
+	"bolge_sayisi": {
+		"_aciklama": "hedef = sabit + alan_katsayisi * karekök(km² / alan_birimi_km2) + nufus_katsayisi * karekök(nüfus / nufus_birimi), yuvarlanıp en_az ile en_cok arasına sınırlanır. Alan, projeksiyondan bağımsız gerçek yüzölçümüdür.",
+		"sabit": -0.5,
+		"alan_katsayisi": 0.27,
+		"alan_birimi_km2": 1000,
+		"nufus_katsayisi": 0.32,
+		"nufus_birimi": 1000000,
+		"en_az": 1,
+		"en_cok": 40
+	},
+	"tohum": {
+		"_aciklama": "aralik_orani: iki tohum arasındaki en az uzaklık = aralik_orani * karekök(ülkenin harita alanı / hedef bölge sayısı). nufus_agirligi: şehir seçerken nüfusun ağırlığı (0 = yalnızca uzaklık). azami_bolge_payi: en az pay_denetimi_asgari_bolge bölgeli ülkelerde hiçbir bölge ülke alanının bu oranını geçmemeli; geçerse o bölgedeki en uzak kasaba da tohum yapılır.",
+		"aralik_orani": 0.5,
+		"nufus_agirligi": 0.35,
+		"azami_bolge_payi": 0.2,
+		"pay_denetimi_asgari_bolge": 8
+	},
+	"kucuk_bolge": {
+		"_aciklama": "Alanı, ülkesindeki ortalama bölge alanının bu oranından küçük kalan (başkent olmayan) bölge, en uzun sınırı paylaştığı komşu bölgeye katılır.",
+		"ortalama_orani": 0.2
+	}
+}
