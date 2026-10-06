@@ -5,7 +5,11 @@ extends RefCounted
 ## Tek kayıt yuvası vardır; yeni kayıt eskisinin üzerine yazılır. Dosyada bir sürüm
 ## numarası durur; okurken sürüm uyuşmazsa kayıt yok sayılır (oyun sıfırdan başlar).
 
-const SURUM: int = 1
+## 2: tümen türleri, teknoloji ve tahkimat eklendi.
+const SURUM: int = 2
+## Hâlâ açılabilen eski sürümler. 1. sürümde tümen türü yoktu; bu kayıtlar açılınca bütün
+## tümenler piyade sayılır, teknoloji ve tahkimat sıfırdan başlar (bkz. Oyun.kayittan_yukle).
+const ACILABILEN_SURUMLER: Array[int] = [1, 2]
 
 ## Kayıt dosyasının yolu. Sınamalar bunu ayrı bir dosyaya çevirir ki oyuncunun gerçek
 ## kaydına dokunmasınlar (bkz. tests/calistirici.gd).
@@ -51,7 +55,7 @@ static func yukle() -> Dictionary:
 		push_error("Kayıt dosyası bozuk: %s" % ayristirici.get_error_message())
 		return {}
 	var veri: Dictionary = ayristirici.data
-	if int(veri.get("surum", -1)) != SURUM:
+	if not ACILABILEN_SURUMLER.has(int(veri.get("surum", -1))):
 		push_error("Kayıt dosyasının sürümü (%s) bu oyunun sürümüyle (%d) uyuşmuyor, yok sayılıyor." % [
 			str(veri.get("surum")), SURUM])
 		return {}

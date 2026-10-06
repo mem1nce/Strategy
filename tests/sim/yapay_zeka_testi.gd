@@ -106,6 +106,9 @@ func sina_savastaki_ulke_simdilik_hicbir_sey_kurmaz() -> String:
 	if komsu == "" or not oyun.savas_ilan_et("TUR", komsu, 0):
 		return "Sınama kurulamadı (komşu yok ya da ilan başarısız)."
 	oyun.hazineler[komsu] = 100000.0
+	# Savaştaki ülke ara sıra tahkimat kurabilir (bilerek); bu sınama yalnızca tümen ve
+	# fabrika kurmadığını denetler, o yüzden tahkimat olasılığı kapatılır.
+	oyun._yz_tahkimat_olasiligi = 0.0
 	var dusunme_saati: int = oyun._ulkenin_dusunme_saati(komsu)
 
 	oyun._yapay_zekayi_isle(dusunme_saati)

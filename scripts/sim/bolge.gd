@@ -24,6 +24,9 @@ var isgal_saati: int = -1
 ## Bölgede kurulan fabrikaların sanayiye kattığı toplam (bkz. Oyun.bolge_sanayisi,
 ## Oyun._insayi_tamamla).
 var fabrika_sanayisi: float = 0.0
+## Tahkimat seviyesi (0-3). Her seviye burada savunana avantaj verir; bölge el değiştirince
+## bir seviye düşer (bkz. Oyun._bolgeyi_devret).
+var tahkimat: int = 0
 ## Bölge, en az bir kıyı (deniz) sınırına değiyor mu?
 var kiyi: bool = false
 ## Bölge adının ve işaretlerinin çizileceği nokta (en büyük çokgenin içinde).

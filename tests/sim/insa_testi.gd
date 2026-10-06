@@ -34,8 +34,8 @@ func sina_tumen_siralanir_ve_maliyet_dusulur() -> String:
 	oyun.hazineler["TUR"] = 1000.0
 	if not oyun.tumen_sirala("TUR", "TUR_1"):
 		return "Hazine yeterliyken tümen sıralanmalı."
-	if oyun.hazineler["TUR"] != 1000.0 - 50.0:
-		return "Maliyet (50) hemen hazineden düşmeli, kalan: %.1f" % oyun.hazineler["TUR"]
+	if oyun.hazineler["TUR"] != 1000.0 - oyun.tumen_maliyeti():
+		return "Maliyet (%d) hemen hazineden düşmeli, kalan: %.1f" % [oyun.tumen_maliyeti(), oyun.hazineler["TUR"]]
 	if (oyun.insa_kuyruklari.get("TUR", []) as Array).size() != 1:
 		return "Kuyrukta 1 iş olmalı."
 	return ""

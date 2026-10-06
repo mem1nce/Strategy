@@ -544,8 +544,35 @@ bildirimler). Oyun artık baştan sona (ana menü → seçim → savaş/ekonomi/
 kaybetme → kapat-aç sürdür, bildirimlerle takip) oynanabilir; bundan sonraki iş G-I, yani
 büyük ölçüde tamamlama/cila/denge/performans.
 
+## Paket: birlik türleri, teknoloji, tahkimat (2026-10-06)
+
+Adımlar (her biri ayrı commit):
+1. ✅ Simülasyon + sınamalar: `BirlikTurleri` (piyade/zırhlı/topçu, üçgen +%50),
+   `Teknoloji` (Sanayi/Silah/Savunma/Lojistik, 3 seviye, tek araştırma), bölge
+   `tahkimat` (0-3, seviye başına savunana +%15, el değiştirince -1), YZ tür seçimi /
+   araştırma / tahkimat, kayıt sürümü 2 (1. sürüm kayıtlar açılır, tümenler piyade).
+   Yeni sınama dosyaları: birlik_turu_testi, teknoloji_testi, tahkimat_testi; kayit_testi'ne
+   eski kayıt + yeni alanların korunması eklendi. 124/124 geçiyor.
+2. ⬜ Arayüz: haritada tür işaretleri + yığın kutusunda tür sayıları, "Tümen kur" tür
+   seçimi, "Tahkimat kur" + bölge panelinde seviye + harita işareti, üst çubukta
+   "Teknoloji" düğmesi ve paneli; 16:9 ve 20:9 ekran görüntüleri.
+3. ⬜ Denge: uzun koşu raporu (teslim sayısı, en büyük ülke payı, tür üretim payları, süre).
+4. ⬜ Belgeler: Nasıl oynanır, TASARIM.md, TEST_LISTESI.md.
+
 ## Kararlar
 
+- 2026-10-06: Kullanıcı yeni sayıların `data/denge.json`'a yazılmasını istedi; ama projenin
+  denge dosyası zaten `data/balance.json` (CLAUDE.md: data/ altındaki dosyalar İngilizce
+  adlı; 2026-10-04 kararıyla aynı gerekçe). Yeni sayılar `balance.json`'a `birlik_turleri`,
+  `teknoloji`, `tahkimat` bölümleri ve `ordu`/`yapay_zeka` altına eklendi; ayrı bir dosya
+  açılmadı. Eski `ekonomi.tumen_maliyeti/tumen_suresi_saat/bakim_birim_maliyeti` kaldırıldı,
+  yerlerini türe göre fiyat/süre/bakım aldı.
+- 2026-10-06: Karışık yığında üstünlük bonusu, karşı tarafın gücünün o türdeki payıyla
+  orantılı uygulanır (ör. yarısı piyade olan yığına zırhlı +%25). Hasar, alan tarafa
+  güçleriyle orantılı dağıtılır; yığın en yavaş türünün hızıyla yürür.
+- 2026-10-06: Savunma teknolojisi alınan hasarı böler (savunma_carpani); Silah verilen
+  hasarı çarpar. Lojistik yürüyüş süresini böler ve denizden saldırı cezasını seviye başına
+  0,1 azaltır.
 - 2026-10-04: Deniz yolu uzaklık sınırı 220 harita birimi, bölge başına en yakın 3 olarak
   uygulandı (kullanıcının verdiği sayılar). Bir kenar, iki ucundan BİRİNİN en yakın 3'üne
   giriyorsa tutulur (simetrik ve her bölge için "yeterli" olacak şekilde) — bu yüzden bir

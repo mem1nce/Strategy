@@ -176,6 +176,74 @@ func sina_surum_uyusmazsa_yukle_bos_sozluk_doner() -> String:
 	return ""
 
 
+## 1. sürüm kaydında tümen türü, tahkimat ve teknoloji yoktu: açılınca çökmemeli ve
+## bütün tümenler piyade olmalı.
+func sina_eski_surum_kaydi_piyade_olarak_acilir() -> String:
+	_kayit_dosyasini_sil()
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.oyuncuyu_sec("TUR")
+	oyun.hazineler["TUR"] = 1000.0
+	oyun.tumen_sirala("TUR", "TUR_1")
+	KayitYoneticisi.kaydet(oyun, {"toplam_saat": 10})
+	# Yeni anahtarları silip dosyayı 1. sürüm kaydı gibi yeniden yaz.
+	var veri: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(KayitYoneticisi.kayit_dosyasi))
+	veri["surum"] = 1
+	veri.erase("teknolojiler")
+	veri.erase("arastirmalar")
+	for b: Dictionary in (veri["bolgeler"] as Array):
+		b.erase("tahkimat")
+	for b: Dictionary in (veri["birlikler"] as Array):
+		b.erase("tur")
+	for kuyruk: Array in (veri["insa_kuyruklari"] as Dictionary).values():
+		for is_verisi: Dictionary in kuyruk:
+			is_verisi.erase("birlik_turu")
+	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.kayit_dosyasi, FileAccess.WRITE)
+	dosya.store_string(JSON.stringify(veri))
+	dosya = null
+
+	var kayit: Dictionary = KayitYoneticisi.yukle()
+	_kayit_dosyasini_sil()
+	if kayit.is_empty():
+		return "1. sürüm kayıt açılabilmeli."
+	var yeni_oyun: Oyun = _kurulu_oyun()
+	yeni_oyun.kayittan_yukle(kayit["oyun_verisi"])
+	if yeni_oyun.birlikler.size() != oyun.birlikler.size():
+		return "Eski kayıttaki bütün tümenler yüklenmeli."
+	for birlik: Birlik in yeni_oyun.birlikler:
+		if birlik.tur != "piyade":
+			return "Eski kayıttaki tümenler piyade olmalı, geldi: %s" % birlik.tur
+	var kuyruk: Array = yeni_oyun.insa_kuyruklari.get("TUR", [])
+	if kuyruk.size() != 1 or (kuyruk[0] as InsaIsi).birlik_turu != "piyade":
+		return "Eski kayıttaki tümen işi piyade işi olarak yüklenmeli."
+	if yeni_oyun.teknoloji_seviyesi("TUR", "silah") != 0 or yeni_oyun.dunya.bolgeler["TUR_1"].tahkimat != 0:
+		return "Eski kayıtta teknoloji ve tahkimat sıfırdan başlamalı."
+	return ""
+
+
+func sina_kaydedip_yuklemek_tur_teknoloji_ve_tahkimati_korur() -> String:
+	_kayit_dosyasini_sil()
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.oyuncuyu_sec("TUR")
+	oyun.hazineler["TUR"] = 1000.0
+	oyun.bolgedeki_birlikler("TUR_1")[0].tur = "topcu"
+	oyun.dunya.bolgeler["TUR_1"].tahkimat = 2
+	oyun.teknolojiler["TUR"] = {"sanayi": 1}
+	oyun.arastirma_baslat("TUR", "silah")
+	KayitYoneticisi.kaydet(oyun, {})
+
+	var kayit: Dictionary = KayitYoneticisi.yukle()
+	_kayit_dosyasini_sil()
+	var yeni_oyun: Oyun = _kurulu_oyun()
+	yeni_oyun.kayittan_yukle(kayit["oyun_verisi"])
+	if yeni_oyun.bolgedeki_birlikler("TUR_1")[0].tur != "topcu":
+		return "Tümen türü korunmalı."
+	if yeni_oyun.dunya.bolgeler["TUR_1"].tahkimat != 2:
+		return "Tahkimat seviyesi korunmalı."
+	if yeni_oyun.teknoloji_seviyesi("TUR", "sanayi") != 1 or yeni_oyun.suren_arastirma("TUR").get("dal", "") != "silah":
+		return "Teknoloji seviyeleri ve süren araştırma korunmalı: %s" % yeni_oyun.suren_arastirma("TUR")
+	return ""
+
+
 func sina_sil_kaydi_kaldirir() -> String:
 	_kayit_dosyasini_sil()
 	var oyun: Oyun = _kurulu_oyun()

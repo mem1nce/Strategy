@@ -9,7 +9,11 @@
 		"nufus_bolen": 2000000,
 		"gsyh_bolen": 50000,
 		"asgari_tumen": 1,
-		"azami_tumen": 24
+		"azami_tumen": 24,
+		"agir_pay_asgari": 0.1,
+		"agir_pay_azami": 0.5,
+		"kisi_basi_gsyh_alt": 2000,
+		"kisi_basi_gsyh_ust": 50000
 	},
 	"hareket": {
 		"kara_saat": 24,
@@ -18,7 +22,7 @@
 	},
 	"savas": {
 		"savunan_avantaji": 1.25,
-		"deniz_cezasi": 0.70,
+		"deniz_cezasi": 0.7,
 		"saatlik_kayip_orani": 0.05,
 		"cekilme_esigi": 0.25
 	},
@@ -26,12 +30,9 @@
 		"sanayi_gsyh_bolen": 5000,
 		"isgal_cezasi_gun": 60,
 		"isgal_cezasi_orani": 0.5,
-		"tumen_maliyeti": 50,
-		"tumen_suresi_saat": 120,
 		"fabrika_maliyeti": 500,
 		"fabrika_suresi_saat": 720,
-		"fabrika_sanayi_artisi": 2.0,
-		"bakim_birim_maliyeti": 0.5
+		"fabrika_sanayi_artisi": 2.0
 	},
 	"yapay_zeka": {
 		"fabrika_olasiligi": 0.2,
@@ -40,6 +41,61 @@
 		"savas_ilani_esigi": 2.0,
 		"savas_ilani_olasiligi": 0.1,
 		"azami_eszamanli_savas": 2,
-		"oyuncuya_dokunulmazlik_gun": 90
+		"oyuncuya_dokunulmazlik_gun": 90,
+		"tur_agirliklari": {"piyade": 0.45, "zirhli": 0.3, "topcu": 0.25},
+		"karsi_tur_bonusu": 0.6,
+		"arastirma_olasiligi": 0.3,
+		"tahkimat_olasiligi": 0.08
+	},
+	"birlik_turleri": {
+		"ustunluk_bonusu": 0.5,
+		"turler": {
+			"piyade": {
+				"ad": "Piyade",
+				"maliyet": 40,
+				"sure_saat": 96,
+				"bakim": 0.4,
+				"saldiri": 1.0,
+				"savunma": 1.0,
+				"hareket_carpani": 1.0,
+				"yener": "topcu"
+			},
+			"zirhli": {
+				"ad": "Zırhlı",
+				"maliyet": 90,
+				"sure_saat": 168,
+				"bakim": 1.0,
+				"saldiri": 1.2,
+				"savunma": 0.9,
+				"hareket_carpani": 0.6,
+				"yener": "piyade"
+			},
+			"topcu": {
+				"ad": "Topçu",
+				"maliyet": 60,
+				"sure_saat": 120,
+				"bakim": 0.6,
+				"saldiri": 1.1,
+				"savunma": 1.1,
+				"hareket_carpani": 1.1,
+				"yener": "zirhli"
+			}
+		}
+	},
+	"teknoloji": {
+		"azami_seviye": 3,
+		"taban_maliyet": 150,
+		"taban_sure_gun": 30,
+		"sanayi_artisi": 0.1,
+		"silah_artisi": 0.1,
+		"savunma_artisi": 0.1,
+		"lojistik_hiz_artisi": 0.15,
+		"lojistik_deniz_cezasi_azalisi": 0.1
+	},
+	"tahkimat": {
+		"azami_seviye": 3,
+		"seviye_avantaji": 0.15,
+		"taban_maliyet": 80,
+		"sure_saat": 240
 	}
 }
