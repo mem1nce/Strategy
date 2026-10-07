@@ -570,6 +570,21 @@ Animasyonlar ve sesler yalnızca sunumdur; simülasyonu değiştirmez ve yavaşl
   ilgilendiren olaylarda çalar (`SesYoneticisi`); aynı ses 0,25 sn'de (en yüksek hızda 1,2 sn'de)
   bir kereden sık çalmaz, aynı anda en çok 4 ses çalar.
 
+## 10e. Android
+
+- Dışa aktarma ön ayarı `export_presets.cfg` → "Android": hiçbir izin yok (internet de),
+  yatay ekran (`display/window/handheld/orientation` = sensör yatay), tam ekran (immersive),
+  yalnızca arm64-v8a. Paket adı geçici: `com.ornek.yerkure`. Simgeler `icons/`
+  (`tools/simge_uret.py`). Derlemeler `builds/` altına çıkar ve depoya girmez.
+- **Geri tuşu** (`application/config/quit_on_go_back=false`): önce açık onay penceresini ya
+  da paneli (tür seçimi, teknoloji, sıralama, sonuç) kapatır, sonra bölge seçimini kaldırır;
+  bunlar yoksa "Ana menüye dönülsün mü? Oyun kaydedilecek." diye sorar (onaylanınca kaydedip
+  ana menüye döner). Ana menüde açık alt panel yoksa uygulamadan çıkar.
+- Uygulama arka plana geçince zaman durur ve oyun kaydedilir. Zaman durmuşken düşük işlemci
+  kipi açılır (ekran yalnızca bir şey değişince çizilir); zaman akarken ekran kapanmaz.
+- Arayüz güvenli alanın (çentik, yuvarlak köşe) içinde kalır (bkz. 4. Kamera ve dokunma).
+- Kurulum ve telefona yükleme: `ANDROID_KURULUM.md`.
+
 ## 11. Kayıt
 
 Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve
@@ -691,7 +706,7 @@ istenen aşama yapılır.
 | 6 | ✅ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ✅ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 7a | ✅ | **Birlik türleri, teknoloji, tahkimat** | Piyade/zırhlı/topçu ve üstünlük üçgeni, 4 dal × 3 seviye araştırma, 3 seviye tahkimat, YZ'nin üçünü de kullanması |
-| 8 | ⬜ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
+| 8 | ◐ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
 çok oyunculu oyun.

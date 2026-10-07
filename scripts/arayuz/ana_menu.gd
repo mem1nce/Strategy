@@ -111,7 +111,7 @@ func kur() -> void:
 	_nasil_oynanir_paneli = _bilgi_paneli_olustur("Nasıl oynanır",
 			NASIL_OYNANIR_METNI_BICIMI % roundi(Oyun.ZAFER_ORANI * 100))
 	var nasil_oynanir: Button = _dugme_ekle(dikey, "Nasıl oynanır")
-	nasil_oynanir.pressed.connect(func() -> void: _nasil_oynanir_paneli.show())
+	nasil_oynanir.pressed.connect(func() -> void: _alt_paneli_ac(_nasil_oynanir_paneli))
 
 	_ayarlar_paneli = _ayarlar_paneli_olustur()
 	_yeni_oyun_paneli = _yeni_oyun_paneli_olustur()
@@ -125,6 +125,26 @@ func kur() -> void:
 ## belirler (main.gd, açılabilen bir kayıt bulunca true verir). `eski_kayit` true ise kayıt
 ## dosyası var ama eski bir sürüme ait: "Devam et" kapalı kalır, uyarı yazısı görünür ve
 ## "Yeni oyun" onay sormadan eski kaydı silip yeni oyuna başlar.
+## Menü ekranda mı?
+func gorunur_mu() -> bool:
+	return _kok.visible
+
+
+## Android geri tuşu: açık bir onay penceresi ya da alt panel (yeni oyun, ayarlar, nasıl
+## oynanır) varsa onu kapatır ve true döner; menünün kendisindeyse false döner (main.gd
+## uygulamadan çıkar).
+func geri_basildi() -> bool:
+	for pencere: ConfirmationDialog in [_yeni_oyun_onayi, _kaydi_sil_onayi]:
+		if pencere.visible:
+			pencere.hide()
+			return true
+	for panel: CenterContainer in [_yeni_oyun_paneli, _ayarlar_paneli, _nasil_oynanir_paneli]:
+		if panel.visible:
+			_alt_paneli_kapat(panel)
+			return true
+	return false
+
+
 func goster(kayit_var: bool, eski_kayit: bool = false) -> void:
 	_kayit_var_ayarla(kayit_var)
 	_eski_kayit_yazisi.visible = eski_kayit
@@ -185,7 +205,7 @@ func _bilgi_paneli_olustur(baslik_metni: String, govde_metni: String) -> CenterC
 	kaydirici.add_child(govde)
 
 	var kapat: Button = _dugme_ekle(dikey, "Kapat")
-	kapat.pressed.connect(func() -> void: ortalayici.hide())
+	kapat.pressed.connect(func() -> void: _alt_paneli_kapat(ortalayici))
 
 	ortalayici.hide()
 	return ortalayici

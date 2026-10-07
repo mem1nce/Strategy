@@ -4,3 +4,9 @@
 
 # Python
 __pycache__/
+
+# Android derlemeleri (APK/AAB) depoya girmez.
+builds/
+*.apk
+*.aab
+*.idsig

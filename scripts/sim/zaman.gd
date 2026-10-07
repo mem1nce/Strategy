@@ -49,13 +49,13 @@ func _process(delta: float) -> void:
 		_birikim = 0.0
 
 
-## Oyunu bir saat ilerletir. Durdurulmuş olsa da çalışır (sınama için).
 ## Bir sonraki oyun saatine ne kadar yaklaşıldığı (0-1); harita tümenleri saatler arasında
 ## da akıcı kaydırmak için kullanır.
 func saat_kesri() -> float:
 	return clampf(_birikim, 0.0, 1.0)
 
 
+## Oyunu bir saat ilerletir. Durdurulmuş olsa da çalışır (sınama için).
 func bir_saat_ilerle() -> void:
 	toplam_saat += 1
 	saat_gecti.emit(toplam_saat)

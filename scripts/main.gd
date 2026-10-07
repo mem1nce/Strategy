@@ -31,6 +31,9 @@ var _secili_bolge_id: String = ""
 
 
 func _ready() -> void:
+	# Zaman bir autoload'dır ve sahne yeniden yüklenince (geri tuşuyla ana menüye dönüş) eski
+	# saatini korur; her açılışta baştan, kilitli ve durmuş başlar (kayıt varsa sonra uygulanır).
+	Zaman.durumu_uygula({})
 	Ayarlar.yukle()
 	_ses = SesYoneticisi.new()
 	_ses.name = "Ses"
@@ -106,6 +109,9 @@ func _ready() -> void:
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
 	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
 	_arayuz.bildirime_dokunuldu.connect(_bildirime_dokunuldu)
+	_arayuz.menuye_donus_istendi.connect(_menuye_don)
+	Zaman.durum_degisti.connect(_guc_modunu_guncelle)
+	_guc_modunu_guncelle()
 	_oyun.bildirim_gonder.connect(_arayuz.bildirim_goster)
 
 	_ana_menu = AnaMenu.new()
@@ -166,8 +172,44 @@ func _ulke_teslim_oldu(ulke_id: String, _galip_id: String) -> void:
 ## Uygulama arka plana geçtiğinde (telefonda) ya da kapatılmak istendiğinde (bilgisayarda)
 ## otomatik kaydeder.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		# Telefonda arka plana geçince oyun durur ve kaydedilir.
+		Zaman.durdur()
 		_otomatik_kaydet()
+	elif what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_otomatik_kaydet()
+	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_geri_istendi()
+
+
+## Android geri tuşu: önce açık pencere/paneli kapatır, sonra seçimi kaldırır; ikisi de yoksa
+## "Ana menüye dönülsün mü?" diye sorar. Ana menüdeyken (alt paneli yoksa) uygulamadan çıkar.
+func _geri_istendi() -> void:
+	if _ana_menu.gorunur_mu():
+		if not _ana_menu.geri_basildi():
+			get_tree().quit()
+		return
+	if _arayuz.acik_paneli_kapat():
+		return
+	if _secili_bolge_id != "" or not _secili_birlikler.is_empty():
+		_bolgeyi_sec("")
+		return
+	_arayuz.menuye_donus_sor()
+
+
+## Onaylanınca oyun kaydedilir ve sahne baştan yüklenir: ana menü "Devam et" etkin açılır.
+func _menuye_don() -> void:
+	_otomatik_kaydet()
+	Zaman.durdur()
+	get_tree().reload_current_scene()
+
+
+## Oyun durmuşken (ya da ülke seçilmeden) işlemci az kullanılır ve ekran kapanabilir; zaman
+## akarken ekran kapanmaz.
+func _guc_modunu_guncelle() -> void:
+	var akiyor: bool = not Zaman.durdu and not Zaman.kilitli
+	OS.low_processor_usage_mode = not akiyor
+	DisplayServer.screen_set_keep_on(akiyor)
 
 
 ## Oyuncu henüz ülkesini seçmediyse kaydedecek bir ilerleme yoktur.

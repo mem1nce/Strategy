@@ -29,6 +29,8 @@ signal sonuc_kapatildi
 signal yz_yonetimi_degisti(acik: bool)
 ## Oyuncu "Sıralama" düğmesini açtığında yayılır (güncel veri main.gd'den istenir).
 signal siralama_istendi
+## Oyuncu geri tuşundan sonra "Ana menüye dönülsün mü?" sorusunu onayladığında yayılır.
+signal menuye_donus_istendi
 ## Oyuncu bir bildirim kartına dokunduğunda, ilgili bölge id'siyle (yoksa boş) yayılır.
 signal bildirime_dokunuldu(bolge_id: String)
 
@@ -57,6 +59,8 @@ var _bildirim_kutusu: BildirimKutusu = null
 var _tumen_secim_paneli: TumenSecimPaneli = null
 var _teknoloji_paneli: TeknolojiPaneli = null
 var _serit: SeritPaneli = null
+## Android geri tuşuyla oyundan ana menüye dönmeden önce sorulan onay.
+var _menu_onayi: ConfirmationDialog = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -157,8 +161,50 @@ func kur(dunya: Dunya) -> void:
 	_serit = SeritPaneli.new()
 	kok.add_child(_serit)
 
+	_menu_onayi = ArayuzTemasi.onay_penceresi_olustur()
+	_menu_onayi.dialog_text = "Ana menüye dönülsün mü? Oyun kaydedilecek."
+	_menu_onayi.confirmed.connect(func() -> void: menuye_donus_istendi.emit())
+	kok.add_child(_menu_onayi)
+
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
+
+
+## Android geri tuşu: üstte açık bir pencere/panel varsa onu kapatır ve true döner.
+## Sıra: onay pencereleri, tür seçimi, teknoloji, sıralama, sonuç. Alt panel (bölge/birlik)
+## main.gd'de seçim kaldırılarak kapanır.
+func acik_paneli_kapat() -> bool:
+	for pencere: Window in _acik_pencereler():
+		pencere.hide()
+		return true
+	if _tumen_secim_paneli.visible:
+		Gecis.kapat(_tumen_secim_paneli)
+		return true
+	if _teknoloji_paneli.visible:
+		_teknoloji_panelini_kapat()
+		return true
+	if _siralama_paneli.visible:
+		Gecis.kapat(_siralama_paneli)
+		_ust_cubuk.siralama_dugmesini_kapat()
+		return true
+	if _sonuc_paneli.visible:
+		Gecis.kapat(_sonuc_paneli)
+		sonuc_kapatildi.emit()
+		return true
+	return false
+
+
+## "Ana menüye dönülsün mü?" onayını gösterir.
+func menuye_donus_sor() -> void:
+	_menu_onayi.popup_centered()
+
+
+func _acik_pencereler() -> Array[Window]:
+	var sonuc: Array[Window] = []
+	for dugum: Node in find_children("*", "ConfirmationDialog", true, false):
+		if (dugum as Window).visible:
+			sonuc.append(dugum)
+	return sonuc
 
 
 ## Ekranın ortasından geçen kısa, tam genişlikte bir şerit gösterir (bkz. SeritPaneli).

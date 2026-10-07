@@ -647,7 +647,18 @@ Adımlar (her biri ayrı commit):
    Bulunan sızıntı: Oyun kendi sinyaline kendini yakalayan bir lambda bağlamıştı (çıkışta
    "8 resources still in use"); yöntemle değiştirildi. Yeni sınamalar: ayarlar_testi (6).
    143/143. Ekran görüntüleriyle denetlendi (kayan kutu, muharebe çubuğu, parlama, şerit).
-3. ⬜ Android.
+3. ✅ Android: `export_presets.cfg` (izin yok, internet yok, yatay (sensor_landscape), tam ekran,
+   yalnız arm64, geçici paket adı `com.ornek.yerkure`). **Mağazaya çıkmadan önce kalıcı paket
+   adına karar verilmeli** (yayımlandıktan sonra değiştirilemez). Simge `tools/simge_uret.py`
+   ile (icons/: 512, 192, uyarlanabilir 432 ön/arka plan). Geri tuşu (`quit_on_go_back=false`):
+   açık pencere/panel → seçim → "Ana menüye dönülsün mü?" (onayla: kaydet + sahneyi baştan
+   yükle); ana menüde alt panel yoksa çıkış. Arka plana geçince zaman durur ve kaydeder. Zaman
+   durmuşken `OS.low_processor_usage_mode`, akarken `screen_set_keep_on`. Sahne yeniden
+   yüklenince `Zaman` (autoload) sıfırlanır. Dokunma hedefleri 1280×720 ve 1920×1080'de
+   10 ekranda ölçüldü: 96 birimden küçük düğme yok (2560×1440 pencere bu ekrana sığmadı;
+   arayüz orantılı ölçeklendiği için birimler aynı, 96 birim = 128 px). Güvenli alan
+   Arayuz'da zaten uygulanıyordu. Araçlar: JDK 21 ✅, Android SDK ✅, debug keystore ✅,
+   **Godot export şablonları ❌** → APK üretilemedi; adımlar ANDROID_KURULUM.md'de.
 4. ⬜ Ülke bonusları.
 5. ⬜ Denge, sınama, belgeler.
 
