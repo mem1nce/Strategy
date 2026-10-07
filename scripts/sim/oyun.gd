@@ -250,7 +250,8 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 	var carpan: float = 0.0
 	for birlik: Birlik in tasinacaklar:
 		carpan = maxf(carpan, BirlikTurleri.hareket_carpani(birlik.tur))
-	sure *= carpan / Teknoloji.hiz_carpani(teknoloji_seviyesi(kaynak_sahibi.id, "lojistik"))
+	sure *= carpan / (Teknoloji.hiz_carpani(teknoloji_seviyesi(kaynak_sahibi.id, "lojistik"))
+			* (1.0 + UlkeBonuslari.deger(kaynak_sahibi.id, "hareket_hizi")))
 	# Son adım deniz yoluysa, muharebede saldırgan deniz cezası alır (bkz. _muharebeyi_coz).
 	var onceki_bolge_id: String = yol[yol.size() - 2]
 	var denizden: bool = dunya.bolgeler[onceki_bolge_id].deniz_gecisleri.has(hedef_bolge_id)
@@ -485,10 +486,14 @@ func _verilen_hasar(verenler: Array[Birlik], alanlar: Array[Birlik], saldiriyor:
 		carpan *= 1.0 + bonus * paylar.get(BirlikTurleri.yener(birlik.tur), 0.0)
 		carpan *= Teknoloji.saldiri_carpani(teknoloji_seviyesi(birlik.sahip, "silah"))
 		if saldiriyor and birlik.son_adim_deniz_mi:
-			carpan *= minf(1.0, _deniz_cezasi + Teknoloji.deniz_cezasi_azalisi(teknoloji_seviyesi(birlik.sahip, "lojistik")))
+			carpan *= minf(1.0, _deniz_cezasi + Teknoloji.deniz_cezasi_azalisi(teknoloji_seviyesi(birlik.sahip, "lojistik"))
+					+ UlkeBonuslari.deger(birlik.sahip, "deniz_saldirisi"))
 		toplam += birlik.guc * carpan
 	if not saldiriyor:
 		toplam *= _savunan_avantaji * tahkimat_carpani(bolge)
+		# Ülke bonusu: ev sahibi olduğu (kendi asıl toprağındaki) bölgeyi savunurken.
+		if bolge.ev_sahibi == bolge.sahip:
+			toplam *= 1.0 + UlkeBonuslari.deger(bolge.sahip, "kendi_toprak_savunmasi")
 	return toplam
 
 
@@ -709,7 +714,7 @@ func gun_basladi(su_anki_saat: int) -> void:
 	for bolge: Bolge in dunya.bolge_listesi:
 		gelirler[bolge.sahip] = gelirler.get(bolge.sahip, 0.0) + bolge_sanayisi(bolge, su_anki_saat)
 	for ulke_id: String in gelirler:
-		var gelir: float = gelirler[ulke_id] * Teknoloji.gelir_carpani(teknoloji_seviyesi(ulke_id, "sanayi"))
+		var gelir: float = gelirler[ulke_id] * _gelir_carpani(ulke_id)
 		hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) + gelir
 	_bakimi_uygula()
 	_ulke_birlik_bolgelerini_hesapla()
@@ -733,6 +738,7 @@ func _bakimi_uygula() -> void:
 		var bakim: float = 0.0
 		for birlik: Birlik in liste:
 			bakim += BirlikTurleri.bakim(birlik.tur)
+		bakim *= 1.0 - UlkeBonuslari.deger(ulke_id, "bakim_indirimi")
 		var mevcut: float = hazineler.get(ulke_id, 0.0)
 		if mevcut >= bakim:
 			hazineler[ulke_id] = mevcut - bakim
@@ -748,7 +754,7 @@ func _bakimi_uygula() -> void:
 func tumen_sirala(ulke_id: String, bolge_id: String, tur: String = BirlikTurleri.VARSAYILAN) -> bool:
 	if not BirlikTurleri.gecerli_mi(tur):
 		return false
-	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.TUMEN, BirlikTurleri.maliyet(tur),
+	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.TUMEN, tumen_maliyeti(tur, ulke_id),
 			BirlikTurleri.sure_saat(tur), tur)
 
 
@@ -786,7 +792,7 @@ func tahkimat_azami_seviye() -> int:
 ## Verilen ülkenin, verilen (kendi) bölgesinde fabrika sıralar; tamamlanınca bölgenin
 ## sanayisini kalıcı olarak artırır.
 func fabrika_sirala(ulke_id: String, bolge_id: String) -> bool:
-	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.FABRIKA, _fabrika_maliyeti, _fabrika_suresi_saat)
+	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.FABRIKA, fabrika_maliyeti(ulke_id), _fabrika_suresi_saat)
 
 
 ## Verilen ülkenin kuyruğunun önündeki (o an yürümekte olan) iş; kuyruk boşsa null.
@@ -797,13 +803,23 @@ func onde_ki_is(ulke_id: String) -> InsaIsi:
 
 
 ## Bir tümen işinin maliyeti (bkz. BirlikTurleri); arayüzdeki düğme yazısı için.
-func tumen_maliyeti(tur: String = BirlikTurleri.VARSAYILAN) -> float:
-	return BirlikTurleri.maliyet(tur)
+## `ulke_id` verilirse ülkenin piyade bonusu uygulanır.
+func tumen_maliyeti(tur: String = BirlikTurleri.VARSAYILAN, ulke_id: String = "") -> float:
+	var maliyet: float = BirlikTurleri.maliyet(tur)
+	if tur == "piyade":
+		maliyet *= 1.0 - UlkeBonuslari.deger(ulke_id, "piyade_indirimi")
+	return maliyet
 
 
 ## Bir fabrika işinin maliyeti; arayüzdeki düğme yazısı için.
-func fabrika_maliyeti() -> float:
-	return _fabrika_maliyeti
+## `ulke_id` verilirse ülkenin fabrika bonusu uygulanır.
+func fabrika_maliyeti(ulke_id: String = "") -> float:
+	return _fabrika_maliyeti * (1.0 - UlkeBonuslari.deger(ulke_id, "fabrika_indirimi"))
+
+
+## Ülkenin araştırma süresi çarpanı (bonusu varsa 1'den küçük).
+func arastirma_sure_carpani(ulke_id: String) -> float:
+	return 1.0 - UlkeBonuslari.deger(ulke_id, "arastirma_hizi")
 
 
 ## Verilen ülkenin kuyruğunda bekleyen iş sayısı (öndeki dahil).
@@ -910,7 +926,7 @@ func arastirma_baslat(ulke_id: String, dal: String) -> bool:
 	if hazineler.get(ulke_id, 0.0) < maliyet:
 		return false
 	hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) - maliyet
-	var sure: int = Teknoloji.sure_saat(seviye)
+	var sure: int = maxi(1, roundi(Teknoloji.sure_saat(seviye) * arastirma_sure_carpani(ulke_id)))
 	arastirmalar[ulke_id] = {"dal": dal, "kalan_saat": sure, "toplam_saat": sure}
 	hazine_degisti.emit()
 	teknoloji_degisti.emit(ulke_id)
@@ -944,7 +960,12 @@ func ulkenin_geliri(ulke_id: String, su_anki_saat: int) -> float:
 	var toplam: float = 0.0
 	for bolge: Bolge in dunya.ulkenin_bolgeleri(ulke_id):
 		toplam += bolge_sanayisi(bolge, su_anki_saat)
-	return toplam * Teknoloji.gelir_carpani(teknoloji_seviyesi(ulke_id, "sanayi"))
+	return toplam * _gelir_carpani(ulke_id)
+
+
+## Gelir çarpanı: Sanayi teknolojisi ve ülkenin gelir bonusu.
+func _gelir_carpani(ulke_id: String) -> float:
+	return Teknoloji.gelir_carpani(teknoloji_seviyesi(ulke_id, "sanayi")) * (1.0 + UlkeBonuslari.deger(ulke_id, "gelir"))
 
 
 ## Bir bölgenin günlük ürettiği sanayi. Taban değer, bölgenin "ev sahibi" ülkesinin (bölge
@@ -1079,13 +1100,13 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 	var hedef_bolge_id: String = secenekler[_rng.randi() % secenekler.size()]
 	var hazine: float = hazineler.get(ulke_id, 0.0)
 
-	if _rng.randf() < _yz_fabrika_olasiligi and hazine >= _fabrika_maliyeti:
+	if _rng.randf() < _yz_fabrika_olasiligi and hazine >= fabrika_maliyeti(ulke_id):
 		fabrika_sirala(ulke_id, hedef_bolge_id)
 		return
 	var tur: String = _yz_bekleyen_tur.get(ulke_id, "")
 	if tur == "":
 		tur = _yz_tur_sec(ulke_id)
-	if hazine >= BirlikTurleri.maliyet(tur) and tumen_sirala(ulke_id, hedef_bolge_id, tur):
+	if hazine >= tumen_maliyeti(tur, ulke_id) and tumen_sirala(ulke_id, hedef_bolge_id, tur):
 		_yz_bekleyen_tur.erase(ulke_id)
 	else:
 		_yz_bekleyen_tur[ulke_id] = tur

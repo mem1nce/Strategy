@@ -585,6 +585,43 @@ Animasyonlar ve sesler yalnızca sunumdur; simülasyonu değiştirmez ve yavaşl
 - Arayüz güvenli alanın (çentik, yuvarlak köşe) içinde kalır (bkz. 4. Kamera ve dokunma).
 - Kurulum ve telefona yükleme: `ANDROID_KURULUM.md`.
 
+## 10f. Ülke bonusları
+
+Her ülkenin tek, küçük bir bonusu vardır; hiçbiri %15'i geçmez. Hepsi `data/bonuses.json`'da
+durur (`tools/bonus_uret.py` üretir) ve yalnızca coğrafyaya, nüfusa ve ekonomiye dayanır.
+Bonusu yapay zekâ ülkeleri de kullanır (aynı hesaplar herkese uygulanır).
+
+| Tür | Etki |
+|---|---|
+| gelir | günlük gelir × (1 + değer) |
+| fabrika_indirimi | fabrika maliyeti × (1 − değer) |
+| piyade_indirimi | piyade maliyeti × (1 − değer) |
+| deniz_saldirisi | denizden saldırı cezası çarpanına + değer (en çok 1) |
+| kendi_toprak_savunmasi | ev sahibi olduğu bölgeyi savunurken verilen hasar × (1 + değer) |
+| arastirma_hizi | araştırma süresi × (1 − değer) |
+| hareket_hizi | yürüyüş süresi ÷ (1 + değer) |
+| bakim_indirimi | tümen bakımı × (1 − değer) |
+
+- **En büyük 20 ülke** (GSYH'ye göre) özel bonus alır: ABD "Büyük iç pazar" (gelir +%10),
+  Çin "Geniş sanayi tabanı" (fabrika %15 ucuz), Japonya ve Birleşik Krallık "Ada ülkesi"
+  (deniz cezası %15 az), Almanya "Güçlü mühendislik sanayisi" (araştırma %15 kısa), Hindistan
+  "Çok büyük nüfus" (piyade %15 ucuz), Fransa "Verimli tarım toprakları" (bakım %15 ucuz),
+  İtalya "Uzun kıyı şeridi" (deniz %10), Brezilya "Geniş orman ve ovalar" (kendi toprağında
+  savunma +%10), Kanada "Geniş kuzey toprakları" ve Rusya "En geniş topraklar" (savunma +%15),
+  Güney Kore "Yüksek teknoloji sanayisi" (araştırma %10), Avustralya "Ada kıta" (deniz %15),
+  İspanya "Hizmet ekonomisi" (gelir +%5), Meksika "Genç ve kalabalık nüfus" (piyade %10),
+  Tayvan "Yarı iletken sanayisi" (araştırma %15), Endonezya "Takımadalar" (deniz %15),
+  Hollanda "Ticaret limanları" (gelir +%10), Suudi Arabistan "Petrol gelirleri" (gelir +%10),
+  Türkiye "İki kıta arasında kara köprüsü" (tümenler %10 hızlı).
+- **Diğer ülkeler** verilerine göre dört genel bonustan ilk tutanı alır: kara komşusu yoksa ya
+  da bölgelerinin en az %80'i kıyıdaysa "Kıyı ülkesi" (deniz %10); kişi başı GSYH 20 000 $'ı
+  geçiyorsa "Güçlü ekonomi" (gelir +%5); km² başına 30 kişiden azsa "Geniş topraklar" (savunma
+  +%10); yoksa "Kalabalık nüfus" (piyade %10). Şu an: 64 kalabalık nüfus, 61 kıyı ülkesi,
+  26 geniş topraklar, 6 güçlü ekonomi.
+- Bonus, bölge panelinde (ülke seçim ekranı da budur) ülke satırının altında tek satırla yazar:
+  "Bonus · Geniş topraklar: kendi toprağında savunma +%10". Oyuncunun fabrika/piyade fiyatları
+  ve araştırma süreleri panellerde bonuslu yazılır.
+
 ## 11. Kayıt
 
 Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve

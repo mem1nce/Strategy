@@ -19,6 +19,8 @@ const KAPALI_YAZI_RENGI: Color = Color(0.72, 0.74, 0.78)
 var _kutular: Dictionary[String, Array] = {}
 var _durum: Label = null
 var _cubuk: ProgressBar = null
+## Oyuncunun araştırma süresi çarpanı (ülke bonusu varsa 1'den küçük; bkz. Oyun.arastirma_sure_carpani).
+var sure_carpani: float = 1.0
 
 
 func _ready() -> void:
@@ -90,7 +92,7 @@ func goster(seviyeler: Dictionary, suren: Dictionary) -> void:
 				kutu.text = "Seviye %d - araştırılıyor\n%s" % [seviye, aciklama]
 			else:
 				kutu.text = "Seviye %d\n%s\nFiyat %d · %d gün" % [seviye, aciklama,
-						roundi(Teknoloji.maliyet(seviye)), Teknoloji.sure_saat(seviye) / 24]
+						roundi(Teknoloji.maliyet(seviye)), roundi(Teknoloji.sure_saat(seviye) * sure_carpani / 24.0)]
 	ilerlemeyi_goster(seviyeler, suren)
 	show()
 

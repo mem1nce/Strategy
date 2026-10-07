@@ -659,7 +659,13 @@ Adımlar (her biri ayrı commit):
    arayüz orantılı ölçeklendiği için birimler aynı, 96 birim = 128 px). Güvenli alan
    Arayuz'da zaten uygulanıyordu. Araçlar: JDK 21 ✅, Android SDK ✅, debug keystore ✅,
    **Godot export şablonları ❌** → APK üretilemedi; adımlar ANDROID_KURULUM.md'de.
-4. ⬜ Ülke bonusları.
+4. ✅ Ülke bonusları: `data/bonuses.json` (`tools/bonus_uret.py`; GSYH'de ilk 20 ülkeye elle yazılmış
+   özel bonus, diğerlerine veriye göre 4 genel bonustan biri; hepsi ≤ %15). 8 tür
+   (`UlkeBonuslari`), Oyun'un gelir, fabrika/piyade maliyeti, deniz cezası, savunma, araştırma
+   süresi, yürüyüş süresi ve bakım hesaplarında uygulanır; yapay zekâ da fiyatlarını bonuslu
+   görür. Bölge panelinde "Bonus · …" satırı; oyuncunun tümen fiyatları, fabrika düğmesi ve
+   araştırma süreleri bonuslu. Yeni sınamalar: bonus_testi (11). Hareket sınaması tümenin
+   kendi varış saatine baktırıldı (Türkiye'nin hareket bonusu yüzünden). 154/154.
 5. ⬜ Denge, sınama, belgeler.
 
 ## Kararlar

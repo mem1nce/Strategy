@@ -285,6 +285,12 @@ func teknolojiyi_goster(seviyeler: Dictionary, suren: Dictionary) -> void:
 	_teknoloji_paneli.goster(seviyeler, suren)
 
 
+## Oyuncunun ülke bonusuna göre tümen fiyatlarını ve araştırma sürelerini panellere yazar.
+func oyuncu_fiyatlarini_ayarla(tumen_fiyatlari: Dictionary, arastirma_sure_carpani: float) -> void:
+	_tumen_secim_paneli.fiyatlari_ayarla(tumen_fiyatlari)
+	_teknoloji_paneli.sure_carpani = arastirma_sure_carpani
+
+
 ## Teknoloji paneli açıksa yalnızca ilerleme çubuğunu günceller.
 func teknoloji_ilerlemesini_goster(seviyeler: Dictionary, suren: Dictionary) -> void:
 	if _teknoloji_paneli.visible:

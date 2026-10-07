@@ -34,6 +34,8 @@ var _ad: Label = null
 var _baskent: Label = null
 var _nufus: Label = null
 var _ulke: Label = null
+## Ülkenin bonusu (bkz. UlkeBonuslari), tek satır.
+var _bonus: Label = null
 var _kara_sayisi: Label = null
 var _deniz_sayisi: Label = null
 var _tahkimat: Label = null
@@ -76,6 +78,10 @@ func _ready() -> void:
 	_ulke.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ulke.max_lines_visible = 2
 	_ulke.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+
+	_bonus = _etiket_ekle(bilgi)
+	_bonus.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
+	_bonus.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 	# Alt satır: komşu sayıları. Renkli kutular haritadaki vurgu renklerini açıklar.
 	var komsu_sirasi: HBoxContainer = _sira_ekle(bilgi, 14)
@@ -156,6 +162,7 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	_ad.text = bolge.ad
 	_baskent.visible = bolge.baskent
 	_nufus.text = "Nüfus: %s" % Bicim.nufus(bolge.nufus)
+	_bonus.text = "Bonus · %s" % UlkeBonuslari.metin(ulke.id)
 	_ulke.text = "%s  ·  %s  ·  Nüfus: %s  ·  GSYH: %s" % [
 		ulke.ad, ulke.kita, Bicim.nufus(ulke.nufus), Bicim.para(ulke.gsyh_milyon_dolar)]
 	_kara_sayisi.text = "Kara komşusu: %d" % bolge.kara_komsulari.size()

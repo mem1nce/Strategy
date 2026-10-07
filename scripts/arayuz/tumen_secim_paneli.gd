@@ -2,7 +2,7 @@ class_name TumenSecimPaneli
 extends PanelContainer
 ## "Tümen kur"a basınca ortada açılan tür seçimi: piyade, zırhlı ve topçu için birer büyük
 ## düğme (fiyat, süre, neye karşı güçlü olduğu) ve "Vazgeç". Sayılar data/balance.json'dan
-## (BirlikTurleri) okunur.
+## (BirlikTurleri) okunur; oyuncunun ülke bonusuyla değişen fiyatlar fiyatlari_ayarla() ile yazılır.
 
 ## Oyuncu bir türe dokunduğunda yayılır; panel kendini kapatır.
 signal tur_secildi(tur: String)
@@ -10,6 +10,8 @@ signal tur_secildi(tur: String)
 const SECENEK_BOYUTU: Vector2 = Vector2(540.0, 260.0)
 const SECENEK_YAZI_BOYUTU: int = 30
 const VAZGEC_BOYUTU: Vector2 = Vector2(300.0, 104.0)
+
+var _dugmeler: Dictionary[String, Button] = {}
 
 
 func _ready() -> void:
@@ -31,10 +33,10 @@ func _ready() -> void:
 		dugme.custom_minimum_size = SECENEK_BOYUTU
 		dugme.focus_mode = Control.FOCUS_NONE
 		dugme.add_theme_font_size_override("font_size", SECENEK_YAZI_BOYUTU)
-		dugme.text = "%s\nFiyat: %d\nSüre: %s\n%s" % [BirlikTurleri.ad(tur), roundi(BirlikTurleri.maliyet(tur)),
-				_sure_metni(BirlikTurleri.sure_saat(tur)), BirlikTurleri.guclu_oldugu_metin(tur)]
 		dugme.pressed.connect(_secildi.bind(tur))
 		sira.add_child(dugme)
+		_dugmeler[tur] = dugme
+	fiyatlari_ayarla({})
 
 	var vazgec: Button = Button.new()
 	vazgec.text = "Vazgeç"
@@ -44,6 +46,15 @@ func _ready() -> void:
 	vazgec.pressed.connect(func() -> void: Gecis.kapat(self))
 	dikey.add_child(vazgec)
 	hide()
+
+
+## `fiyatlar`: tür -> oyuncunun ödeyeceği fiyat (ör. piyade indirimi olan ülkede ucuz);
+## verilmeyen türde data/balance.json'daki fiyat yazar.
+func fiyatlari_ayarla(fiyatlar: Dictionary) -> void:
+	for tur: String in _dugmeler:
+		var fiyat: float = float(fiyatlar.get(tur, BirlikTurleri.maliyet(tur)))
+		_dugmeler[tur].text = "%s\nFiyat: %d\nSüre: %s\n%s" % [BirlikTurleri.ad(tur), roundi(fiyat),
+				_sure_metni(BirlikTurleri.sure_saat(tur)), BirlikTurleri.guclu_oldugu_metin(tur)]
 
 
 func _secildi(tur: String) -> void:

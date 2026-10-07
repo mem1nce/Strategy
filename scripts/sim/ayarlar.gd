@@ -36,11 +36,11 @@ static func yukle() -> void:
 	sessiz = false
 	if not FileAccess.file_exists(ayar_dosyasi):
 		return
-	var veri: Variant = JSON.parse_string(FileAccess.get_file_as_string(ayar_dosyasi))
-	if not veri is Dictionary:
+	var ayristirici: JSON = JSON.new()
+	if ayristirici.parse(FileAccess.get_file_as_string(ayar_dosyasi)) != OK or not ayristirici.data is Dictionary:
 		push_warning("Ayar dosyası bozuk, varsayılanlar kullanılıyor: %s" % ayar_dosyasi)
 		return
-	var sozluk: Dictionary = veri
+	var sozluk: Dictionary = ayristirici.data
 	animasyonlar_azaltilmis = bool(sozluk.get("animasyonlar_azaltilmis", false))
 	ses_duzeyi = clampf(float(sozluk.get("ses_duzeyi", 0.8)), 0.0, 1.0)
 	sessiz = bool(sozluk.get("sessiz", false))

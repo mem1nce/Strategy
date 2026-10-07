@@ -326,7 +326,7 @@ func _insa_istendi(tur: String) -> void:
 		_tahkimat_dugmesini_guncelle()
 	else:
 		_siralama_sonucunu_bildir(_oyun.fabrika_sirala(ulke_id, _secili_bolge_id), "Fabrika",
-				_oyun.fabrika_maliyeti())
+				_oyun.fabrika_maliyeti(ulke_id))
 
 
 ## Tür seçim panelinde bir tümen türü seçildi: seçili (kendi) bölgede o türde tümen sıralanır.
@@ -334,7 +334,7 @@ func _tumen_istendi(birlik_turu: String) -> void:
 	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
 		return
 	_siralama_sonucunu_bildir(_oyun.tumen_sirala(_oyun.oyuncu_ulkesi, _secili_bolge_id, birlik_turu),
-			"%s tümen" % BirlikTurleri.ad(birlik_turu), _oyun.tumen_maliyeti(birlik_turu))
+			"%s tümen" % BirlikTurleri.ad(birlik_turu), _oyun.tumen_maliyeti(birlik_turu, _oyun.oyuncu_ulkesi))
 
 
 func _siralama_sonucunu_bildir(kabul: bool, ad: String, maliyet: float) -> void:
@@ -464,6 +464,12 @@ func _yarisini_ayir_istendi() -> void:
 
 ## Oyuncu ülkesini seçti: ülke işaretlenir, kamera oraya kayar, zaman düğmeleri açılır.
 func _oyuncu_secildi(ulke_id: String) -> void:
+	# Ülke bonusu fiyatları değiştirebilir (fabrika, piyade, araştırma süresi).
+	InsaDugmeleri.maliyetleri_ayarla(_oyun.fabrika_maliyeti(ulke_id), _oyun.tahkimat_azami_seviye())
+	var fiyatlar: Dictionary = {}
+	for tur: String in BirlikTurleri.SIRA:
+		fiyatlar[tur] = _oyun.tumen_maliyeti(tur, ulke_id)
+	_arayuz.oyuncu_fiyatlarini_ayarla(fiyatlar, _oyun.arastirma_sure_carpani(ulke_id))
 	var ulke: Ulke = _oyun.dunya.ulkeler[ulke_id]
 	_bolgeyi_sec("")
 	_harita.oyuncuyu_ayarla(ulke_id)

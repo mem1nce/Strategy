@@ -25,13 +25,16 @@ func sina_kendi_topragina_yurur_ve_varir() -> String:
 		if not birlik.yuruyor_mu() or birlik.hedef_bolge_id != hedef_id:
 			return "TUR_1'den taşınan tümenler yürüyor olmalı, hedefi %s." % hedef_id
 
-	var sure: float = dunya.yol_bulucu.en_kisa_sure("TUR_1", hedef_id)
-	oyun.saat_ilerledi(int(sure) - 1)
+	# Varış saati yol süresinden, tümen türünden, teknolojiden ve ülke bonusundan çıkar.
+	var varis: int = tasinanlar[0].varis_saati
+	if varis <= 0:
+		return "Yürüyen tümenin varış saati olmalı."
+	oyun.saat_ilerledi(varis - 1)
 	for birlik: Birlik in tasinanlar:
 		if birlik.bolge_id != "TUR_1" or not birlik.yuruyor_mu():
 			return "Süre dolmadan taşınan tümenler hâlâ TUR_1'de ve yürüyor olmalı."
 
-	oyun.saat_ilerledi(int(sure) + 2)
+	oyun.saat_ilerledi(varis + 2)
 	for birlik: Birlik in tasinanlar:
 		if birlik.bolge_id != hedef_id or birlik.yuruyor_mu():
 			return "Süre dolunca taşınan tümenler hedefe varmış ve durağan olmalı."
