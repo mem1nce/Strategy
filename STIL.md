@@ -79,12 +79,24 @@ Sayılar kısaltılır (`Bicim`): 1 250 → "1,2 B", 3 400 000 → "3,4 Mn", 2,7
 
 ## Harita
 
-- Ülke paleti doygunluk ve parlaklığı denetlenmiş dokuz sakin renktir; komşular farklı renk
-  alır (`HaritaPaleti.PALET`).
-- Deniz koyu lacivertten açığa yumuşak geçiş, kıyıda açık bir kuşak, çok hafif dalga dokusu.
-- Kara: ülke rengi × kabartma × hafif kâğıt dokusu. "Grafik: Düşük" ayarında dalga, kâğıt
-  ve kabartma kapanır.
-- Ülke sınırı koyu ve net, içinde ülke renginin koyusuyla yumuşak bir kuşak; bölge sınırı
-  ince ve soluk; kıyı ayrı tonda.
-- Ülke adları Cinzel, büyük harf, harf aralıklı, yarı saydam; ülkenin uzun eksenine göre döner.
-- Oyuncunun ülkesi her zaman ince altın çerçeve; seçili bölge parlak kenar ve iç ışıma.
+- Ülke paleti ton çemberine yayılmış dokuz orta-açık renktir; tonu yakın olanların açıklığı
+  farklıdır, böylece hangi iki indeks komşu olursa olsun ayırt edilir (`HaritaPaleti.PALET`;
+  komşular Natural Earth MAPCOLOR9'dan farklı indeks alır).
+- Deniz (`deniz.gdshader`): açık denizde koyu lacivert, kıyıya yaklaştıkça açılan geçiş (kıyıya
+  yakınlık kabartma dokusunun deniz piksellerinde saklıdır), iki sinüs katmanlı hafif dalga.
+  Dalga yalnızca oyun akarken kıpırdar.
+- Kara (`kara.gdshader`): ülke rengi × kabartma × hafif kâğıt dokusu. Yakınlaştıkça kabartma
+  yumuşar (doku büyütülünce bulanık lekelere dönmesin). "Grafik: Düşük" ayarında dalga,
+  kâğıt ve kabartma kapanır.
+- Ülke sınırı koyu ve net; iki yanında o yandaki ülke renginin koyusuyla içe doğru solan
+  yumuşak bir bant (`sinir_bandi.gdshader`). Bölge sınırı ince ve soluk; kıyı koyu mavi.
+- Ülke adları Cinzel 700, büyük harf, harf aralıklı, ülke renginin koyusuyla yarı saydam.
+  Ülkenin en büyük kara parçasının uzun eksenine göre döner ve parçaya sığacak boyda yazılır;
+  uzun adlar iki satıra bölünebilir. Ekranda 12 pikselden küçük kalan ad yazılmaz (küçük
+  ülkelerinki yakınlaşınca belirir).
+- Bölge adları Inter 500, 20 px, koyu kenarlı beyaz. Başkent: koyu daire, altın halka, yıldız.
+- Oyuncunun ülkesi her zaman ince altın çerçeve; seçili bölge parlak kenar ve içe doğru
+  solan açık parıltı.
+- Harita modları sol kenarda dikey sekmelerdir: Siyasi, Diplomasi (sen / savaştığın /
+  tarafsız; ittifak olmadığı için müttefik rengi yok), Ekonomi (bölge sanayisi, logaritmik
+  merdiven). Siyasi dışındaki modlarda renklerin anlamı küçük bir kartta yazar.

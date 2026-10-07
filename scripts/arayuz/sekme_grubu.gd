@@ -1,17 +1,18 @@
 class_name SekmeGrubu
 extends PanelContainer
-## Ortak "sekme" bileşeni (STIL.md): bir hap içinde yan yana düğmeler; aynı anda yalnızca biri
-## seçilidir ve vurgu renginde görünür. Seçim değişince `secildi(sira)` yayılır.
+## Ortak "sekme" bileşeni (STIL.md): bir hap içinde yan yana (ya da `dikey` ise alt alta)
+## düğmeler; aynı anda yalnızca biri seçilidir ve vurgu renginde görünür. Seçim değişince
+## `secildi(sira)` yayılır.
 
 signal secildi(sira: int)
 
-var _sira: HBoxContainer = null
+var _sira: BoxContainer = null
 var _grup: ButtonGroup = ButtonGroup.new()
 
 
-func _init() -> void:
+func _init(dikey: bool = false) -> void:
 	add_theme_stylebox_override("panel", ArayuzTemasi.kutu(ArayuzTemasi.YUZEY, ArayuzTemasi.KOSE_BUYUK, 4))
-	_sira = Bilesenler.sira(4)
+	_sira = Bilesenler.yigin(4) if dikey else Bilesenler.sira(4)
 	add_child(_sira)
 
 

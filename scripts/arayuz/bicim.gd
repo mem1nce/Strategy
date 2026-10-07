@@ -32,6 +32,12 @@ static func para(milyon_dolar: int) -> String:
 	return "%s $" % kisa(milyon_dolar * 1e6)
 
 
+## Türkçe büyük harf: "i" -> "İ", "ı" -> "I" (String.to_upper() dilden bağımsızdır ve "i"yi
+## "I" yapar). Örnek: "Birleşik Krallık" -> "BİRLEŞİK KRALLIK"
+static func buyuk_harf(metin: String) -> String:
+	return metin.replace("i", "İ").replace("ı", "I").to_upper()
+
+
 ## Sayıyı üç anlamlı basamağa indirir ve Türkçe ondalık virgülüyle yazar:
 ## 761.4 -> "761", 85.34 -> "85,3", 1.409 -> "1,41", 5.0 -> "5".
 static func _kisalt(deger: float) -> String:

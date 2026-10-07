@@ -705,6 +705,22 @@ Adımlar:
    `Bicim.kisa()` büyük sayıları kısaltır (1,2 Mn; 3,4 B). Ülke paleti `HaritaPaleti`'ne
    taşındı (Zaman'a bağlı olmasın diye). CLAUDE.md'ye kural 7 eklendi. Vitrin:
    docs/gorsel/stil_vitrini.jpg (`tests/bilesen_vitrini.gd`); sonra: docs/gorsel/adim1_stil/.
+3. ✅ Harita (ayrıntı STIL.md → Harita). Sonra: docs/gorsel/adim2_harita/ (16, 17: yeni modlar).
+   - Deniz `deniz.gdshader`: derinlik geçişi + iki katmanlı sinüs dalgası. Kıyıya yakınlık,
+     relief.png'nin deniz piksellerine yazıldı (`tools/kabartma_uret.py`, oyunun kendi
+     çokgenlerinden kara maskesi + üç bulanıklık katmanı); böylece tek doku kaldı. Dalga
+     zamanı yalnızca oyun akarken ilerler (dururken ekran yeniden çizilmesin, pil).
+   - Kara `kara.gdshader`: ülke rengi × kabartma (yakınlaşınca yumuşar) × kâğıt gürültüsü.
+     Yeni palet: tonu yakın renklerin açıklığı farklı.
+   - Ülke sınırına iki yanlı iç bant (`sinir_bandi.gdshader`; her sınırda `a` bölgesinin hangi
+     yanda kaldığı açılışta nokta-çokgen sınamasıyla bulunur). Kıyı koyu mavi, bölge sınırı soluk.
+   - Ülke adları: Cinzel (MSDF açıldı; tek taban boyutta çizilip ölçeklenir), büyük harf, harf
+     aralıklı; en büyük kara parçasının ikinci momentlerinden uzun eksen ve boy; uzun adlar iki
+     satır; orta çizgisi denize taşan ad küçültülür. Yerleşim ülke başına önbellekte (toprağı
+     değişmeyen ülke yeniden hesaplanmaz; tamamı ~20 ms).
+   - Bölge adları Inter 500 / 20 px; başkent rozeti; seçili bölgeye iç parıltı; oyuncuya altın çerçeve.
+   - Harita modları: Siyasi / Diplomasi / Ekonomi (`HaritaModuSecici`, `HaritaPaleti.Mod`).
+   - `tests/sim/bicim_testi.gd`: Bicim.kisa, Türkçe büyük harf, ekonomi merdiveni.
 
 ## Kararlar
 

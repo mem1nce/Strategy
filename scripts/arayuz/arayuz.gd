@@ -33,6 +33,8 @@ signal siralama_istendi
 signal menuye_donus_istendi
 ## Oyuncu bir bildirim kartına dokunduğunda, ilgili bölge id'siyle (yoksa boş) yayılır.
 signal bildirime_dokunuldu(bolge_id: String)
+## Haritanın sol kenarındaki mod düğmelerinden biri seçildi.
+signal harita_modu_degisti(mod: HaritaPaleti.Mod)
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
@@ -59,6 +61,7 @@ var _bildirim_kutusu: BildirimKutusu = null
 var _tumen_secim_paneli: TumenSecimPaneli = null
 var _teknoloji_paneli: TeknolojiPaneli = null
 var _serit: SeritPaneli = null
+var _mod_secici: HaritaModuSecici = null
 ## Android geri tuşuyla oyundan ana menüye dönmeden önce sorulan onay.
 var _menu_onayi: ConfirmationDialog = null
 
@@ -88,10 +91,19 @@ func kur(dunya: Dunya) -> void:
 	_ust_cubuk.siralama_degisti.connect(_siralama_degisti)
 	_ust_cubuk.teknoloji_degisti.connect(_teknoloji_degisti)
 
-	var bosluk: Control = Control.new()
-	bosluk.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bosluk.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dikey.add_child(bosluk)
+	# Üst çubukla alt panel arasındaki boşluk; sol kenarında harita modu düğmeleri durur
+	# (oyuncu ülkesini seçince belirir).
+	var orta: MarginContainer = MarginContainer.new()
+	orta.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	orta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	orta.add_theme_constant_override("margin_top", ArayuzTemasi.BOSLUK_2)
+	dikey.add_child(orta)
+	_mod_secici = HaritaModuSecici.new()
+	_mod_secici.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_mod_secici.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_mod_secici.hide()
+	orta.add_child(_mod_secici)
+	_mod_secici.mod_secildi.connect(func(mod: HaritaPaleti.Mod) -> void: harita_modu_degisti.emit(mod))
 
 	_bolge_paneli = BolgePaneli.new()
 	dikey.add_child(_bolge_paneli)
@@ -253,6 +265,7 @@ func birligi_goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 ## Oyuncunun ülkesini üst çubuğa yazar.
 func oyuncuyu_goster(ulke: Ulke) -> void:
 	_ust_cubuk.oyuncuyu_goster(ulke)
+	_mod_secici.show()
 
 
 ## Oyuncunun hazinesini üst çubuğa yazar.

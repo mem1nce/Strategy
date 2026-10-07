@@ -14,32 +14,53 @@ extends Node2D
 ##   ekranda görünen adlar çizilir.
 
 const SINIR_GOLGELENDIRICISI: Shader = preload("res://scripts/gorsel/sinir_cizgisi.gdshader")
+const DENIZ_GOLGELENDIRICISI: Shader = preload("res://scripts/gorsel/deniz.gdshader")
+const KARA_GOLGELENDIRICISI: Shader = preload("res://scripts/gorsel/kara.gdshader")
+const BANT_GOLGELENDIRICISI: Shader = preload("res://scripts/gorsel/sinir_bandi.gdshader")
+## Tek kabartma dokusu: karada gölgeli kabartma, denizde kıyıya yakınlık (bkz. tools/kabartma_uret.py).
+const KABARTMA: Texture2D = preload("res://assets/relief.png")
 
-const DENIZ_RENGI: Color = Color("#1e2a36")
+## Açık denizin rengi (deniz gölgelendiricisinin `derin_renk`i ile aynı); harita dışını boyar.
+const DENIZ_RENGI: Color = Color("#0D1B2A")
+## Deniz katmanı harita alanının bu katı kadar dışa taşar (kamera kenarda boşluk görmesin).
+const DENIZ_TASMASI: float = 1.0
 
 # Çizgi renkleri ve kalınlıkları (kalınlıklar ekran pikseli cinsindendir).
-const KIYI_RENGI: Color = Color(0.07, 0.09, 0.11, 0.9)
-const KIYI_KALINLIGI: float = 1.5
-const ULKE_SINIRI_RENGI: Color = Color(0.05, 0.06, 0.08, 0.95)
-const ULKE_SINIRI_KALINLIGI: float = 3.0
+## Kıyı çizgisi sınırlardan ayrı, denize yakın koyu bir mavidir.
+const KIYI_RENGI: Color = Color(0.03, 0.12, 0.18, 0.85)
+const KIYI_KALINLIGI: float = 1.4
+const ULKE_SINIRI_RENGI: Color = Color(0.03, 0.035, 0.05, 0.95)
+const ULKE_SINIRI_KALINLIGI: float = 2.6
 ## Uzaktan bakınca küçük ülkeler kalın çizgilerin altında kaybolmasın diye ülke sınırı incelir.
-const UZAK_ULKE_SINIRI_KALINLIGI: float = 1.8
-const BOLGE_SINIRI_RENGI: Color = Color(0.05, 0.06, 0.08, 0.4)
-const BOLGE_SINIRI_KALINLIGI: float = 1.2
+const UZAK_ULKE_SINIRI_KALINLIGI: float = 1.6
+const BOLGE_SINIRI_RENGI: Color = Color(0.05, 0.06, 0.08, 0.26)
+const BOLGE_SINIRI_KALINLIGI: float = 1.0
+## Ülke sınırının iki yanındaki, o yandaki ülkenin koyulaştırılmış renginde yumuşak bant.
+## Uzaktan dar, yakından geniştir (ekran pikseli).
+const ULKE_BANDI_KOYULUGU: float = 0.5
+const ULKE_BANDI_OPAKLIGI: float = 0.85
+const UZAK_ULKE_BANDI_GENISLIGI: float = 4.0
+const ULKE_BANDI_GENISLIGI: float = 11.0
 ## Çizgi köşelerindeki gönye payının üst sınırı (sivri köşelerde çizgi uzayıp gitmesin).
 const AZAMI_GONYE: float = 2.5
 
 # Çerçeveler.
-const SECIM_RENGI: Color = Color("#fff36b")
-const SECIM_KALINLIGI: float = 5.0
+## Seçili bölge: parlak kenar ve içe doğru solan açık parıltı.
+const SECIM_RENGI: Color = Color("#FFF1B8")
+const SECIM_KALINLIGI: float = 3.5
+const SECIM_PARILTISI_RENGI: Color = Color("#FFF4C9")
+const SECIM_PARILTISI_GENISLIGI: float = 26.0
+const UZAK_SECIM_PARILTISI_GENISLIGI: float = 5.0
+const SECIM_PARILTISI_OPAKLIGI: float = 0.75
 ## Seçili bölgenin ülkesi daha hafif bir çerçeveyle gösterilir.
-const SECILI_ULKE_RENGI: Color = Color(1.0, 0.95, 0.42, 0.6)
-const SECILI_ULKE_KALINLIGI: float = 2.5
-const OYUNCU_RENGI: Color = Color.WHITE
-const OYUNCU_KALINLIGI: float = 5.0
+const SECILI_ULKE_RENGI: Color = Color(1.0, 1.0, 1.0, 0.45)
+const SECILI_ULKE_KALINLIGI: float = 2.0
+## Oyuncunun ülkesi her zaman ince altın bir çerçeveyle (arayüzün vurgu rengi) belli olur.
+const OYUNCU_RENGI: Color = Color("#E6AE48")
+const OYUNCU_KALINLIGI: float = 2.5
 ## Oyuncuyla savaştaki ülkeleri işaretler (muharebe işaretiyle aynı kırmızı).
-const SAVAS_RENGI: Color = Color("#e03b3b")
-const SAVAS_KALINLIGI: float = 4.0
+const SAVAS_RENGI: Color = Color("#E25B5B")
+const SAVAS_KALINLIGI: float = 3.0
 ## Son "işgal cezası" günü içinde ele geçirilmiş, hâlâ ev sahibine dönmemiş bölgeleri
 ## işaretler (bkz. Oyun.bolge_isgal_altinda_mi).
 const ISGAL_RENGI: Color = Color("#e0943b")
@@ -66,27 +87,50 @@ const PARLAMA_OPAKLIGI: float = 0.55
 # Yazılar.
 const YAZI_RENGI: Color = Color.WHITE
 const YAZI_KENAR_RENGI: Color = Color(0.0, 0.0, 0.0, 0.8)
-const ASGARI_ULKE_ADI_BOYUTU: int = 24
-const AZAMI_ULKE_ADI_BOYUTU: int = 52
-## Ülke adının boyutu, ülkenin ekrandaki büyüklüğünün bu oranı kadardır.
-const ULKE_ADI_ORANI: float = 0.16
-## Ülke adı, ülkenin ekrandaki büyüklüğünün bu katından genişse gizlenir.
-const ULKE_ADI_SIGMA_ORANI: float = 1.5
-## Ülke ekranda bundan büyükse adı sığmasa da gösterilir (piksel).
-const HER_ZAMAN_YAZ_ESIGI: float = 100.0
+## Ülke adları: büyük harf, harf aralıklı Cinzel; ülkenin en büyük kara parçasının uzun ekseni
+## boyunca döndürülür ve parçaya sığacak boyutta yazılır (bkz. _ulke_olculerini_hesapla).
+## Tek bir taban boyutta (MSDF yazı tipi) çizilip ölçeklendiği için her boyutta keskindir.
+const ULKE_ADI_TABAN_BOYUTU: int = 64
+## Harfler arası ek boşluk (taban boyutun oranı).
+const ULKE_ADI_HARF_ARALIGI: float = 0.16
+## İki satırlık adlarda satır aralığı (yazı boyunun katı).
+const ULKE_ADI_SATIR_ARALIGI: float = 1.05
+## Ad karaya sığmazsa en çok bu kadar kez küçültülür.
+const ULKE_ADI_SIGDIRMA_DENEMESI: int = 6
+## Ad, kara parçasının o yöndeki uzunluğunun en çok bu kadarını kaplar...
+const ULKE_ADI_UZUNLUK_PAYI: float = 0.78
+## ...ve yazı boyu, parçanın yazıya dik kalınlığının bu kadarını geçmez.
+const ULKE_ADI_KALINLIK_PAYI: float = 0.4
+## Ad ekranda bundan küçük kalıyorsa yazılmaz (küçük ülkelerin adı yakınlaşınca belirir)...
+const ASGARI_ULKE_ADI_EKRAN_BOYU: float = 12.0
+## ...ve bundan büyük olmaz (piksel).
+const AZAMI_ULKE_ADI_EKRAN_BOYU: float = 110.0
+## Ad en çok bu kadar eğilir (dikleşen yazı okunmaz).
+const ULKE_ADI_AZAMI_ACI: float = deg_to_rad(65.0)
+## Uzunu enine yakın (yuvarlak) parçalarda ad yatay kalır: en/boy oranı bu aralıkta eğime geçer.
+const ULKE_ADI_EGIM_BASI: float = 1.2
+const ULKE_ADI_EGIM_SONU: float = 1.8
+## Ad, ülkenin renginin koyulaştırılmışı ile yarı saydam yazılır (zemine basılmış mürekkep gibi).
+const ULKE_ADI_MUREKKEP_KOYULUGU: float = 0.62
+const ULKE_ADI_OPAKLIGI: float = 0.8
+const ULKE_ADI_NOTR_MUREKKEP: Color = Color(0.04, 0.06, 0.09)
 ## Bölge adları belirince ülke adları bu opaklığa kadar solar...
 const SOLUK_ULKE_ADI_OPAKLIGI: float = 0.3
 ## ...ve bu iki yakınlık arasında tümüyle kaybolur.
 const ULKE_ADI_KAYBOLMA_BASI: float = 3.5
 const ULKE_ADI_KAYBOLMA_SONU: float = 6.0
-const BOLGE_ADI_BOYUTU: int = 24
+## Bölge adları ülke adlarından küçük ve incedir (Inter, orta ağırlık).
+const BOLGE_ADI_BOYUTU: int = 20
 ## Bölge adı, bölgenin ekrandaki büyüklüğünün bu katından genişse gizlenir.
 const BOLGE_ADI_SIGMA_ORANI: float = 1.1
 ## Bu yakınlıktan sonra bölge adı, bölgeye sığmasa da gösterilir (başka ada çarpmıyorsa).
 const BOLGE_ADI_SIGMA_SINIRI: float = 10.0
 ## İki ad arasında bırakılan en az boşluk (piksel).
 const YAZI_ARALIGI: float = 6.0
-const YILDIZ_YARICAPI: float = 13.0
+## Başkent rozeti: koyu daire, altın halka, içinde küçük yıldız.
+const YILDIZ_YARICAPI: float = 11.0
+const BASKENT_ROZETI_RENGI: Color = Color(0.055, 0.078, 0.114, 0.92)
+const BASKENT_HALKASI_RENGI: Color = Color("#E6AE48")
 ## Aynı bölgedeki bütün tümenler tek kutuda gösterilir: solda toplam güç, sağında her tür
 ## için işareti ve tümen sayısı. Bölge adları gibi yakınlıktan bağımsız sabit ekran
 ## boyutundadır; genişlik içerikle değişir, yükseklik ve en küçük genişlik sabittir.
@@ -156,16 +200,31 @@ var _animasyon_suruyor: bool = false
 var _ag: ArrayMesh = null
 var _vurgu_agi: ArrayMesh = null
 var _ust_katman: Node2D = null
+var _deniz: Node2D = null
+var _ulke_bandi: MeshInstance2D = null
+var _secim_parlamasi: MeshInstance2D = null
+## Her sınırın her noktasındaki gönye yönü (bkz. _sinir_geometrisini_hazirla).
+var _gonyeler: Array[PackedVector2Array] = []
+## Her sınır için `a` bölgesi çizginin artı yanında mı (1) değil mi (0).
+var _a_arti_yanda: PackedByteArray = PackedByteArray()
+## Dalgaların zamanı (saniye); yalnızca oyun akarken ilerler (bkz. _process).
+var _dalga_zamani: float = 0.0
 ## Sınır türü -> o türün çizgi katmanı.
 var _cizgi_katmanlari: Dictionary[SinirTuru, MeshInstance2D] = {}
 ## Her çokgenin üçgen indisleri (Dunya.cokgenler ile aynı sırada). Üçgenlenemeyenlerde boştur.
 var _ucgenler: Array[PackedInt32Array] = []
 ## Bölge id'si -> o bölgenin çokgenlerinin Dunya.cokgenler içindeki sıraları.
 var _bolge_cokgenleri: Dictionary[String, PackedInt32Array] = {}
-## Ülke id'si -> elindeki toprağın yaklaşık genişliği (harita birimi). Ad yazarken kullanılır.
-var _ulke_buyuklugu: Dictionary[String, float] = {}
-## Ülkeler, toprağı büyük olandan küçüğe. Adlar bu sırayla yazılır.
-var _ulke_adi_sirasi: Array[Ulke] = []
+## Ülke adlarının yerleşimi, en büyük kara parçası büyükten küçüğe (adlar bu sırayla yazılır):
+## {"ulke": Ulke, "ad": büyük harfli ad, "merkez": Vector2, "aci": float (radyan),
+## "boy": yazı boyu (harita birimi), "genislik": taban boyuttaki yazı genişliği (piksel)}.
+var _ulke_adlari: Array[Dictionary] = []
+var _ad_yazi_tipi: Font = null
+var _mod: HaritaPaleti.Mod = HaritaPaleti.Mod.SIYASI
+## Ekonomi modunda bölge id'si -> 0-1 arası sanayi oranı (bkz. _sanayi_oranlarini_hesapla).
+var _sanayi_oranlari: Dictionary[String, float] = {}
+## Ülke id'si -> {"anahtar": bölgelerinin id'leri, "yerlesim": _ulke_adlari öğesi}.
+var _ad_onbellegi: Dictionary[String, Dictionary] = {}
 ## Her bölgenin adının görünmeye başladığı yakınlık (Dunya.bolge_listesi ile aynı sırada).
 var _bolge_adi_esigi: PackedFloat32Array = PackedFloat32Array()
 var _bolge_adi_genisligi: PackedFloat32Array = PackedFloat32Array()
@@ -185,15 +244,36 @@ static func ulke_rengi(ulke: Ulke) -> Color:
 func kur(dunya: Dunya, oyun: Oyun) -> void:
 	_dunya = dunya
 	_oyun = oyun
-	_yazi_tipi = ThemeDB.fallback_font
+	_yazi_tipi = ArayuzTemasi.arayuz_fontu(500)
+	var ad_yazi_tipi: FontVariation = FontVariation.new()
+	ad_yazi_tipi.base_font = load(ArayuzTemasi.CINZEL)
+	ad_yazi_tipi.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 700}
+	ad_yazi_tipi.spacing_glyph = roundi(ULKE_ADI_TABAN_BOYUTU * ULKE_ADI_HARF_ARALIGI)
+	_ad_yazi_tipi = ad_yazi_tipi
 	RenderingServer.set_default_clear_color(DENIZ_RENGI)
 
+	# Dolgular bu düğümün kendi çizimidir; kara gölgelendiricisi yalnızca onlara uygulanır
+	# (alt düğümler kendi malzemelerini kullanır).
+	material = _harita_malzemesi(KARA_GOLGELENDIRICISI)
+	# Deniz, dolguların arkasında (show_behind_parent) harita alanından taşan tek bir dikdörtgendir.
+	_deniz = Node2D.new()
+	_deniz.name = "Deniz"
+	_deniz.show_behind_parent = true
+	_deniz.material = _harita_malzemesi(DENIZ_GOLGELENDIRICISI)
+	add_child(_deniz)
+	_deniz.draw.connect(func() -> void:
+		_deniz.draw_rect(Rect2(Vector2.ZERO, _dunya.boyut).grow(_dunya.boyut.x * DENIZ_TASMASI), Color.WHITE))
+
 	_cokgenleri_hazirla()
+	_sinir_geometrisini_hazirla()
 	_bolge_adi_esiklerini_hesapla()
 
+	# Çizim sırası: bantlar, bölge sınırları, kıyı, ülke sınırları, seçim parıltısı, üst katman.
+	_ulke_bandi = _bant_katmani_ekle("UlkeBandi", ULKE_BANDI_GENISLIGI, ULKE_BANDI_OPAKLIGI)
 	_cizgi_katmani_ekle(SinirTuru.BOLGE, BOLGE_SINIRI_RENGI, BOLGE_SINIRI_KALINLIGI)
 	_cizgi_katmani_ekle(SinirTuru.KIYI, KIYI_RENGI, KIYI_KALINLIGI)
 	_cizgi_katmani_ekle(SinirTuru.ULKE, ULKE_SINIRI_RENGI, ULKE_SINIRI_KALINLIGI)
+	_secim_parlamasi = _bant_katmani_ekle("SecimParlamasi", SECIM_PARILTISI_GENISLIGI, SECIM_PARILTISI_OPAKLIGI)
 
 	_ust_katman = Node2D.new()
 	_ust_katman.name = "UstKatman"
@@ -211,6 +291,8 @@ func gorunumu_ayarla(merkez: Vector2, yakinlik: float, ekran: Vector2) -> void:
 	if not is_equal_approx(yeni_yakinlik, _yakinlik):
 		_yakinlik = yeni_yakinlik
 		_cizgi_katmanlarini_guncelle()
+		(material as ShaderMaterial).set_shader_parameter("yakinlik", _yakinlik)
+		(_deniz.material as ShaderMaterial).set_shader_parameter("yakinlik", _yakinlik)
 	_ust_katmani_yenile()
 
 
@@ -218,6 +300,7 @@ func gorunumu_ayarla(merkez: Vector2, yakinlik: float, ekran: Vector2) -> void:
 func secimi_ayarla(bolge_id: String) -> void:
 	_secili_bolge = bolge_id
 	_cerceveleri_guncelle()
+	_secim_parlamasini_kur()
 	_vurgu_agini_kur()
 	_ust_katmani_yenile()
 
@@ -226,6 +309,8 @@ func secimi_ayarla(bolge_id: String) -> void:
 func oyuncuyu_ayarla(ulke_id: String) -> void:
 	_oyuncu = ulke_id
 	_cerceveleri_guncelle()
+	if _mod != HaritaPaleti.Mod.SIYASI:
+		_modu_yenile()
 	_ust_katmani_yenile()
 
 
@@ -244,9 +329,24 @@ func sisi_yenile() -> void:
 	_ust_katmani_yenile()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _animasyon_suruyor:
 		_ust_katmani_yenile()
+	# Dalgalar yalnızca oyun akarken kıpırdar: dururken ekran yeniden çizilmez ve işlemci
+	# dinlenir (bkz. main.gd, _guc_modunu_guncelle).
+	if _deniz != null and not Zaman.durdu and not Zaman.kilitli and not Ayarlar.animasyonlar_azaltilmis:
+		_dalga_zamani = fmod(_dalga_zamani + delta, 3600.0)
+		(_deniz.material as ShaderMaterial).set_shader_parameter("zaman", _dalga_zamani)
+
+
+## Kara ve deniz gölgelendiricileri için ortak malzeme: kabartma dokusu ve harita boyutu.
+func _harita_malzemesi(golgelendirici: Shader) -> ShaderMaterial:
+	var malzeme: ShaderMaterial = ShaderMaterial.new()
+	malzeme.shader = golgelendirici
+	malzeme.set_shader_parameter("kabartma", KABARTMA)
+	malzeme.set_shader_parameter("harita_boyutu", _dunya.boyut)
+	malzeme.set_shader_parameter("yakinlik", _yakinlik)
+	return malzeme
 
 
 ## Animasyonlar şu an oynatılsın mı? Ayarlarda azaltılmışsa ya da oyun en yüksek hızda
@@ -297,6 +397,8 @@ func birlikleri_yenile() -> void:
 ## çerçevesini günceller.
 func savaslari_yenile() -> void:
 	_cerceveleri_guncelle()
+	if _mod == HaritaPaleti.Mod.DIPLOMASI:
+		_modu_yenile()
 	_ust_katmani_yenile()
 
 
@@ -314,11 +416,16 @@ func isgalleri_yenile(su_anki_saat: int) -> void:
 			var sinir: Sinir = _dunya.sinirlar[i]
 			if isgalliler.has(sinir.a) or isgalliler.has(sinir.b):
 				_isgalli_bolge_sinirlari.append(i)
+	# Sanayi her gün değişebilir (fabrika bitti, işgal cezası doldu).
+	if _mod == HaritaPaleti.Mod.EKONOMI:
+		_modu_yenile()
 	_ust_katmani_yenile()
 
 
 ## Bölgelerin sahipliği değiştiğinde haritayı baştan boyar ve sınırları yeniden sınıflandırır.
 func yenile() -> void:
+	if _mod == HaritaPaleti.Mod.EKONOMI:
+		_sanayi_oranlarini_hesapla()
 	_dolgu_agini_kur()
 	for tur: SinirTuru in _cizgi_katmanlari:
 		_cizgi_katmanlari[tur].mesh = _cizgi_agini_kur(tur)
@@ -372,13 +479,64 @@ func _dolgu_agini_kur() -> void:
 	var siralar: PackedInt32Array = PackedInt32Array()
 	var renkler: PackedColorArray = PackedColorArray()
 	for i: int in _dunya.cokgenler.size():
-		var bolge_id: String = _dunya.cokgenler[i].bolge_id
-		var renk: Color = ulke_rengi(_dunya.bolgenin_sahibi(bolge_id))
-		if _oyun != null and not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
-			renk = renk.darkened(SIS_KARARTMASI)
 		siralar.append(i)
-		renkler.append(renk)
+		renkler.append(_bolge_dolgu_rengi(_dunya.cokgenler[i].bolge_id))
 	_ag = _ucgen_agi(siralar, renkler)
+	# Ülke bantları dolgunun rengini taşır; dolgu değişince onlar da yenilenir.
+	_ulke_bantlarini_kur()
+
+
+## Bölgenin dolgu rengi harita moduna göre: siyasi modda sahibinin rengi, diplomasi modunda
+## sahibinin oyuncuyla ilişkisi, ekonomi modunda sanayisi. Oyuncunun görmediği bölge biraz koyu.
+func _bolge_dolgu_rengi(bolge_id: String) -> Color:
+	var renk: Color = ulke_rengi(_dunya.bolgenin_sahibi(bolge_id))
+	match _mod:
+		HaritaPaleti.Mod.DIPLOMASI:
+			var sahip: String = _dunya.bolgeler[bolge_id].sahip
+			if sahip == _oyuncu:
+				renk = HaritaPaleti.BEN_RENGI
+			elif _oyuncu != "" and _oyun.savasta_mi(_oyuncu, sahip):
+				renk = HaritaPaleti.DUSMAN_RENGI
+			else:
+				renk = HaritaPaleti.TARAFSIZ_RENGI
+		HaritaPaleti.Mod.EKONOMI:
+			renk = HaritaPaleti.ekonomi_rengi(_sanayi_oranlari.get(bolge_id, 0.0))
+	if _oyun != null and not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
+		renk = renk.darkened(SIS_KARARTMASI)
+	return renk
+
+
+## Harita modunu değiştirir (bkz. HaritaPaleti.Mod).
+func modu_ayarla(mod: HaritaPaleti.Mod) -> void:
+	_mod = mod
+	_modu_yenile()
+
+
+## Diplomasi ve ekonomi modlarında renkler oyun durumuna bağlıdır; durum değişince çağrılır.
+func _modu_yenile() -> void:
+	if _mod == HaritaPaleti.Mod.EKONOMI:
+		_sanayi_oranlarini_hesapla()
+	_dolgu_agini_kur()
+	queue_redraw()
+	_ust_katmani_yenile()
+
+
+## Ekonomi modu için her bölgenin sanayisini en sanayili bölgeye oranlar. Logaritmik ölçek:
+## az sanayili bölgeler arasındaki fark da görünsün.
+func _sanayi_oranlarini_hesapla() -> void:
+	_sanayi_oranlari = {}
+	if _oyun == null:
+		return
+	var saat: int = Zaman.toplam_saat
+	var en_cok: float = 0.0
+	var sanayiler: Dictionary[String, float] = {}
+	for bolge: Bolge in _dunya.bolge_listesi:
+		var sanayi: float = maxf(_oyun.bolge_sanayisi(bolge, saat), 0.0)
+		sanayiler[bolge.id] = sanayi
+		en_cok = maxf(en_cok, sanayi)
+	var bolen: float = log(1.0 + en_cok)
+	for bolge_id: String in sanayiler:
+		_sanayi_oranlari[bolge_id] = log(1.0 + sanayiler[bolge_id]) / bolen if bolen > 0.0 else 0.0
 
 
 ## Verilen çokgenleri (Dunya.cokgenler sıralarıyla) verilen renklerle tek bir ağ yapar.
@@ -465,44 +623,21 @@ func _cizgi_agini_kur(tur: SinirTuru) -> ArrayMesh:
 	var yanlar: PackedColorArray = PackedColorArray()
 	var indisler: PackedInt32Array = PackedInt32Array()
 
-	for sinir: Sinir in _dunya.sinirlar:
+	for s: int in _dunya.sinirlar.size():
+		var sinir: Sinir = _dunya.sinirlar[s]
 		if _sinir_turu(sinir) != tur:
 			continue
 		var noktalar: PackedVector2Array = sinir.noktalar
 		var adet: int = noktalar.size()
 		if adet < 2:
 			continue
-		# Başı ve sonu aynı olan çizgi kapalıdır (ör. bir adanın kıyısı).
-		var kapali: bool = adet > 3 and noktalar[0].is_equal_approx(noktalar[adet - 1])
+		var gonyeler: PackedVector2Array = _gonyeler[s]
 		var taban: int = koseler.size()
 		for i: int in adet:
-			var onceki: Vector2 = noktalar[i]
-			var sonraki: Vector2 = noktalar[i]
-			if i > 0:
-				onceki = noktalar[i - 1]
-			elif kapali:
-				onceki = noktalar[adet - 2]
-			if i < adet - 1:
-				sonraki = noktalar[i + 1]
-			elif kapali:
-				sonraki = noktalar[1]
-			var gelen: Vector2 = (noktalar[i] - onceki).normalized()
-			var giden: Vector2 = (sonraki - noktalar[i]).normalized()
-			if gelen == Vector2.ZERO:
-				gelen = giden
-			if giden == Vector2.ZERO:
-				giden = gelen
-			# Köşede iki kenarın dik yönlerinin ortası alınır ve çizgi incelmesin diye uzatılır.
-			var dik: Vector2 = giden.orthogonal()
-			var gonye: Vector2 = (gelen.orthogonal() + dik).normalized()
-			if gonye == Vector2.ZERO:
-				gonye = dik
-			gonye *= 1.0 / maxf(gonye.dot(dik), 1.0 / AZAMI_GONYE)
-
 			koseler.append(noktalar[i])
 			koseler.append(noktalar[i])
-			yonler.append(gonye)
-			yonler.append(-gonye)
+			yonler.append(gonyeler[i])
+			yonler.append(-gonyeler[i])
 			yanlar.append(Color(1.0, 1.0, 1.0))
 			yanlar.append(Color(0.0, 1.0, 1.0))
 		for i: int in adet - 1:
@@ -527,6 +662,153 @@ func _cizgi_agini_kur(tur: SinirTuru) -> ArrayMesh:
 	return ag
 
 
+## Her sınırın her noktası için gönye yönünü bir kez hesaplar: çizginin "artı" yanına
+## (gidiş yönünün `orthogonal()`'ı) dönük, köşelerde iki kenarın dik yönlerinin ortası, çizgi
+## köşede incelmesin diye uzatılmış. Ayrıca her sınırda `a` bölgesinin hangi yanda kaldığını
+## bulur (bantlar sınırın yalnızca bir yanına çizilir). Sınırların yeri hiç değişmez.
+func _sinir_geometrisini_hazirla() -> void:
+	_gonyeler = []
+	_a_arti_yanda = PackedByteArray()
+	_a_arti_yanda.resize(_dunya.sinirlar.size())
+	for s: int in _dunya.sinirlar.size():
+		var noktalar: PackedVector2Array = _dunya.sinirlar[s].noktalar
+		var adet: int = noktalar.size()
+		var gonyeler: PackedVector2Array = PackedVector2Array()
+		gonyeler.resize(adet)
+		# Başı ve sonu aynı olan çizgi kapalıdır (ör. bir adanın kıyısı).
+		var kapali: bool = adet > 3 and noktalar[0].is_equal_approx(noktalar[adet - 1])
+		for i: int in adet:
+			var onceki: Vector2 = noktalar[i]
+			var sonraki: Vector2 = noktalar[i]
+			if i > 0:
+				onceki = noktalar[i - 1]
+			elif kapali:
+				onceki = noktalar[adet - 2]
+			if i < adet - 1:
+				sonraki = noktalar[i + 1]
+			elif kapali:
+				sonraki = noktalar[1]
+			var gelen: Vector2 = (noktalar[i] - onceki).normalized()
+			var giden: Vector2 = (sonraki - noktalar[i]).normalized()
+			if gelen == Vector2.ZERO:
+				gelen = giden
+			if giden == Vector2.ZERO:
+				giden = gelen
+			var dik: Vector2 = giden.orthogonal()
+			var gonye: Vector2 = (gelen.orthogonal() + dik).normalized()
+			if gonye == Vector2.ZERO:
+				gonye = dik
+			gonyeler[i] = gonye / maxf(gonye.dot(dik), 1.0 / AZAMI_GONYE)
+		_gonyeler.append(gonyeler)
+		_a_arti_yanda[s] = 1 if _a_arti_yanda_mi(_dunya.sinirlar[s]) else 0
+
+
+## Sınırın en uzun parçasının ortasından artı yana küçük bir adım atılır; o nokta `a`
+## bölgesinin içindeyse `a` artı yandadır. Karar verilemezse (çok ince bölge) öbür yana bakılır.
+func _a_arti_yanda_mi(sinir: Sinir) -> bool:
+	var noktalar: PackedVector2Array = sinir.noktalar
+	var en_uzun: int = 0
+	var uzunluk: float = -1.0
+	for i: int in noktalar.size() - 1:
+		var l: float = noktalar[i].distance_squared_to(noktalar[i + 1])
+		if l > uzunluk:
+			uzunluk = l
+			en_uzun = i
+	if noktalar.size() < 2:
+		return true
+	var orta: Vector2 = (noktalar[en_uzun] + noktalar[en_uzun + 1]) * 0.5
+	var dik: Vector2 = (noktalar[en_uzun + 1] - noktalar[en_uzun]).normalized().orthogonal()
+	var adim: float = clampf(sqrt(uzunluk) * 0.25, 0.01, 0.3)
+	if _bolge_noktayi_iceriyor_mu(sinir.a, orta + dik * adim):
+		return true
+	if _bolge_noktayi_iceriyor_mu(sinir.a, orta - dik * adim):
+		return false
+	return not (sinir.b != "" and _bolge_noktayi_iceriyor_mu(sinir.b, orta + dik * adim))
+
+
+func _bolge_noktayi_iceriyor_mu(bolge_id: String, nokta: Vector2) -> bool:
+	for sira: int in _bolge_cokgenleri.get(bolge_id, PackedInt32Array()):
+		if Geometry2D.is_point_in_polygon(nokta, _dunya.cokgenler[sira].noktalar):
+			return true
+	return false
+
+
+## Verilen sınırların, `renk_bul`un renk verdiği yanına (bölge id'si -> renk; opaklığı 0 olan
+## yan atlanır) içe doğru solan bir bant ağı kurar (bkz. sinir_bandi.gdshader).
+func _bant_agi(sinir_siralari: PackedInt32Array, renk_bul: Callable) -> ArrayMesh:
+	var koseler: PackedVector2Array = PackedVector2Array()
+	var yonler: PackedVector2Array = PackedVector2Array()
+	var renkler: PackedColorArray = PackedColorArray()
+	var indisler: PackedInt32Array = PackedInt32Array()
+	for s: int in sinir_siralari:
+		var sinir: Sinir = _dunya.sinirlar[s]
+		var noktalar: PackedVector2Array = sinir.noktalar
+		var adet: int = noktalar.size()
+		if adet < 2:
+			continue
+		var a_isareti: float = 1.0 if _a_arti_yanda[s] == 1 else -1.0
+		for yan: Array in [[sinir.a, a_isareti], [sinir.b, -a_isareti]]:
+			if yan[0] == "":
+				continue
+			var renk: Color = renk_bul.call(yan[0])
+			if renk.a <= 0.0:
+				continue
+			var taban: int = koseler.size()
+			for i: int in adet:
+				koseler.append(noktalar[i])
+				koseler.append(noktalar[i])
+				yonler.append(Vector2.ZERO)
+				yonler.append(_gonyeler[s][i] * float(yan[1]))
+				renkler.append(Color(renk, 1.0))
+				renkler.append(Color(renk, 0.0))
+			for i: int in adet - 1:
+				var k: int = taban + i * 2
+				indisler.append_array([k, k + 1, k + 2, k + 1, k + 3, k + 2])
+	if indisler.is_empty():
+		return null
+	var diziler: Array = []
+	diziler.resize(Mesh.ARRAY_MAX)
+	diziler[Mesh.ARRAY_VERTEX] = koseler
+	diziler[Mesh.ARRAY_TEX_UV] = yonler
+	diziler[Mesh.ARRAY_COLOR] = renkler
+	diziler[Mesh.ARRAY_INDEX] = indisler
+	var ag: ArrayMesh = ArrayMesh.new()
+	ag.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, diziler)
+	return ag
+
+
+func _bant_katmani_ekle(ad: String, genislik: float, opaklik: float) -> MeshInstance2D:
+	var malzeme: ShaderMaterial = ShaderMaterial.new()
+	malzeme.shader = BANT_GOLGELENDIRICISI
+	malzeme.set_shader_parameter("genislik", genislik)
+	malzeme.set_shader_parameter("opaklik", opaklik)
+	var katman: MeshInstance2D = MeshInstance2D.new()
+	katman.name = ad
+	katman.material = malzeme
+	add_child(katman)
+	return katman
+
+
+## Ülke sınırlarının iki yanına, o yandaki dolgunun koyulaştırılmış renginde bant çizer.
+func _ulke_bantlarini_kur() -> void:
+	var siralar: PackedInt32Array = PackedInt32Array()
+	for s: int in _dunya.sinirlar.size():
+		if _sinir_turu(_dunya.sinirlar[s]) == SinirTuru.ULKE:
+			siralar.append(s)
+	_ulke_bandi.mesh = _bant_agi(siralar, func(bolge_id: String) -> Color:
+		return _bolge_dolgu_rengi(bolge_id).darkened(ULKE_BANDI_KOYULUGU))
+
+
+## Seçili bölgenin içine, kenarlarından içe doğru solan açık bir parıltı çizer.
+func _secim_parlamasini_kur() -> void:
+	if not _dunya.bolgeler.has(_secili_bolge):
+		_secim_parlamasi.mesh = null
+		return
+	var secili: String = _secili_bolge
+	_secim_parlamasi.mesh = _bant_agi(_secili_bolge_sinirlari, func(bolge_id: String) -> Color:
+		return SECIM_PARILTISI_RENGI if bolge_id == secili else Color(0.0, 0.0, 0.0, 0.0))
+
+
 ## Bölge ayrıntılarının o anki görünürlüğü: uzaktan 0, yakından 1.
 func _bolge_gorunurlugu() -> float:
 	return smoothstep(BOLGE_BELIRME_BASI, BOLGE_BELIRME_SONU, _yakinlik)
@@ -540,6 +822,15 @@ func _cizgi_katmanlarini_guncelle() -> void:
 	var gorunurluk: float = _bolge_gorunurlugu()
 	(_cizgi_katmanlari[SinirTuru.ULKE].material as ShaderMaterial).set_shader_parameter(
 			"kalinlik", lerpf(UZAK_ULKE_SINIRI_KALINLIGI, ULKE_SINIRI_KALINLIGI, gorunurluk))
+	var bant: ShaderMaterial = _ulke_bandi.material as ShaderMaterial
+	bant.set_shader_parameter("yakinlik", _yakinlik)
+	bant.set_shader_parameter("genislik", lerpf(UZAK_ULKE_BANDI_GENISLIGI, ULKE_BANDI_GENISLIGI,
+			smoothstep(0.5, BOLGE_BELIRME_SONU, _yakinlik)))
+	var parilti: ShaderMaterial = _secim_parlamasi.material as ShaderMaterial
+	parilti.set_shader_parameter("yakinlik", _yakinlik)
+	# Uzaktan bölgeler küçüktür: geniş parıltı bölgeyi taşar, bu yüzden daralır.
+	parilti.set_shader_parameter("genislik", lerpf(UZAK_SECIM_PARILTISI_GENISLIGI, SECIM_PARILTISI_GENISLIGI,
+			smoothstep(0.5, BOLGE_BELIRME_SONU, _yakinlik)))
 	var bolge_katmani: MeshInstance2D = _cizgi_katmanlari[SinirTuru.BOLGE]
 	bolge_katmani.visible = gorunurluk > 0.0
 	(bolge_katmani.material as ShaderMaterial).set_shader_parameter(
@@ -618,54 +909,267 @@ func _ust_katmani_ciz() -> void:
 	_ust_katman.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## Her ülkenin elindeki toprağın büyüklüğünü ölçer ve ülkeleri büyükten küçüğe sıralar.
+## Her ülkenin adının yerini, açısını ve boyunu bulur (sahiplik her değiştiğinde).
+##
+## Ad, ülkenin en büyük kara parçasına (kara komşuluğuyla birbirine bağlı bölgelerin en geniş
+## öbeği) yazılır. Parçanın ağırlık merkezi ve ikinci momentlerinden uzun ekseni bulunur; ad
+## bu eksen boyunca döner ve parçayı eşdeğer bir elips sayarak o yöne sığacak boyda yazılır.
 func _ulke_olculerini_hesapla() -> void:
-	var alanlar: Dictionary[String, float] = {}
+	var sahipler: Dictionary[String, Array] = {}
 	for bolge: Bolge in _dunya.bolge_listesi:
-		alanlar[bolge.sahip] = alanlar.get(bolge.sahip, 0.0) + bolge.alan
-	_ulke_buyuklugu = {}
-	_ulke_adi_sirasi = []
-	for ulke: Ulke in _dunya.ulke_listesi:
-		if alanlar.has(ulke.id):
-			_ulke_buyuklugu[ulke.id] = sqrt(alanlar[ulke.id])
-			_ulke_adi_sirasi.append(ulke)
-	_ulke_adi_sirasi.sort_custom(func(a: Ulke, b: Ulke) -> bool:
-		return _ulke_buyuklugu[a.id] > _ulke_buyuklugu[b.id])
+		if not sahipler.has(bolge.sahip):
+			sahipler[bolge.sahip] = []
+		sahipler[bolge.sahip].append(bolge)
+	_ulke_adlari = []
+	var onbellek: Dictionary[String, Dictionary] = {}
+	for ulke_id: String in sahipler:
+		var ulke: Ulke = _dunya.ulkeler.get(ulke_id)
+		if ulke == null:
+			continue
+		# Toprağı değişmeyen ülkenin yerleşimi yeniden hesaplanmaz (savaşta her el değiştirmede
+		# yalnızca iki ülke değişir).
+		var anahtar: String = ",".join(PackedStringArray(sahipler[ulke_id].map(func(b: Bolge) -> String: return b.id)))
+		var yerlesim: Dictionary = {}
+		if _ad_onbellegi.has(ulke_id) and _ad_onbellegi[ulke_id]["anahtar"] == anahtar:
+			yerlesim = _ad_onbellegi[ulke_id]["yerlesim"]
+		else:
+			yerlesim = _ad_yerlesimi(ulke, _en_buyuk_kara_parcasi(sahipler[ulke_id]))
+		onbellek[ulke_id] = {"anahtar": anahtar, "yerlesim": yerlesim}
+		if not yerlesim.is_empty():
+			_ulke_adlari.append(yerlesim)
+	_ad_onbellegi = onbellek
+	_ulke_adlari.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["alan"] > b["alan"])
 
 
-## Ülke adlarını yazar. Uzaktan yalnızca büyük ülkelerin adı görünür; yakınlaştıkça ülke
-## ekranda büyür ve adı sığmaya başlar. Bölge adları belirince ülke adları solar.
-## Adlar üst üste binmez: büyük ülkeden küçüğe yazılır, önceki bir ada çarpan ad atlanır.
-func _ulke_adlarini_ciz(gorunen: Rect2, olcek: float) -> void:
-	var opaklik: float = lerpf(1.0, SOLUK_ULKE_ADI_OPAKLIGI, _bolge_gorunurlugu()) 			* (1.0 - smoothstep(ULKE_ADI_KAYBOLMA_BASI, ULKE_ADI_KAYBOLMA_SONU, _yakinlik))
+## Bir ülkenin bölgelerinden, kara komşuluğuyla birbirine bağlı en geniş öbek.
+func _en_buyuk_kara_parcasi(bolgeler: Array) -> Array[Bolge]:
+	var kalan: Dictionary[String, Bolge] = {}
+	for bolge: Bolge in bolgeler:
+		kalan[bolge.id] = bolge
+	var en_buyuk: Array[Bolge] = []
+	var en_buyuk_alan: float = -1.0
+	while not kalan.is_empty():
+		var ilk: String = kalan.keys()[0]
+		var obek: Array[Bolge] = [kalan[ilk]]
+		kalan.erase(ilk)
+		var alan: float = 0.0
+		var i: int = 0
+		while i < obek.size():
+			alan += obek[i].alan
+			for komsu: String in obek[i].kara_komsulari:
+				if kalan.has(komsu):
+					obek.append(kalan[komsu])
+					kalan.erase(komsu)
+			i += 1
+		if alan > en_buyuk_alan:
+			en_buyuk_alan = alan
+			en_buyuk = obek
+	return en_buyuk
+
+
+## Kara parçasının üçgenlerinden alan, ağırlık merkezi ve ikinci momentleri; bunlardan adın
+## merkezi, açısı ve boyu. Parça boşsa boş sözlük döner.
+func _ad_yerlesimi(ulke: Ulke, parca: Array[Bolge]) -> Dictionary:
+	var s: float = 0.0
+	var sx: float = 0.0
+	var sy: float = 0.0
+	var sxx: float = 0.0
+	var syy: float = 0.0
+	var sxy: float = 0.0
+	for bolge: Bolge in parca:
+		for sira: int in _bolge_cokgenleri.get(bolge.id, PackedInt32Array()):
+			var n: PackedVector2Array = _dunya.cokgenler[sira].noktalar
+			var u: PackedInt32Array = _ucgenler[sira]
+			for k: int in range(0, u.size(), 3):
+				var p1: Vector2 = n[u[k]]
+				var p2: Vector2 = n[u[k + 1]]
+				var p3: Vector2 = n[u[k + 2]]
+				var a: float = absf((p2 - p1).cross(p3 - p1)) * 0.5
+				s += a
+				sx += a * (p1.x + p2.x + p3.x) / 3.0
+				sy += a * (p1.y + p2.y + p3.y) / 3.0
+				sxx += a / 6.0 * (p1.x * p1.x + p2.x * p2.x + p3.x * p3.x + p1.x * p2.x + p2.x * p3.x + p3.x * p1.x)
+				syy += a / 6.0 * (p1.y * p1.y + p2.y * p2.y + p3.y * p3.y + p1.y * p2.y + p2.y * p3.y + p3.y * p1.y)
+				sxy += a / 12.0 * (2.0 * (p1.x * p1.y + p2.x * p2.y + p3.x * p3.y)
+						+ p1.x * p2.y + p2.x * p1.y + p1.x * p3.y + p3.x * p1.y + p2.x * p3.y + p3.x * p2.y)
+	if s <= 0.0:
+		return {}
+	var merkez: Vector2 = Vector2(sx / s, sy / s)
+	var cxx: float = maxf(sxx / s - merkez.x * merkez.x, 0.0)
+	var cyy: float = maxf(syy / s - merkez.y * merkez.y, 0.0)
+	var cxy: float = sxy / s - merkez.x * merkez.y
+	var yari_fark: float = sqrt((cxx - cyy) * (cxx - cyy) * 0.25 + cxy * cxy)
+	# Düzgün bir dikdörtgende varyans uzunluk² / 12'dir: eşdeğer uzunluk ve kalınlık.
+	var uzunluk: float = sqrt(12.0 * ((cxx + cyy) * 0.5 + yari_fark))
+	var kalinlik: float = sqrt(12.0 * maxf((cxx + cyy) * 0.5 - yari_fark, 0.0))
+	var eksen_acisi: float = 0.5 * atan2(2.0 * cxy, cxx - cyy)
+	var egim: float = smoothstep(ULKE_ADI_EGIM_BASI, ULKE_ADI_EGIM_SONU, uzunluk / maxf(kalinlik, 0.001))
+	var aci: float = clampf(eksen_acisi * egim, -ULKE_ADI_AZAMI_ACI, ULKE_ADI_AZAMI_ACI)
+
+	# Yazının yönünde ve ona dik yönde parçanın (elips sayılarak) ne kadar yer verdiği.
+	var fark: float = aci - eksen_acisi
+	var yer: float = _elips_capi(uzunluk, kalinlik, fark)
+	var dik_yer: float = _elips_capi(uzunluk, kalinlik, fark + PI * 0.5)
+	# Ad tek satırda ya da (birden çok sözcükse) iki satırda yazılır; hangisi daha büyük
+	# sığıyorsa o seçilir ("ÇİN HALK / CUMHURİYETİ").
+	var en_iyi: Dictionary = {}
+	for satirlar: PackedStringArray in _satir_secenekleri(Bicim.buyuk_harf(ulke.ad)):
+		var genislikler: PackedFloat32Array = PackedFloat32Array()
+		var genislik: float = 0.0
+		for satir: String in satirlar:
+			var g: float = _ad_yazi_tipi.get_string_size(satir, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+					ULKE_ADI_TABAN_BOYUTU).x
+			genislikler.append(g)
+			genislik = maxf(genislik, g)
+		var yukseklik: float = 1.0 + ULKE_ADI_SATIR_ARALIGI * (satirlar.size() - 1)
+		var boy: float = minf(yer * ULKE_ADI_UZUNLUK_PAYI * ULKE_ADI_TABAN_BOYUTU / maxf(genislik, 1.0),
+				dik_yer * ULKE_ADI_KALINLIK_PAYI / yukseklik)
+		if en_iyi.is_empty() or boy > float(en_iyi["boy"]) * 1.1:
+			en_iyi = {"satirlar": satirlar, "satir_genislikleri": genislikler, "genislik": genislik, "boy": boy}
+
+	# Ağırlık merkezi parçanın dışına düşüyorsa (hilal biçimli ülkeler) en geniş bölgenin
+	# etiket noktası kullanılır.
+	var icinde: bool = false
+	var en_genis: Bolge = parca[0]
+	for bolge: Bolge in parca:
+		if bolge.alan > en_genis.alan:
+			en_genis = bolge
+		if not icinde and _bolge_noktayi_iceriyor_mu(bolge.id, merkez):
+			icinde = true
+	if not icinde:
+		merkez = en_genis.etiket
+
+	# Elips yaklaşımı eğri ülkelerde (ör. İtalya) adı denize taşırabilir: adın orta çizgisi
+	# boyunca birkaç nokta karada değilse ad küçültülür.
+	var yon: Vector2 = Vector2.RIGHT.rotated(aci)
+	var boy_son: float = en_iyi["boy"]
+	for deneme: int in ULKE_ADI_SIGDIRMA_DENEMESI:
+		var yari_uzunluk: float = float(en_iyi["genislik"]) * boy_son / ULKE_ADI_TABAN_BOYUTU * 0.5
+		var hepsi_karada: bool = true
+		for k: int in 7:
+			var nokta: Vector2 = merkez + yon * yari_uzunluk * (float(k) / 3.0 - 1.0)
+			if not _parca_noktayi_iceriyor_mu(parca, nokta):
+				hepsi_karada = false
+				break
+		if hepsi_karada:
+			break
+		boy_son *= 0.82
+	en_iyi["boy"] = boy_son
+	en_iyi.merge({"ulke": ulke, "merkez": merkez, "aci": aci, "alan": s})
+	return en_iyi
+
+
+## Adın yazılabileceği satır düzenleri: tek satır ve (birden çok sözcükse) iki satırlık en
+## dengeli bölünüş.
+static func _satir_secenekleri(ad: String) -> Array[PackedStringArray]:
+	var secenekler: Array[PackedStringArray] = [PackedStringArray([ad])]
+	var sozcukler: PackedStringArray = ad.split(" ", false)
+	if sozcukler.size() < 2:
+		return secenekler
+	var en_iyi: PackedStringArray = PackedStringArray()
+	var en_iyi_fark: int = 1 << 30
+	for i: int in range(1, sozcukler.size()):
+		var ust: String = " ".join(sozcukler.slice(0, i))
+		var alt: String = " ".join(sozcukler.slice(i))
+		var fark: int = absi(ust.length() - alt.length())
+		if fark < en_iyi_fark:
+			en_iyi_fark = fark
+			en_iyi = PackedStringArray([ust, alt])
+	secenekler.append(en_iyi)
+	return secenekler
+
+
+func _parca_noktayi_iceriyor_mu(parca: Array[Bolge], nokta: Vector2) -> bool:
+	for bolge: Bolge in parca:
+		if _bolge_noktayi_iceriyor_mu(bolge.id, nokta):
+			return true
+	return false
+
+
+## Uzunluğu `uzunluk`, kalınlığı `kalinlik` olan elipsin, büyük ekseninden `aci` kadar dönük
+## yöndeki çapı.
+static func _elips_capi(uzunluk: float, kalinlik: float, aci: float) -> float:
+	var a: float = maxf(uzunluk, 0.001)
+	var b: float = maxf(kalinlik, 0.001)
+	return 1.0 / sqrt(pow(cos(aci) / a, 2.0) + pow(sin(aci) / b, 2.0))
+
+
+## Ülke adlarını yazar. Küçük ülkelerin adı ekranda okunacak boya gelince (yakınlaşınca)
+## belirir. Bölge adları belirince ülke adları solar ve sonra kaybolur. Adlar üst üste binmez:
+## büyük parçadan küçüğe yazılır, önceki bir ada çarpan ad atlanır. Oyuncunun ülkesinin adı
+## her zaman yazılır.
+func _ulke_adlarini_ciz(gorunen: Rect2, _olcek: float) -> void:
+	var opaklik: float = ULKE_ADI_OPAKLIGI * lerpf(1.0, SOLUK_ULKE_ADI_OPAKLIGI, _bolge_gorunurlugu()) \
+			* (1.0 - smoothstep(ULKE_ADI_KAYBOLMA_BASI, ULKE_ADI_KAYBOLMA_SONU, _yakinlik))
 	if opaklik <= 0.0:
 		return
-	var dolu_alanlar: Array[Rect2] = []
-	for ulke: Ulke in _ulke_adi_sirasi:
-		if not gorunen.has_point(ulke.etiket):
+	var dolu_alanlar: Array[PackedVector2Array] = []
+	for yerlesim: Dictionary in _ulke_adlari:
+		var merkez: Vector2 = yerlesim["merkez"]
+		if not gorunen.has_point(merkez):
 			continue
+		var ulke: Ulke = yerlesim["ulke"]
 		var zorunlu: bool = ulke.id == _oyuncu
-		var ekran_buyuklugu: float = _ulke_buyuklugu[ulke.id] * _yakinlik
-		# Yazı tipi her boyut için ayrı hazırlandığından boyut 4'ün katlarına yuvarlanır.
-		var boyut: int = clampi(int(snappedf(ekran_buyuklugu * ULKE_ADI_ORANI, 4.0)),
-				ASGARI_ULKE_ADI_BOYUTU, AZAMI_ULKE_ADI_BOYUTU)
-		var genislik: float = _yazi_tipi.get_string_size(ulke.ad, HORIZONTAL_ALIGNMENT_LEFT, -1.0, boyut).x
-		# Adın ekranda kaplayacağı yer (kamera kaymasından bağımsız, yalnızca yakınlığa bağlı).
-		var alan: Rect2 = Rect2(ulke.etiket * _yakinlik + Vector2(-genislik * 0.5, -boyut * 0.65),
-				Vector2(genislik, boyut)).grow(YAZI_ARALIGI)
-		if not zorunlu:
-			if genislik > ekran_buyuklugu * ULKE_ADI_SIGMA_ORANI and ekran_buyuklugu < HER_ZAMAN_YAZ_ESIGI:
+		var ekran_boyu: float = float(yerlesim["boy"]) * _yakinlik
+		if ekran_boyu < ASGARI_ULKE_ADI_EKRAN_BOYU:
+			if not zorunlu:
 				continue
+			ekran_boyu = ASGARI_ULKE_ADI_EKRAN_BOYU
+		ekran_boyu = minf(ekran_boyu, AZAMI_ULKE_ADI_EKRAN_BOYU)
+		var olcu: float = ekran_boyu / ULKE_ADI_TABAN_BOYUTU
+		var aci: float = yerlesim["aci"]
+		var satirlar: PackedStringArray = yerlesim["satirlar"]
+		var satir_sayisi: int = satirlar.size()
+		# Adın ekranda kapladığı döndürülmüş dikdörtgen (yalnızca yakınlığa bağlı koordinatlarla).
+		var yari: Vector2 = Vector2(float(yerlesim["genislik"]) * olcu * 0.5 + YAZI_ARALIGI,
+				ekran_boyu * (0.42 + ULKE_ADI_SATIR_ARALIGI * 0.5 * (satir_sayisi - 1)) + YAZI_ARALIGI)
+		var x: Vector2 = Vector2.RIGHT.rotated(aci) * yari.x
+		var y: Vector2 = Vector2.DOWN.rotated(aci) * yari.y
+		var orta: Vector2 = merkez * _yakinlik
+		var alan: PackedVector2Array = PackedVector2Array([orta - x - y, orta + x - y, orta + x + y, orta - x + y])
+		if not zorunlu:
 			var carpiyor: bool = false
-			for dolu: Rect2 in dolu_alanlar:
-				if dolu.intersects(alan):
+			for dolu: PackedVector2Array in dolu_alanlar:
+				if _dortgenler_kesisiyor(dolu, alan):
 					carpiyor = true
 					break
 			if carpiyor:
 				continue
 		dolu_alanlar.append(alan)
-		_ust_katman.draw_set_transform(ulke.etiket, 0.0, Vector2(olcek, olcek))
-		_yazi_ciz(ulke.ad, Vector2(-genislik * 0.5, boyut * 0.35), boyut, opaklik)
+		var harita_olcusu: float = olcu / _yakinlik
+		_ust_katman.draw_set_transform(merkez, aci, Vector2(harita_olcusu, harita_olcusu))
+		# Diğer modlarda dolgu ülke rengi olmadığı için ad nötr koyu mürekkeple yazılır.
+		var murekkep_rengi: Color = ULKE_ADI_NOTR_MUREKKEP
+		if _mod == HaritaPaleti.Mod.SIYASI:
+			murekkep_rengi = ulke_rengi(ulke).darkened(ULKE_ADI_MUREKKEP_KOYULUGU)
+		var murekkep: Color = Color(murekkep_rengi, opaklik)
+		var genislikler: PackedFloat32Array = yerlesim["satir_genislikleri"]
+		for i: int in satir_sayisi:
+			var taban_y: float = ULKE_ADI_TABAN_BOYUTU * (0.35 + ULKE_ADI_SATIR_ARALIGI * (i - (satir_sayisi - 1) * 0.5))
+			_ust_katman.draw_string(_ad_yazi_tipi, Vector2(-genislikler[i] * 0.5, taban_y), satirlar[i],
+					HORIZONTAL_ALIGNMENT_LEFT, -1.0, ULKE_ADI_TABAN_BOYUTU, murekkep)
+
+
+## İki dışbükey dörtgen (köşeleri sırayla) kesişiyor mu? Ayırıcı eksen sınaması.
+static func _dortgenler_kesisiyor(a: PackedVector2Array, b: PackedVector2Array) -> bool:
+	for kume: PackedVector2Array in [a, b]:
+		for i: int in 2:
+			var eksen: Vector2 = (kume[i + 1] - kume[i]).orthogonal()
+			var a_en_az: float = INF
+			var a_en_cok: float = -INF
+			var b_en_az: float = INF
+			var b_en_cok: float = -INF
+			for nokta: Vector2 in a:
+				var d: float = nokta.dot(eksen)
+				a_en_az = minf(a_en_az, d)
+				a_en_cok = maxf(a_en_cok, d)
+			for nokta: Vector2 in b:
+				var d: float = nokta.dot(eksen)
+				b_en_az = minf(b_en_az, d)
+				b_en_cok = maxf(b_en_cok, d)
+			if a_en_cok < b_en_az or b_en_cok < a_en_az:
+				return false
+	return true
 
 
 ## Her bölge adının hangi yakınlıktan sonra görüneceğini bir kez hesaplar.
@@ -1036,17 +1540,17 @@ func _muharebe_isareti_ciz(kutu_merkezi: Vector2, ozet: Dictionary, bolge: Bolge
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.
 func _yazi_ciz(metin: String, konum: Vector2, boyut: int, opaklik: float) -> void:
 	_ust_katman.draw_string_outline(_yazi_tipi, konum, metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, boyut,
-			maxi(4, roundi(boyut * 0.26)), Color(YAZI_KENAR_RENGI, YAZI_KENAR_RENGI.a * opaklik))
+			maxi(4, roundi(boyut * 0.22)), Color(YAZI_KENAR_RENGI, YAZI_KENAR_RENGI.a * opaklik))
 	_ust_katman.draw_string(_yazi_tipi, konum, metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, boyut,
 			Color(YAZI_RENGI, opaklik))
 
 
+## Başkent rozeti (bkz. YILDIZ_YARICAPI).
 func _yildiz_ciz(konum: Vector2, opaklik: float) -> void:
+	_ust_katman.draw_circle(konum, YILDIZ_YARICAPI, Color(BASKENT_ROZETI_RENGI, BASKENT_ROZETI_RENGI.a * opaklik))
+	_ust_katman.draw_arc(konum, YILDIZ_YARICAPI - 1.0, 0.0, TAU, 24, Color(BASKENT_HALKASI_RENGI, opaklik), 2.0, true)
 	var noktalar: PackedVector2Array = PackedVector2Array()
 	for k: int in 10:
-		var yaricap: float = YILDIZ_YARICAPI if k % 2 == 0 else YILDIZ_YARICAPI * 0.42
+		var yaricap: float = YILDIZ_YARICAPI * (0.55 if k % 2 == 0 else 0.23)
 		noktalar.append(konum + Vector2.UP.rotated(TAU * float(k) / 10.0) * yaricap)
-	_ust_katman.draw_colored_polygon(noktalar, Color(1.0, 0.85, 0.29, opaklik))
-	noktalar.append(noktalar[0])
-	noktalar.append(noktalar[1])
-	_ust_katman.draw_polyline(noktalar, Color(0.12, 0.08, 0.0, opaklik), 2.0, true)
+	_ust_katman.draw_colored_polygon(noktalar, Color(BASKENT_HALKASI_RENGI, opaklik))

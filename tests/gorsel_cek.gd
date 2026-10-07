@@ -118,4 +118,13 @@ func _calistir() -> void:
 		zaman.bir_saat_ilerle()
 	oyun.bildirim_gonder.emit("Yunanistan'la muharebe başladı.", hedef)
 	await _cek("15_muharebe_bildirim")
+
+	# Harita modları (görsel yenilemeyle geldi; "önce" görüntülerinde yoktur).
+	await _odaklan("DEU_1", Vector2(700, 350))
+	var secici: SekmeGrubu = arayuz.get("_mod_secici").get("_sekmeler")
+	(secici.get_child(0).get_child(1) as Button).button_pressed = true
+	await _cek("16_diplomasi")
+	(secici.get_child(0).get_child(2) as Button).button_pressed = true
+	await _cek("17_ekonomi")
+	(secici.get_child(0).get_child(0) as Button).button_pressed = true
 	quit(0)

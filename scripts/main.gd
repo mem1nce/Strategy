@@ -109,6 +109,7 @@ func _ready() -> void:
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
 	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
 	_arayuz.bildirime_dokunuldu.connect(_bildirime_dokunuldu)
+	_arayuz.harita_modu_degisti.connect(_harita.modu_ayarla)
 	_arayuz.menuye_donus_istendi.connect(_menuye_don)
 	Zaman.durum_degisti.connect(_guc_modunu_guncelle)
 	_guc_modunu_guncelle()
