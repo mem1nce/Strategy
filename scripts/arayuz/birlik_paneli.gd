@@ -59,7 +59,7 @@ func _ready() -> void:
 
 ## Bölgedeki tümenleri gösterir. `birlikler` boş olmamalı (main.gd çağırmadan önce denetler).
 func goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
-	_renk_kutusu.color = HaritaGorunumu.ulke_rengi(ulke)
+	_renk_kutusu.color = HaritaPaleti.ulke_rengi(ulke)
 	_ad.text = bolge.ad
 	var toplam: float = 0.0
 	var sayilar: Dictionary[String, int] = {}

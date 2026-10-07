@@ -697,6 +697,14 @@ Adımlar:
    - Kabartma: Natural Earth SR_50M (kamu malı) → `tools/kabartma_uret.py` Miller'e çevirir:
      assets/relief.png, 4096×2066 gri tek doku (1,8 MB). Kaynak zip depoya girmez.
    - Lisans metinleri lisanslar/ (export'a `include_filter` ile dahil).
+2. ✅ Stil kılavuzu: STIL.md + ortak tema (`ArayuzTemasi.olustur()`: koyu lacivert-kömür
+   zemin, tek altın-kehribar vurgu, başarı/tehlike, yazı ölçeği, 8 px ızgara, köşe, gölge).
+   Ortak bileşenler: `Bilesenler` (birincil/ikincil düğme, kart, rozet, ilerleme çubuğu),
+   `BaslikliPanel`, `IstatistikSatiri`, `SekmeGrubu`, `Bayraklar` (atlas + ülke renginde yedek
+   bayrak), `Simgeler` (art/icons, `tools/simgeler_uret.py` ile 31 SVG, tek çizgi kalınlığı).
+   `Bicim.kisa()` büyük sayıları kısaltır (1,2 Mn; 3,4 B). Ülke paleti `HaritaPaleti`'ne
+   taşındı (Zaman'a bağlı olmasın diye). CLAUDE.md'ye kural 7 eklendi. Vitrin:
+   docs/gorsel/stil_vitrini.jpg (`tests/bilesen_vitrini.gd`); sonra: docs/gorsel/adim1_stil/.
 
 ## Kararlar
 

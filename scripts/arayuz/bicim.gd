@@ -1,28 +1,35 @@
 class_name Bicim
 extends RefCounted
-## Sayıları ekranda okunur biçimde yazar ("85,3 milyon", "761 milyar $").
+## Sayıları ekranda kısa ve okunur biçimde yazar (STIL.md → Yazı): 1 250 -> "1,25 B",
+## 83 429 615 -> "83,4 Mn", 2 720 000 000 -> "2,72 Mr". B = bin, Mn = milyon, Mr = milyar,
+## Tn = trilyon.
 
 
-## Örnek: 83429615 -> "83,4 milyon"
+## Herhangi bir büyük sayıyı kısaltır. 1 000'in altındakiler tam sayı olarak yazılır.
+static func kisa(sayi: float) -> String:
+	var mutlak: float = absf(sayi)
+	var isaret: String = "-" if sayi < 0.0 else ""
+	if mutlak >= 1e12:
+		return "%s%s Tn" % [isaret, _kisalt(mutlak / 1e12)]
+	if mutlak >= 1e9:
+		return "%s%s Mr" % [isaret, _kisalt(mutlak / 1e9)]
+	if mutlak >= 1e6:
+		return "%s%s Mn" % [isaret, _kisalt(mutlak / 1e6)]
+	if mutlak >= 1e3:
+		return "%s%s B" % [isaret, _kisalt(mutlak / 1e3)]
+	return "%s%d" % [isaret, roundi(mutlak)]
+
+
+## Örnek: 83429615 -> "83,4 Mn"
 static func nufus(sayi: int) -> String:
-	if sayi >= 1_000_000_000:
-		return "%s milyar" % _kisalt(sayi / 1_000_000_000.0)
-	if sayi >= 1_000_000:
-		return "%s milyon" % _kisalt(sayi / 1_000_000.0)
-	if sayi >= 1_000:
-		return "%s bin" % _kisalt(sayi / 1_000.0)
-	return str(sayi)
+	return kisa(float(sayi))
 
 
-## Milyon dolar cinsinden verilen tutarı yazar. Örnek: 761425 -> "761 milyar $"
+## Milyon dolar cinsinden verilen tutarı yazar. Örnek: 761425 -> "761 Mr $"
 static func para(milyon_dolar: int) -> String:
 	if milyon_dolar <= 0:
 		return "bilinmiyor"
-	if milyon_dolar >= 1_000_000:
-		return "%s trilyon $" % _kisalt(milyon_dolar / 1_000_000.0)
-	if milyon_dolar >= 1_000:
-		return "%s milyar $" % _kisalt(milyon_dolar / 1_000.0)
-	return "%d milyon $" % milyon_dolar
+	return "%s $" % kisa(milyon_dolar * 1e6)
 
 
 ## Sayıyı üç anlamlı basamağa indirir ve Türkçe ondalık virgülüyle yazar:

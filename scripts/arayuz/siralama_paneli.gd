@@ -61,7 +61,7 @@ func _satir_ekle(sira: int, oge: Dictionary, dunya: Dunya, vurgulu: bool) -> voi
 	satir.add_child(sira_etiketi)
 
 	var renk_kutusu: ColorRect = ColorRect.new()
-	renk_kutusu.color = HaritaGorunumu.ulke_rengi(ulke)
+	renk_kutusu.color = HaritaPaleti.ulke_rengi(ulke)
 	renk_kutusu.custom_minimum_size = Vector2(RENK_KUTUSU_BOYUTU, RENK_KUTUSU_BOYUTU)
 	renk_kutusu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	renk_kutusu.mouse_filter = Control.MOUSE_FILTER_IGNORE

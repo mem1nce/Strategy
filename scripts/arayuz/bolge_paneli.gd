@@ -158,7 +158,7 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	var ulke: Ulke = dunya.bolgenin_sahibi(bolge.id)
 	_ulke_id = ulke.id
 	_ulke_adi = ulke.ad
-	_renk_kutusu.color = HaritaGorunumu.ulke_rengi(ulke)
+	_renk_kutusu.color = HaritaPaleti.ulke_rengi(ulke)
 	_ad.text = bolge.ad
 	_baskent.visible = bolge.baskent
 	_nufus.text = "Nüfus: %s" % Bicim.nufus(bolge.nufus)

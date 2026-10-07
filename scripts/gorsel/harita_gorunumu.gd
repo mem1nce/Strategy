@@ -16,12 +16,6 @@ extends Node2D
 const SINIR_GOLGELENDIRICISI: Shader = preload("res://scripts/gorsel/sinir_cizgisi.gdshader")
 
 const DENIZ_RENGI: Color = Color("#1e2a36")
-## Ülkelerin renk indeksine (1-9) karşılık gelen dokuz sakin renk.
-const PALET: Array[Color] = [
-	Color("#c97b6b"), Color("#d9a066"), Color("#d8c878"),
-	Color("#9dbb6f"), Color("#6fae8f"), Color("#6fa8b8"),
-	Color("#7f8fc4"), Color("#a584bd"), Color("#c487a6"),
-]
 
 # Çizgi renkleri ve kalınlıkları (kalınlıklar ekran pikseli cinsindendir).
 const KIYI_RENGI: Color = Color(0.07, 0.09, 0.11, 0.9)
@@ -183,9 +177,9 @@ var _savastaki_ulke_sinirlari: PackedInt32Array = PackedInt32Array()
 var _isgalli_bolge_sinirlari: PackedInt32Array = PackedInt32Array()
 
 
-## Ülkenin haritadaki rengi.
+## Ülkenin haritadaki rengi (bkz. HaritaPaleti).
 static func ulke_rengi(ulke: Ulke) -> Color:
-	return PALET[posmod(ulke.renk_indeksi - 1, PALET.size())]
+	return HaritaPaleti.ulke_rengi(ulke)
 
 
 func kur(dunya: Dunya, oyun: Oyun) -> void:

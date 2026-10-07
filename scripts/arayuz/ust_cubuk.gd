@@ -46,7 +46,7 @@ func _ready() -> void:
 
 ## Oyuncunun ülkesini üst çubuğa yazar ve "Ülkeni seç" yazısını kaldırır.
 func oyuncuyu_goster(ulke: Ulke) -> void:
-	_ulke_rengi.color = HaritaGorunumu.ulke_rengi(ulke)
+	_ulke_rengi.color = HaritaPaleti.ulke_rengi(ulke)
 	_ulke_adi.text = ulke.ad
 	_ulke_sirasi.show()
 	_secim_yazisi.hide()

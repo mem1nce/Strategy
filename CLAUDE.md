@@ -53,7 +53,15 @@ sonra kod.
    - HOI4 ya da başka bir oyundan ad, metin, simge, harita ya da ekran düzeni kopyalanmaz.
    - Harita verisi yalnızca Natural Earth'ten (kamu malı) gelir.
 
-7. **Açıklamalar ve kod yorumları Türkçe yazılır.**
+7. **Yeni her ekran ve panel [STIL.md](STIL.md)'ye ve ortak temaya uyar.**
+   - Renk, yazı tipi, yazı boyutu, boşluk ve köşe yarıçapı `ArayuzTemasi` sabitlerinden
+     alınır; koda elle renk ya da boyut yazılmaz.
+   - Düğme, kart, başlıklı panel, istatistik satırı, sekme, ilerleme çubuğu, rozet ve
+     bildirim kartı `Bilesenler` / `BaslikliPanel` / `IstatistikSatiri` / `SekmeGrubu`
+     bileşenleriyle kurulur. Simgeler `art/icons/` altındadır ve `tools/simgeler_uret.py`
+     ile aynı stilde çizilir.
+
+8. **Açıklamalar ve kod yorumları Türkçe yazılır.**
    - Kullanıcıya verilen yanıtlar, kod yorumları, commit iletileri ve oyun içi
      metinler Türkçedir.
 
