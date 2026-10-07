@@ -183,3 +183,32 @@ kaydırma, tekerlek = yakınlaştırma.
     ana ekrana al ve geri dön → oyun durmuş olmalı, kaldığı yerden devam etmeli. Zaman akarken
     ekran kendiliğinden kararmamalı; durdurunca normal süresinde kararmalı. Çentikli
     telefonda üst çubuk ve paneller çentiğe girmemeli.
+
+34. **Görsel yenileme: harita** — Deniz kıyıya yakın yerlerde açık, açıkta koyu olmalı; oyun
+    akarken çok hafif dalgalanmalı (durunca durmalı). Karada dağlar gölgeli görünmeli. Ülke
+    adları büyük harf ve eğik olabilir (ülkenin uzun yönünde); küçük ülkelerin adı yakınlaşınca
+    çıkmalı. Ülke sınırlarının iç tarafında koyu bir bant, oyuncunun ülkesinde ince altın
+    çerçeve olmalı. Bir bölgeye dokun → kenarı parlamalı, içi hafif aydınlanmalı.
+
+35. **Harita modları** — Ülkeni seçtikten sonra sol kenarda üç düğme çıkmalı. Ortadaki
+    (Diplomasi): sen yeşil, savaştığın ülke kırmızı, diğerleri gri; bir ülkeye savaş ilan et →
+    hemen kırmızıya dönmeli. Alttaki (Ekonomi): bölgeler koyudan altına doğru renklenmeli,
+    açıklama kartında "Az → Çok" olmalı. Üstteki (Siyasi) ile ülke renklerine dönmeli.
+
+36. **Tümen kartları ve işaretler** — Yakınlaşınca her tümenli bölgede bayraklı bir kart
+    görünmeli (tür simgeleri, sayı, altta yeşil güç çubuğu). Kendi tümenlerine dokun → kartın
+    çevresinde altın halka olmalı. Yürüt → kaynaktan hedefe ok uçlu, kesikli bir yol çizilmeli,
+    oyun akarken kesikler hedefe doğru akmalı. Muharebede kırmızı çapraz kılıç rozeti ve iki
+    renkli çubuk çıkmalı. Tahkimat kur → bölge adının solunda kale simgesi ve seviyesi; fabrika
+    kur → sağında fabrika simgesi.
+
+37. **Yeni arayüz** — Üst çubuk: solda bayrak ve ülke adı, altında hazine (ör. "2,5 B"), günlük
+    gelir, tümen ve bölge sayısı; ortada tarih ve oynat/durdur + 1×2×3× tek hapta; sağda Ordu
+    YZ / Sıralama / Teknoloji. Ülke seçerken bir bölgeye dokun → büyük bayrak, nüfus / sanayi /
+    ordu çubukları ve "Bu ülkeyle oyna" olmalı. Bildirimler solda simge ve ülke bayrağıyla
+    gelmeli. Hiçbir panel ekrandan taşmamalı (16:9 ve geniş telefon).
+
+38. **Ana menü, Grafik ve Lisanslar** — Ana menünün arkasında karartılmış harita yavaşça
+    kaymalı. Ayarlar → "Grafik: Düşük" → dalga, kabartma ve kâğıt dokusu kalkmalı (harita düz
+    renkli). Ayarlar → Lisanslar → Natural Earth, flag-icons (MIT), Cinzel ve Inter (OFL)
+    metinleri okunmalı, kaydırılabilmeli.

@@ -199,20 +199,28 @@ Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik
 - Harita **"çokgen → bölge → sahip ülke"** mantığıyla çalışır: her çokgen, bölgesinin o anki
   sahibinin rengini alır. Sınır çizgisinin türü de iki yanındaki bölgelerin sahibine göre
   belirlenir. Bir bölge el değiştirince harita ve ülke sınırları kendiliğinden güncellenir.
-- Deniz düz, koyu mavi-gri bir arka plandır.
-- Ülkeler renk indeksine göre dokuz sakin renkten birini alır; komşular farklı renktedir.
+- Görünüşün ayrıntısı (renkler, yazı tipleri, simgeler) [STIL.md](STIL.md)'dedir; özetle:
+- **Deniz** koyu laciverttir; kıyıya yaklaştıkça açılır ve hafif dalgalanır (oyun akarken).
+- **Kara:** ülkeler renk indeksine göre dokuz renkten birini alır (komşular farklı renktedir);
+  üstüne Natural Earth gölgeli kabartması ve hafif bir kâğıt dokusu biner.
+- **Harita modları** (sol kenardaki düğmeler; yalnızca görünüm, kural değil): **Siyasi**
+  (ülke renkleri), **Diplomasi** (sen / savaştığın / tarafsız; ittifak olmadığı için müttefik
+  rengi yok), **Ekonomi** (bölgelerin günlük sanayisi, logaritmik renk merdiveni).
 - Çokgenler büyükten küçüğe çizilir; iç içe ülkelerde küçük olan üstte kalır (Lesotho).
-- **Sınırlar:** kıyı ince, ülke sınırı kalın, bölge sınırı ince ve soluktur. Hepsi
+- **Sınırlar:** kıyı ince ve koyu mavi, ülke sınırı koyu ve net (iki yanında o yandaki ülke
+  renginin koyusuyla içe doğru solan bir bant), bölge sınırı ince ve soluktur. Hepsi
   yakınlıktan bağımsız olarak ekranda aynı kalınlıkta görünür.
 - **Uzaktan** harita sadedir: yalnızca ülkeler, ülke sınırları ve büyük ülkelerin adları.
 - **Yakınlaşınca** (yakınlık 2,4 ile 3,4 arasında yavaşça; bölgeler sıklaştığı için eskiden
   1,7-2,6 idi) bölge sınırları, bölge adları ve başkent bölgelerindeki yıldızlar belirir; ülke
   adları solar ve daha da yakında kaybolur. Tümen kutuları bu belirme en az yarıya varınca
   (yakınlık ~2,9) çizilir.
-- **Adlar:** bir ad, ülke ya da bölge ekranda adına yetecek kadar büyükse yazılır. Adlar üst
-  üste binmez; çakışmada büyük ülkenin, bölgelerde başkentin ve kalabalık bölgenin adı kalır.
-- Seçili bölge parlak sarı, ülkesi daha hafif bir çerçeveyle; oyuncunun ülkesi kalın beyaz
-  çerçeveyle işaretlenir.
+- **Adlar:** ülke adı, ülkenin en büyük kara parçasının uzun ekseni boyunca döner ve parçaya
+  sığacak boyda yazılır (uzun adlar iki satır); ekranda okunacak boya gelmeyen ad yazılmaz.
+  Bölge adı, bölge ekranda adına yetecek kadar büyükse yazılır. Adlar üst üste binmez;
+  çakışmada büyük ülkenin, bölgelerde başkentin ve kalabalık bölgenin adı kalır.
+- Seçili bölge parlak kenar ve içe doğru solan açık bir parıltıyla, ülkesi hafif beyaz bir
+  çerçeveyle; oyuncunun ülkesi her zaman ince altın çerçeveyle işaretlenir.
 - **Savaştaki ülkeler** (yalnızca oyuncuyla savaşta olanlar) kırmızı bir dış çerçeveyle
   işaretlenir (`HaritaGorunumu.savaslari_yenile()`, savaş ilan edilince/barış yapılınca
   çağrılır).
@@ -266,8 +274,10 @@ menü. Dört düğme:
   `Oyun.kayittan_yukle()` ve `Zaman.durumu_uygula()` ile uygulanır (bkz. 11. Kayıt).
 - **Nasıl oynanır:** oyunun amacını ve temel eylemlerini özetleyen, kapatılabilir bir
   bilgi paneli açar.
-- **Ayarlar:** şu an yalnızca **"Kaydı sil"** içerir (onaylı, kayıt yoksa pasif); tek
-  kalıcı ayar kayıt dosyasıdır, başka bir ayar (ses, grafik) henüz yok.
+- **Ayarlar:** animasyonlar, ses, sessiz, **Grafik: Yüksek / Düşük** (bkz. 10d), **"Kaydı
+  sil"** (onaylı, kayıt yoksa pasif) ve **Lisanslar** (dış kaynakların lisans metinleri,
+  `lisanslar/`).
+- Menünün arkasında harita yavaşça kayar (animasyonlar azaltılmışsa durur).
 
 Menü kapanınca (Yeni oyun ya da Devam et) aşağıdaki ülke seçimi akışı başlar:
 
@@ -553,7 +563,9 @@ Dört dal, her biri 3 seviye (`sim/teknoloji.gd`, sayılar data/balance.json →
 Animasyonlar ve sesler yalnızca sunumdur; simülasyonu değiştirmez ve yavaşlatmaz.
 
 - **Ayarlar** (ana menü → Ayarlar, `user://ayarlar.json`, `sim/ayarlar.gd`): "Animasyonlar: Açık /
-  Azaltılmış", ses düzeyi ("−" / "+", %10 adımla) ve "Sessiz: Açık / Kapalı". Kayıttan ayrıdır.
+  Azaltılmış", ses düzeyi ("−" / "+", %10 adımla), "Sessiz: Açık / Kapalı" ve "Grafik: Yüksek /
+  Düşük" (Düşük: denizde dalga, karada kâğıt dokusu ve kabartma yok; zayıf telefonlar için).
+  Kayıttan ayrıdır.
 - **Harita:** yürüyen tümen kutuları kaynakla hedef arasında, geçen zamana göre kayar
   (`Birlik.cikis_saati`, `Zaman.saat_kesri`). Muharebe işareti hafifçe atar; altındaki küçük
   çubuk savunanın (solda) ve saldıranın güç oranını gösterir. El değiştiren bölge 0,7 saniyelik
@@ -743,6 +755,7 @@ istenen aşama yapılır.
 | 6 | ✅ | **Yapay zekâ** | Diğer ülkelerin savunması, saldırısı ve üretimi |
 | 7 | ✅ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 7a | ✅ | **Birlik türleri, teknoloji, tahkimat** | Piyade/zırhlı/topçu ve üstünlük üçgeni, 4 dal × 3 seviye araştırma, 3 seviye tahkimat, YZ'nin üçünü de kullanması |
+| 7b | ✅ | **Görsel yenileme** | Stil kılavuzu (STIL.md) ve ortak tema, kabartmalı harita, harita modları, bayraklı tümen kartları, yeni arayüz; kurallar değişmedi |
 | 8 | ◐ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,

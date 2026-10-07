@@ -748,6 +748,23 @@ Adımlar:
    - Lisanslar ekranı: Ayarlar → Lisanslar (lisanslar/*.txt).
    - Cinzel artık sabit 700 örnek (`tools/cinzel_sabitle.py`, çakışmalar kaldırıldı): değişken
      sürümde MSDF harflerin üstünde leke bırakıyordu. Özgün dosya tools/kaynak/fontlar/.
+6. ✅ Performans ve kontrol.
+   - Ayarlar → "Grafik: Yüksek / Düşük" (`Ayarlar.grafik_dusuk`; gölgelendiricilerde `ayrinti`).
+     Düşük: dalga yok, kara dokuyu hiç okumaz (kabartma ve kâğıt yok). Sınaması ayarlar_testi'nde.
+   - `tests/performans_olc.gd` (bu bilgisayarda, 1600×900, oyun akarken; arka planda oyun
+     uygulamaları açıktı): Yüksek dünya ~2,2 ms, Avrupa ~2,3-3,0 ms, yakın ~4,8 ms; Düşük
+     yakın ~2,5 ms. Pahalı kısım yakından kara gölgelendiricisi; zayıf telefonda Düşük önerilir.
+     Ucuz tutulanlar: tek kabartma dokusu (denizin kıyı geçişi de onda), blur yok, dalga zamanı
+     yalnızca oyun akarken ilerler, ülke adı yerleşimi ülke başına önbellekte, adlar MSDF ile
+     tek boyutta.
+   - Önce/sonra: docs/gorsel/once/ ve docs/gorsel/sonra/ (16:9 = 1600×900, 20:9 = 2000×900 →
+     pencere 1924×900); yan yana: docs/gorsel/karsilastirma/ (`tools/karsilastirma_yap.py`).
+     "Sonra"da yeni 16_diplomasi, 17_ekonomi, 18_grafik_dusuk görüntüleri de var.
+   - Uzun koşu (tohum 1/2/3): teslim 10 / 16 / 24, en büyük ülke %4,0 / %4,3 / %5,2, tür
+     payları değişmedi (simülasyon kodu değişmedi). Süre 93-100 sn (önceki 60-65 sn; ölçüm
+     sırasında bilgisayarda oyun uygulamaları çalışıyordu, sınır 120 sn).
+   - Atlanan madde yok. Not: flag-icons'ta Tayvan (CN-TW) yok; Tayvan, Kuzey Kıbrıs ve
+     Somaliland ülke renginde yedek bayrak alır.
 
 ## Kararlar
 

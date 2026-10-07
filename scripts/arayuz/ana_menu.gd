@@ -11,6 +11,8 @@ extends CanvasLayer
 signal yeni_oyun_istendi(savas_sisi: bool)
 ## Oyuncu "Devam et"e bastığında yayılır (yalnızca kayıt varken düğme etkindir).
 signal devam_istendi
+## "Grafik: Yüksek / Düşük" değiştiğinde yayılır (harita gölgelendiricileri güncellenir).
+signal grafik_degisti
 
 const BASLIK: String = "Yerküre"
 const ALT_BASLIK: String = "Gerçek dünya haritasında strateji"
@@ -50,6 +52,8 @@ const NASIL_OYNANIR_METNI_BICIMI: String = (
 		"Savaş sisi: yalnızca kendi bölgelerini, tümenlerinin olduğu yerleri ve bunların " +
 		"komşularını görürsün; karanlık bölgelerdeki düşman tümenleri görünmez.\n" +
 		"Her ülkenin küçük bir bonusu var (en çok %%15); bölge panelinde yazar.\n" +
+		"Sol kenardaki düğmeler haritayı değiştirir: siyasi, diplomasi (sen / savaştığın / " +
+		"tarafsız) ve ekonomi (bölgelerin sanayisi).\n" +
 		"Amaç: kıtandaki bölgelerin %%%d'ı ya da daha fazlasını ele geçirmek ya da " +
 		"ülkeni teslim olmaktan korumak.")
 
@@ -71,6 +75,7 @@ var _savas_sisi: Button = null
 var _animasyonlar: Button = null
 var _ses_duzeyi: Label = null
 var _sessiz: Button = null
+var _grafik: Button = null
 
 
 func kur() -> void:
@@ -306,6 +311,14 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 		Ayarlar.sessiz = acik
 		Ayarlar.kaydet()
 		_ayar_yazilarini_yenile())
+	_grafik = _dugme_ekle(dikey, "")
+	_grafik.toggle_mode = true
+	_grafik.button_pressed = not Ayarlar.grafik_dusuk
+	_grafik.toggled.connect(func(yuksek: bool) -> void:
+		Ayarlar.grafik_dusuk = not yuksek
+		Ayarlar.kaydet()
+		_ayar_yazilarini_yenile()
+		grafik_degisti.emit())
 	_ayar_yazilarini_yenile()
 
 	_kaydi_sil = _dugme_ekle(dikey, "Kaydı sil")
@@ -338,6 +351,8 @@ func _ayar_yazilarini_yenile() -> void:
 	_animasyonlar.text = "Animasyonlar: Açık" if _animasyonlar.button_pressed else "Animasyonlar: Azaltılmış"
 	_ses_duzeyi.text = "Ses: %%%d" % roundi(Ayarlar.ses_duzeyi * 100.0)
 	_sessiz.text = "Sessiz: Açık" if _sessiz.button_pressed else "Sessiz: Kapalı"
+	if _grafik != null:
+		_grafik.text = "Grafik: Yüksek" if _grafik.button_pressed else "Grafik: Düşük"
 
 
 func _alt_paneli_ac(panel: CenterContainer) -> void:

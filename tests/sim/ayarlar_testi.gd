@@ -13,13 +13,16 @@ func sina_ayarlar_kaydedilip_geri_yuklenir() -> String:
 	Ayarlar.animasyonlar_azaltilmis = true
 	Ayarlar.ses_duzeyi = 0.3
 	Ayarlar.sessiz = true
+	Ayarlar.grafik_dusuk = true
 	Ayarlar.kaydet()
 	# Bellekteki değerleri boz, dosyadan geri gelsin.
 	Ayarlar.animasyonlar_azaltilmis = false
 	Ayarlar.ses_duzeyi = 1.0
 	Ayarlar.sessiz = false
+	Ayarlar.grafik_dusuk = false
 	Ayarlar.yukle()
-	var tamam: bool = Ayarlar.animasyonlar_azaltilmis and is_equal_approx(Ayarlar.ses_duzeyi, 0.3) and Ayarlar.sessiz
+	var tamam: bool = Ayarlar.animasyonlar_azaltilmis and is_equal_approx(Ayarlar.ses_duzeyi, 0.3) and Ayarlar.sessiz \
+			and Ayarlar.grafik_dusuk
 	_dosyayi_sil()
 	Ayarlar.yukle()
 	if not tamam:
@@ -30,7 +33,10 @@ func sina_ayarlar_kaydedilip_geri_yuklenir() -> String:
 func sina_ayar_dosyasi_yoksa_varsayilanlar() -> String:
 	_dosyayi_sil()
 	Ayarlar.sessiz = true
+	Ayarlar.grafik_dusuk = true
 	Ayarlar.yukle()
+	if Ayarlar.grafik_dusuk:
+		return "Dosya yokken grafik Yüksek olmalı."
 	if Ayarlar.animasyonlar_azaltilmis or Ayarlar.sessiz or not is_equal_approx(Ayarlar.ses_duzeyi, 0.8):
 		return "Dosya yokken varsayılanlar (animasyon açık, ses %80, sessiz değil) kullanılmalı."
 	return ""

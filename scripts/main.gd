@@ -122,6 +122,7 @@ func _ready() -> void:
 	_ana_menu.kur()
 	_ana_menu.yeni_oyun_istendi.connect(_yeni_oyun_secildi)
 	_ana_menu.devam_istendi.connect(_devam_secildi)
+	_ana_menu.grafik_degisti.connect(_harita.grafigi_uygula)
 	_ana_menu.goster(not _bekleyen_kayit.is_empty(),
 			_bekleyen_kayit.is_empty() and KayitYoneticisi.eski_kayit_mi())
 	# Menünün arkasında harita yavaşça kayar (animasyonlar azaltılmışsa durur).

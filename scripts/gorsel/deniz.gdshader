@@ -19,6 +19,8 @@ uniform vec4 kiyi_renk : source_color = vec4(0.200, 0.408, 0.494, 1.0);
 uniform float zaman = 0.0;
 // Kameranın yakınlığı (dalgaların ekranda ne kadar sık görüneceğini bulmak için).
 uniform float yakinlik = 1.0;
+// 1 = Grafik: Yüksek; 0 = Düşük (dalga yok).
+uniform float ayrinti = 1.0;
 
 varying vec2 dunya;
 
@@ -43,7 +45,9 @@ void fragment() {
 	}
 	vec3 renk = mix(derin_renk.rgb, orta_renk.rgb, smoothstep(0.0, 0.45, yakin));
 	renk = mix(renk, kiyi_renk.rgb, smoothstep(0.5, 1.0, yakin));
-	float w = dalga(dunya, 90.0, 0.5) * 0.6 + dalga(dunya, 22.0, 0.9) * 0.4;
-	renk *= 1.0 + w * 0.035 * (0.6 + 0.4 * yakin);
+	if (ayrinti > 0.5) {
+		float w = dalga(dunya, 90.0, 0.5) * 0.6 + dalga(dunya, 22.0, 0.9) * 0.4;
+		renk *= 1.0 + w * 0.035 * (0.6 + 0.4 * yakin);
+	}
 	COLOR = vec4(renk, 1.0);
 }

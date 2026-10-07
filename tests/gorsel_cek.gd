@@ -130,4 +130,10 @@ func _calistir() -> void:
 	(secici.get_child(0).get_child(2) as Button).button_pressed = true
 	await _cek("17_ekonomi")
 	(secici.get_child(0).get_child(0) as Button).button_pressed = true
+	# "Grafik: Düşük": dalga, kâğıt dokusu ve kabartma kapalı (kaydedilmez).
+	Ayarlar.grafik_dusuk = true
+	_ana.get("_harita").grafigi_uygula()
+	await _cek("18_grafik_dusuk")
+	Ayarlar.grafik_dusuk = false
+	_ana.get("_harita").grafigi_uygula()
 	quit(0)

@@ -15,6 +15,8 @@ uniform float duz_deger = 0.808;
 uniform float kabartma_gucu = 1.3;
 uniform float kagit_gucu = 0.05;
 uniform float yakinlik = 1.0;
+// 1 = Grafik: Yüksek; 0 = Düşük (kabartma ve kâğıt dokusu kapalı, doku hiç okunmaz).
+uniform float ayrinti = 1.0;
 
 varying vec2 dunya;
 
@@ -38,13 +40,16 @@ float gurultu(vec2 p) {
 }
 
 void fragment() {
-	float r = texture(kabartma, dunya / harita_boyutu).r / duz_deger;
-	// Doku bir harita birimine bir piksel; çok yakından büyütülünce bulanık lekelere döner,
-	// bu yüzden yakınlaştıkça kabartma yumuşar.
-	float guc = kabartma_gucu * mix(1.0, 0.55, smoothstep(2.0, 8.0, yakinlik));
-	float carpan = clamp(1.0 + (r - 1.0) * guc, 0.5, 1.3);
-	float ince = (gurultu(dunya * 0.4) - 0.5) * smoothstep(2.0, 6.0, 2.5 * yakinlik);
-	float kaba = gurultu(dunya * 0.05) - 0.5;
-	float kagit = 1.0 + (ince * 0.6 + kaba) * kagit_gucu;
-	COLOR = vec4(COLOR.rgb * carpan * kagit, COLOR.a);
+	// Grafik: Düşük ise köşe rengi olduğu gibi kalır (doku hiç okunmaz).
+	if (ayrinti > 0.5) {
+		float r = texture(kabartma, dunya / harita_boyutu).r / duz_deger;
+		// Doku bir harita birimine bir piksel; çok yakından büyütülünce bulanık lekelere döner,
+		// bu yüzden yakınlaştıkça kabartma yumuşar.
+		float guc = kabartma_gucu * mix(1.0, 0.55, smoothstep(2.0, 8.0, yakinlik));
+		float carpan = clamp(1.0 + (r - 1.0) * guc, 0.5, 1.3);
+		float ince = (gurultu(dunya * 0.4) - 0.5) * smoothstep(2.0, 6.0, 2.5 * yakinlik);
+		float kaba = gurultu(dunya * 0.05) - 0.5;
+		float kagit = 1.0 + (ince * 0.6 + kaba) * kagit_gucu;
+		COLOR = vec4(COLOR.rgb * carpan * kagit, COLOR.a);
+	}
 }

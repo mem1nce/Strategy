@@ -1,6 +1,6 @@
 class_name Ayarlar
 extends RefCounted
-## Oyuncunun cihaz ayarları: animasyonlar, ses düzeyi, sessiz. Oyun kaydından ayrıdır (kayıt
+## Oyuncunun cihaz ayarları: animasyonlar, ses düzeyi, sessiz, grafik kalitesi. Oyun kaydından ayrıdır (kayıt
 ## silinse de ayarlar kalır) ve user:// altına tek bir JSON dosyası olarak yazılır.
 ##
 ## Ayarlar oyunun kurallarını değil yalnızca sunumunu etkiler; savaş sisi gibi oyuna ait
@@ -14,6 +14,9 @@ static var animasyonlar_azaltilmis: bool = false
 ## Efekt ses düzeyi (0-1).
 static var ses_duzeyi: float = 0.8
 static var sessiz: bool = false
+## true ise "Grafik: Düşük": harita dalgasız, kâğıt dokusuz ve kabartmasız çizilir (zayıf
+## telefonlarda kare hızı için).
+static var grafik_dusuk: bool = false
 
 
 static func kaydet() -> void:
@@ -25,6 +28,7 @@ static func kaydet() -> void:
 		"animasyonlar_azaltilmis": animasyonlar_azaltilmis,
 		"ses_duzeyi": ses_duzeyi,
 		"sessiz": sessiz,
+		"grafik_dusuk": grafik_dusuk,
 	}))
 	dosya.close()
 
@@ -34,6 +38,7 @@ static func yukle() -> void:
 	animasyonlar_azaltilmis = false
 	ses_duzeyi = 0.8
 	sessiz = false
+	grafik_dusuk = false
 	if not FileAccess.file_exists(ayar_dosyasi):
 		return
 	var ayristirici: JSON = JSON.new()
@@ -44,3 +49,4 @@ static func yukle() -> void:
 	animasyonlar_azaltilmis = bool(sozluk.get("animasyonlar_azaltilmis", false))
 	ses_duzeyi = clampf(float(sozluk.get("ses_duzeyi", 0.8)), 0.0, 1.0)
 	sessiz = bool(sozluk.get("sessiz", false))
+	grafik_dusuk = bool(sozluk.get("grafik_dusuk", false))

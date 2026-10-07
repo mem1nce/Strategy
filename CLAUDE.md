@@ -100,6 +100,11 @@ sonra kod.
   açılırsa 2 saniye bekleyip ekranı PNG olarak kaydeder ve kapanır:
   `Godot --path . -- --ekran-goruntusu /tam/yol/goruntu.png`. Dosya yolunun klasörü önceden
   var olmalı. Her görsel değişiklikten sonra çalıştırıp görüntüye bakılır.
+- **Görsel karşılaştırma:** `Godot --path . --resolution 1600x900 --script res://tests/gorsel_cek.gd
+  -- <klasör> <önek>` bütün ekranların JPG görüntüsünü alır (20:9 için `2000x900`);
+  `python tools/karsilastirma_yap.py` docs/gorsel/once ile sonra'yı yan yana birleştirir.
+- **Kare süresi:** `Godot --path . --script res://tests/performans_olc.gd` dünya, Avrupa ve
+  yakın görünümde "Grafik: Yüksek / Düşük" kare sürelerini yazar.
 - Girdi taklit ederken `Input.parse_input_event` konumları **pencere pikseli** ister,
   1920 × 1080 birimini değil.
 - Python bu bilgisayarda kuruludur; `tools/` altındaki betikler Python'la yazılır.

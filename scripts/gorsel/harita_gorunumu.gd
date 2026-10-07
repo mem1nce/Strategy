@@ -302,6 +302,8 @@ func kur(dunya: Dunya, oyun: Oyun) -> void:
 	_deniz.draw.connect(func() -> void:
 		_deniz.draw_rect(Rect2(Vector2.ZERO, _dunya.boyut).grow(_dunya.boyut.x * DENIZ_TASMASI), Color.WHITE))
 
+	grafigi_uygula()
+
 	_cokgenleri_hazirla()
 	_sinir_geometrisini_hazirla()
 	_bolge_adi_esiklerini_hesapla()
@@ -381,9 +383,17 @@ func _process(delta: float) -> void:
 		_ust_katmani_yenile()
 	# Dalgalar yalnızca oyun akarken kıpırdar: dururken ekran yeniden çizilmez ve işlemci
 	# dinlenir (bkz. main.gd, _guc_modunu_guncelle).
-	if _deniz != null and not Zaman.durdu and not Zaman.kilitli and not Ayarlar.animasyonlar_azaltilmis:
+	if _deniz != null and not Zaman.durdu and not Zaman.kilitli and not Ayarlar.animasyonlar_azaltilmis \
+			and not Ayarlar.grafik_dusuk:
 		_dalga_zamani = fmod(_dalga_zamani + delta, 3600.0)
 		(_deniz.material as ShaderMaterial).set_shader_parameter("zaman", _dalga_zamani)
+
+
+## "Grafik: Yüksek / Düşük" ayarını gölgelendiricilere uygular (açılışta ve ayar değişince).
+func grafigi_uygula() -> void:
+	var ayrinti: float = 0.0 if Ayarlar.grafik_dusuk else 1.0
+	(material as ShaderMaterial).set_shader_parameter("ayrinti", ayrinti)
+	(_deniz.material as ShaderMaterial).set_shader_parameter("ayrinti", ayrinti)
 
 
 ## Kara ve deniz gölgelendiricileri için ortak malzeme: kabartma dokusu ve harita boyutu.
