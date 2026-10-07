@@ -12,10 +12,9 @@ config_version=5
 
 config/name="Yerküre"
 run/main_scene="res://scenes/main.tscn"
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icons/icon_512.png"
-; Android geri tuşu oyunu kapatmasın; main.gd önce açık paneli kapatır, sonra menüye dönmeyi sorar.
-config/quit_on_go_back=false
 
 [autoload]
 
