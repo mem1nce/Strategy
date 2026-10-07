@@ -721,6 +721,15 @@ Adımlar:
    - Bölge adları Inter 500 / 20 px; başkent rozeti; seçili bölgeye iç parıltı; oyuncuya altın çerçeve.
    - Harita modları: Siyasi / Diplomasi / Ekonomi (`HaritaModuSecici`, `HaritaPaleti.Mod`).
    - `tests/sim/bicim_testi.gd`: Bicim.kisa, Türkçe büyük harf, ekonomi merdiveni.
+4. ✅ Birlikler ve harita üstü öğeler. Sonra: docs/gorsel/adim3_birlikler/.
+   - Tümen kartı (StyleBoxFlat: köşe, sahip renginde kenar, gölge): bayrak (atlas), tür
+     simgeleri (SVG), tümen sayısı, ortalama güç çubuğu; birlik kartı açık bölgede altın halka
+     (`HaritaGorunumu.birlik_secimini_ayarla`, main.gd çağırır).
+   - Yürüyüş: ok uçlu, akan kesik çizgi (yalnızca oyun akarken ve animasyon açıkken akar).
+   - Muharebe: kırmızı rozet + muharebe simgesi + beyaz ayraçlı üstünlük çubuğu.
+   - Tahkimat / fabrika / başkent simgeleri art/icons'tan; simge ve bayrak dokularına mipmap
+     açıldı (küçük çizilince pürüzsüz).
+   - `tests/gorsel_cek.gd` 07 görüntüsünde boş bölgeye tahkimat ve fabrika koyar (simgeler görünsün).
 
 ## Kararlar
 

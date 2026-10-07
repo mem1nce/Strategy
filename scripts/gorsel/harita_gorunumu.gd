@@ -80,7 +80,7 @@ const SIS_KARARTMASI: float = 0.32
 ## muharebe işaretinin atışı, altındaki güç çubuğu ve ele geçirilen bölgenin parlaması.
 const MUHAREBE_ATIS_HIZI: float = 6.0
 const MUHAREBE_ATIS_GENLIGI: float = 0.15
-const GUC_CUBUGU_BOYUTU: Vector2 = Vector2(44.0, 8.0)
+const GUC_CUBUGU_BOYUTU: Vector2 = Vector2(52.0, 8.0)
 const PARLAMA_SURESI_MS: int = 700
 const PARLAMA_OPAKLIGI: float = 0.55
 
@@ -127,29 +127,43 @@ const BOLGE_ADI_SIGMA_ORANI: float = 1.1
 const BOLGE_ADI_SIGMA_SINIRI: float = 10.0
 ## İki ad arasında bırakılan en az boşluk (piksel).
 const YAZI_ARALIGI: float = 6.0
-## Başkent rozeti: koyu daire, altın halka, içinde küçük yıldız.
+## Başkent rozeti: koyu daire, altın halka, içinde başkent simgesi (art/icons/baskent.svg).
 const YILDIZ_YARICAPI: float = 11.0
 const BASKENT_ROZETI_RENGI: Color = Color(0.055, 0.078, 0.114, 0.92)
 const BASKENT_HALKASI_RENGI: Color = Color("#E6AE48")
-## Aynı bölgedeki bütün tümenler tek kutuda gösterilir: solda toplam güç, sağında her tür
-## için işareti ve tümen sayısı. Bölge adları gibi yakınlıktan bağımsız sabit ekran
-## boyutundadır; genişlik içerikle değişir, yükseklik ve en küçük genişlik sabittir.
-const BIRLIK_KUTU_BOYUTU: Vector2 = Vector2(56.0, 34.0)
-const BIRLIK_KUTU_IC_BOSLUGU: float = 8.0
-## Tür işaretinin kapladığı kare (piksel) ve işaretle sayısı arasındaki boşluk.
-const TUR_ISARETI_BOYUTU: float = 17.0
-const TUR_ISARETI_ARALIGI: float = 4.0
-const TUR_ISARETI_KALINLIGI: float = 3.0
-## Tahkimatlı bölgenin adının solundaki küçük kale işareti.
-const TAHKIMAT_ISARETI_BOYUTU: float = 22.0
-const TAHKIMAT_ISARETI_RENGI: Color = Color(0.62, 0.62, 0.66)
+## Aynı bölgedeki bütün tümenler tek kartta gösterilir: solda en güçlü tarafın bayrağı, sonra
+## bulunan her tür için simgesi, sağda tümen sayısı; altta ortalama gücü gösteren ince çubuk.
+## Kartın kenarı sahibinin renginde, altında hafif gölge. Bölge adları gibi yakınlıktan
+## bağımsız sabit ekran boyutundadır; genişlik içerikle değişir.
+const BIRLIK_KUTU_BOYUTU: Vector2 = Vector2(76.0, 46.0)
+const BIRLIK_KUTU_IC_BOSLUGU: float = 7.0
+const BIRLIK_BAYRAK_BOYUTU: Vector2 = Vector2(30.0, 22.0)
+## Tür simgesinin kapladığı kare (piksel) ve simgeler arası boşluk.
+const TUR_ISARETI_BOYUTU: float = 26.0
+const TUR_ISARETI_ARALIGI: float = 2.0
+const BIRLIK_KART_RENGI: Color = Color(0.082, 0.114, 0.165, 0.94)
+const BIRLIK_KART_KOSESI: int = 8
+const BIRLIK_KART_KENARI: int = 2
+const BIRLIK_GOLGE_RENGI: Color = Color(0.0, 0.0, 0.0, 0.45)
+const BIRLIK_GOLGE_BOYUTU: int = 5
+## Seçili tümenlerin kartının çevresindeki parlak halka.
+const BIRLIK_SECIM_HALKASI_RENGI: Color = Color("#FFE08A")
+const BIRLIK_SECIM_HALKASI_KALINLIGI: int = 3
+## Kartın altındaki güç çubuğu (ortalama güç / 100): yüksek yeşil, orta altın, düşük kırmızı.
+const GUC_SERIDI_YUKSEKLIGI: float = 5.0
+const GUC_SERIDI_ZEMINI: Color = Color(1.0, 1.0, 1.0, 0.12)
+const TAM_GUC: float = 100.0
+## Tahkimatlı ve fabrikalı bölgenin adının yanındaki küçük simgeler.
+const TAHKIMAT_ISARETI_BOYUTU: float = 28.0
+const TAHKIMAT_ISARETI_RENGI: Color = Color("#C9D1DE")
+const FABRIKA_ISARETI_RENGI: Color = Color("#E6AE48")
 const TAHKIMAT_YAZI_BOYUTU: int = 20
 const BIRLIK_KUTU_KENAR_RENGI: Color = Color(0.0, 0.0, 0.0, 0.85)
-const BIRLIK_KUTU_KENAR_KALINLIGI: float = 3.0
-const BIRLIK_YAZI_BOYUTU: int = 22
+const BIRLIK_YAZI_BOYUTU: int = 24
+const BIRLIK_YAZI_RENGI: Color = Color("#ECEFF4")
 ## Kutu, bölge adıyla çakışmasın diye etiket noktasının üstüne çizilir. Bu yer başka bir
 ## kutuya çarpıyorsa solu, sağı ve kat kat daha üstü denenir (bkz. _birlik_kutularini_yerlestir).
-const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -40.0)
+const BIRLIK_KONUM_PAYI: Vector2 = Vector2(0.0, -46.0)
 ## Kutu için denenen yedek kat sayısı (her katta üst, sol ve sağ).
 const BIRLIK_YEDEK_KAT_SAYISI: int = 4
 ## Tümen kutuları, bölge ayrıntıları (sınırlar, adlar) en az bu oranda belirince çizilir;
@@ -158,12 +172,22 @@ const BIRLIK_GORUNURLUK_ESIGI: float = 0.5
 ## Yerinden kaymış kutuyu bölgesine bağlayan ince çizgi.
 const BIRLIK_BAG_CIZGISI_RENGI: Color = Color(0.0, 0.0, 0.0, 0.7)
 const BIRLIK_BAG_CIZGISI_KALINLIGI: float = 2.0
-## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu. Yakınlıktan bağımsız her zaman görünür.
-const YOL_CIZGISI_RENGI: Color = Color(1.0, 0.95, 0.42, 0.85)
-const YOL_CIZGISI_KALINLIGI: float = 4.0
-## Birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen daire.
-const MUHAREBE_ISARETI_YARICAPI: float = 16.0
-const MUHAREBE_ISARETI_RENGI: Color = Color("#e03b3b")
+## Yürüyen tümenlerin kaynaktan hedefe çizilen yolu: ok uçlu, kesik çizgili; oyun akarken
+## çizgiler hedefe doğru akar. Yakınlıktan bağımsız her zaman görünür (ekran pikseli).
+const YOL_CIZGISI_RENGI: Color = Color("#FFE08A")
+const YOL_CIZGISI_ALT_RENGI: Color = Color(0.0, 0.0, 0.0, 0.6)
+const YOL_CIZGISI_KALINLIGI: float = 5.0
+const YOL_KESIK_BOYU: float = 16.0
+const YOL_BOSLUK_BOYU: float = 10.0
+## Kesiklerin akış hızı (piksel / saniye).
+const YOL_AKIS_HIZI: float = 28.0
+const YOL_OK_BOYU: float = 26.0
+## Ok ucu, hedefteki bölge adına binmesin diye hedef noktasından bu kadar önce biter.
+const YOL_HEDEF_PAYI: float = 10.0
+## Birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen rozet: kırmızı daire içinde
+## çapraz kılıçlar (art/icons/muharebe.svg); altında iki tarafın renginde üstünlük çubuğu.
+const MUHAREBE_ISARETI_YARICAPI: float = 19.0
+const MUHAREBE_ISARETI_RENGI: Color = Color("#E25B5B")
 ## Ekranın biraz dışındaki adlar da çizilir ki kaydırırken kenarda birden belirmesinler (piksel).
 const GORUNUM_PAYI: float = 260.0
 
@@ -220,6 +244,12 @@ var _bolge_cokgenleri: Dictionary[String, PackedInt32Array] = {}
 ## "boy": yazı boyu (harita birimi), "genislik": taban boyuttaki yazı genişliği (piksel)}.
 var _ulke_adlari: Array[Dictionary] = []
 var _ad_yazi_tipi: Font = null
+var _kalin_yazi_tipi: Font = null
+## Tümen kartlarının zeminleri (kenar rengi -> kutu) ve seçili kartın halkası.
+var _kart_kutulari: Dictionary[Color, StyleBoxFlat] = {}
+var _secim_halkasi: StyleBoxFlat = null
+## Birlik kartı açık olan (seçili tümenlerin bulunduğu) bölge; yoksa boş.
+var _secili_birlik_bolgesi: String = ""
 var _mod: HaritaPaleti.Mod = HaritaPaleti.Mod.SIYASI
 ## Ekonomi modunda bölge id'si -> 0-1 arası sanayi oranı (bkz. _sanayi_oranlarini_hesapla).
 var _sanayi_oranlari: Dictionary[String, float] = {}
@@ -245,6 +275,14 @@ func kur(dunya: Dunya, oyun: Oyun) -> void:
 	_dunya = dunya
 	_oyun = oyun
 	_yazi_tipi = ArayuzTemasi.arayuz_fontu(500)
+	_kalin_yazi_tipi = ArayuzTemasi.arayuz_fontu(600)
+	_secim_halkasi = StyleBoxFlat.new()
+	_secim_halkasi.draw_center = false
+	_secim_halkasi.set_corner_radius_all(BIRLIK_KART_KOSESI + BIRLIK_SECIM_HALKASI_KALINLIGI)
+	_secim_halkasi.set_border_width_all(BIRLIK_SECIM_HALKASI_KALINLIGI)
+	_secim_halkasi.set_expand_margin_all(BIRLIK_SECIM_HALKASI_KALINLIGI + 1)
+	_secim_halkasi.border_color = BIRLIK_SECIM_HALKASI_RENGI
+	_secim_halkasi.anti_aliasing = true
 	var ad_yazi_tipi: FontVariation = FontVariation.new()
 	ad_yazi_tipi.base_font = load(ArayuzTemasi.CINZEL)
 	ad_yazi_tipi.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 700}
@@ -277,6 +315,8 @@ func kur(dunya: Dunya, oyun: Oyun) -> void:
 
 	_ust_katman = Node2D.new()
 	_ust_katman.name = "UstKatman"
+	# Simgeler ve bayraklar asıl boyutlarından küçük çizilir; mipmap'le pürüzsüz küçülürler.
+	_ust_katman.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	add_child(_ust_katman)
 	_ust_katman.draw.connect(_ust_katmani_ciz)
 
@@ -302,6 +342,13 @@ func secimi_ayarla(bolge_id: String) -> void:
 	_cerceveleri_guncelle()
 	_secim_parlamasini_kur()
 	_vurgu_agini_kur()
+	_ust_katmani_yenile()
+
+
+## Birlik kartı açık olan bölgeyi verir: o bölgenin tümen kartı parlak bir halkayla çizilir.
+## Seçim yoksa boş metin.
+func birlik_secimini_ayarla(bolge_id: String) -> void:
+	_secili_birlik_bolgesi = bolge_id
 	_ust_katmani_yenile()
 
 
@@ -1245,7 +1292,8 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float, kutu_alanlari: Array[Rect
 				if kutu.intersects(ad_alani):
 					ad_gorunur = false
 					break
-		if not ad_gorunur and not bolge.baskent and bolge.tahkimat == 0:
+		var fabrikali: bool = bolge.fabrika_sanayisi > 0.0 and _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id)
+		if not ad_gorunur and not bolge.baskent and bolge.tahkimat == 0 and not fabrikali:
 			continue
 		var oge_opakligi: float = 1.0 if secili else opaklik
 
@@ -1254,9 +1302,18 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float, kutu_alanlari: Array[Rect
 			# Ad yazılıyorsa solunda, yazılmıyorsa etiket noktasının biraz altında durur.
 			var tahkimat_yeri: Vector2 = Vector2(0.0, TAHKIMAT_ISARETI_BOYUTU)
 			if ad_gorunur:
-				tahkimat_yeri = Vector2(-_bolge_adi_genisligi[i] * 0.5 - TAHKIMAT_ISARETI_BOYUTU,
+				# Simgenin sağındaki seviye rakamı da ada çarpmasın diye biraz daha solda.
+				tahkimat_yeri = Vector2(-_bolge_adi_genisligi[i] * 0.5 - TAHKIMAT_ISARETI_BOYUTU * 1.5,
 						taban_y - BOLGE_ADI_BOYUTU * 0.35)
 			_tahkimat_isareti_ciz(tahkimat_yeri, bolge.tahkimat, oge_opakligi)
+		if fabrikali:
+			# Ad yazılıyorsa sağında, yazılmıyorsa etiket noktasının biraz altında (tahkimatın sağında).
+			var fabrika_yeri: Vector2 = Vector2(TAHKIMAT_ISARETI_BOYUTU * 1.3 if bolge.tahkimat > 0 else 0.0,
+					TAHKIMAT_ISARETI_BOYUTU)
+			if ad_gorunur:
+				fabrika_yeri = Vector2(_bolge_adi_genisligi[i] * 0.5 + TAHKIMAT_ISARETI_BOYUTU * 0.85,
+						taban_y - BOLGE_ADI_BOYUTU * 0.35)
+			_harita_simgesi_ciz("fabrika", fabrika_yeri, Color(FABRIKA_ISARETI_RENGI, oge_opakligi), oge_opakligi)
 		if bolge.baskent:
 			_yildiz_ciz(Vector2(0.0, -YILDIZ_YARICAPI * 0.6), oge_opakligi)
 		if ad_gorunur:
@@ -1282,7 +1339,45 @@ func _yol_cizgilerini_ciz(olcek: float) -> void:
 		var hedef: Bolge = _dunya.bolgeler.get(birlik.hedef_bolge_id)
 		if kaynak == null or hedef == null:
 			continue
-		_ust_katman.draw_line(kaynak.etiket, hedef.etiket, YOL_CIZGISI_RENGI, YOL_CIZGISI_KALINLIGI * olcek, true)
+		_yol_oku_ciz(kaynak.etiket, hedef.etiket, olcek)
+	if not cizilen.is_empty() and _animasyon_acik() and not Zaman.durdu:
+		_animasyon_suruyor = true
+
+
+## Kaynaktan hedefe ok uçlu, akan kesik çizgi. Uzunluklar ekran pikseli; `olcek` ile harita
+## birimine çevrilir. Kesikler oyun akarken (animasyonlar açıksa) hedefe doğru kayar.
+func _yol_oku_ciz(bas: Vector2, son: Vector2, olcek: float) -> void:
+	var fark: Vector2 = son - bas
+	var uzunluk: float = fark.length() / olcek
+	if uzunluk < 1.0:
+		return
+	var yon: Vector2 = fark.normalized()
+	var bitis: float = maxf(uzunluk - YOL_HEDEF_PAYI, 0.0)
+	var ok_dibi: float = maxf(bitis - YOL_OK_BOYU, 0.0)
+	var adim: float = YOL_KESIK_BOYU + YOL_BOSLUK_BOYU
+	var kayma: float = 0.0
+	if _animasyon_acik():
+		kayma = fmod(Time.get_ticks_msec() / 1000.0 * YOL_AKIS_HIZI, adim)
+	# Önce koyu alt çizgiler (okunaklılık), sonra açık kesikler.
+	for kat: int in 2:
+		var renk: Color = YOL_CIZGISI_ALT_RENGI if kat == 0 else YOL_CIZGISI_RENGI
+		var kalinlik: float = (YOL_CIZGISI_KALINLIGI + (3.0 if kat == 0 else 0.0)) * olcek
+		var t: float = kayma - adim
+		while t < ok_dibi:
+			var a: float = maxf(t, 0.0)
+			var b: float = minf(t + YOL_KESIK_BOYU, ok_dibi)
+			if b > a:
+				_ust_katman.draw_line(bas + yon * a * olcek, bas + yon * b * olcek, renk, kalinlik, true)
+			t += adim
+		var uc: Vector2 = bas + yon * bitis * olcek
+		var dik: Vector2 = yon.orthogonal() * YOL_OK_BOYU * 0.55 * olcek
+		var dip: Vector2 = bas + yon * ok_dibi * olcek
+		var ok: PackedVector2Array = PackedVector2Array([uc, dip + dik, dip - dik])
+		if kat == 0:
+			# Alt katman oktan biraz taşar.
+			var tas: float = 2.5 * olcek
+			ok = PackedVector2Array([uc + yon * tas, dip + dik * 1.25 - yon * tas, dip - dik * 1.25 - yon * tas])
+		_ust_katman.draw_colored_polygon(ok, renk)
 
 
 ## Ekrandaki her tümenli bölgenin özeti: bölge id'si -> {"guc": toplam güç, "sayilar": tür ->
@@ -1314,7 +1409,14 @@ func _birlik_ozetleri(gorunen: Rect2) -> Dictionary[String, Dictionary]:
 		ozet["sayilar"][birlik.tur] = int(ozet["sayilar"].get(birlik.tur, 0)) + 1
 		ozet["sahipler"][birlik.sahip] = float(ozet["sahipler"].get(birlik.sahip, 0.0)) + birlik.guc
 	for bolge_id: String in ozetler:
-		ozetler[bolge_id]["genislik"] = _birlik_kutusu_genisligi(ozetler[bolge_id])
+		var ozet: Dictionary = ozetler[bolge_id]
+		# Kartın bayrağı ve kenar rengi bölgedeki en güçlü tarafındır.
+		var baskin: String = ""
+		for sahip: String in ozet["sahipler"]:
+			if baskin == "" or float(ozet["sahipler"][sahip]) > float(ozet["sahipler"][baskin]):
+				baskin = sahip
+		ozet["baskin"] = baskin
+		ozet["genislik"] = _birlik_kutusu_genisligi(ozet)
 	return ozetler
 
 
@@ -1326,7 +1428,7 @@ func _yuruyene_ekle(birlik: Birlik) -> void:
 	var anahtar: String = "%s>%s|%s" % [birlik.bolge_id, birlik.hedef_bolge_id, birlik.sahip]
 	var ozet: Dictionary = _yuruyen_ozetler.get(anahtar, {})
 	if ozet.is_empty():
-		ozet = {"guc": 0.0, "sayilar": {}, "sahipler": {}, "birlik": birlik}
+		ozet = {"guc": 0.0, "sayilar": {}, "sahipler": {}, "birlik": birlik, "baskin": birlik.sahip}
 		_yuruyen_ozetler[anahtar] = ozet
 	ozet["guc"] += birlik.guc
 	ozet["sayilar"][birlik.tur] = int(ozet["sayilar"].get(birlik.tur, 0)) + 1
@@ -1352,25 +1454,31 @@ func _yuruyenleri_ciz(gorunen: Rect2, olcek: float) -> void:
 		if not gorunen.has_point(konum):
 			continue
 		ozet["genislik"] = _birlik_kutusu_genisligi(ozet)
-		var sahip: Ulke = _dunya.ulkeler.get(birlik.sahip)
 		_ust_katman.draw_set_transform(konum, 0.0, Vector2(olcek, olcek))
-		_birlik_kutusu_ciz(ulke_rengi(sahip) if sahip != null else Color.GRAY, ozet, Vector2.ZERO)
+		_birlik_kutusu_ciz(ozet, Vector2.ZERO, false)
 		if not Zaman.durdu:
 			_animasyon_suruyor = true
 
 
-## Kutunun genişliği: iç boşluk + güç yazısı + her tür için (aralık + işaret + sayı).
+## Kartın genişliği: iç boşluk + bayrak + bulunan her tür için simge + tümen sayısı + iç boşluk.
 func _birlik_kutusu_genisligi(ozet: Dictionary) -> float:
-	var genislik: float = BIRLIK_KUTU_IC_BOSLUGU * 2.0 + _yazi_genisligi(str(roundi(ozet["guc"])))
+	var genislik: float = BIRLIK_KUTU_IC_BOSLUGU * 3.0 + BIRLIK_BAYRAK_BOYUTU.x + 2.0
 	for tur: String in BirlikTurleri.SIRA:
-		var sayi: int = ozet["sayilar"].get(tur, 0)
-		if sayi > 0:
-			genislik += BIRLIK_KUTU_IC_BOSLUGU + TUR_ISARETI_BOYUTU + TUR_ISARETI_ARALIGI + _yazi_genisligi(str(sayi))
+		if int(ozet["sayilar"].get(tur, 0)) > 0:
+			genislik += TUR_ISARETI_BOYUTU + TUR_ISARETI_ARALIGI
+	genislik += _yazi_genisligi(str(_tumen_sayisi(ozet)))
 	return maxf(genislik, BIRLIK_KUTU_BOYUTU.x)
 
 
+func _tumen_sayisi(ozet: Dictionary) -> int:
+	var toplam: int = 0
+	for tur: String in ozet["sayilar"]:
+		toplam += int(ozet["sayilar"][tur])
+	return toplam
+
+
 func _yazi_genisligi(metin: String) -> float:
-	return _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
+	return _kalin_yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU).x
 
 
 ## Aynı bölgedeki tümenleri tek kutuda çizer (bkz. _birlik_ozetleri).
@@ -1379,15 +1487,13 @@ func _birlikleri_ciz(olcek: float, ozetler: Dictionary[String, Dictionary],
 		kutu_yerleri: Dictionary[String, Vector2]) -> void:
 	for bolge_id: String in ozetler:
 		var bolge: Bolge = _dunya.bolgeler[bolge_id]
-		var sahip: Ulke = _dunya.bolgenin_sahibi(bolge_id)
-		var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
 		var yer: Vector2 = kutu_yerleri.get(bolge_id, BIRLIK_KONUM_PAYI)
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
 		if yer != BIRLIK_KONUM_PAYI:
 			# Kutu kalabalık yüzünden bölgesinden uzaklaştı: hangi bölgenin olduğu belli olsun.
 			_ust_katman.draw_line(Vector2.ZERO, yer + Vector2(0.0, BIRLIK_KUTU_BOYUTU.y * 0.5),
 					BIRLIK_BAG_CIZGISI_RENGI, BIRLIK_BAG_CIZGISI_KALINLIGI, true)
-		_birlik_kutusu_ciz(renk, ozetler[bolge_id], yer)
+		_birlik_kutusu_ciz(ozetler[bolge_id], yer, bolge_id == _secili_birlik_bolgesi)
 		if ozetler[bolge_id]["sahipler"].size() > 1:
 			_muharebe_isareti_ciz(yer, ozetler[bolge_id], bolge)
 
@@ -1435,75 +1541,82 @@ func _birlik_kutularini_yerlestir(ozetler: Dictionary[String, Dictionary],
 ## `merkez` (BIRLIK_KONUM_PAYI) ölçeklenmiş yerel çerçeve içinde uygulanır ki kutu,
 ## yakınlıktan bağımsız olarak bölge etiketine göre hep aynı ekran uzaklığında kalsın
 ## (konum dönüşüm köküne eklenseydi, kamera yakınlığıyla birlikte ekranda büyürdü).
-func _birlik_kutusu_ciz(renk: Color, ozet: Dictionary, merkez: Vector2 = BIRLIK_KONUM_PAYI) -> void:
+func _birlik_kutusu_ciz(ozet: Dictionary, merkez: Vector2 = BIRLIK_KONUM_PAYI, secili: bool = false) -> void:
 	var yarim: Vector2 = Vector2(ozet["genislik"], BIRLIK_KUTU_BOYUTU.y) * 0.5
-	var kose: PackedVector2Array = PackedVector2Array([
-		merkez + Vector2(-yarim.x, -yarim.y), merkez + Vector2(yarim.x, -yarim.y),
-		merkez + Vector2(yarim.x, yarim.y), merkez + Vector2(-yarim.x, yarim.y),
-	])
-	_ust_katman.draw_colored_polygon(kose, renk)
-	kose.append(kose[0])
-	_ust_katman.draw_polyline(kose, BIRLIK_KUTU_KENAR_RENGI, BIRLIK_KUTU_KENAR_KALINLIGI, true)
+	var alan: Rect2 = Rect2(merkez - yarim, yarim * 2.0)
+	var sahip: Ulke = _dunya.ulkeler.get(ozet.get("baskin", ""))
+	var renk: Color = ulke_rengi(sahip) if sahip != null else Color.GRAY
+	_ust_katman.draw_style_box(_kart_kutusu(renk), alan)
+	if secili:
+		_ust_katman.draw_style_box(_secim_halkasi, alan)
 
-	var taban_y: float = merkez.y + BIRLIK_YAZI_BOYUTU * 0.35
-	var x: float = merkez.x - yarim.x + BIRLIK_KUTU_IC_BOSLUGU
-	var guc_metni: String = str(roundi(ozet["guc"]))
-	_yazi_ciz(guc_metni, Vector2(x, taban_y), BIRLIK_YAZI_BOYUTU, 1.0)
-	x += _yazi_genisligi(guc_metni)
+	# Üst sıra: bayrak, tür simgeleri, tümen sayısı (kartın üst kısmında, altta çubuğa yer kalır).
+	var orta_y: float = merkez.y - GUC_SERIDI_YUKSEKLIGI * 0.5 - 1.0
+	var x: float = alan.position.x + BIRLIK_KUTU_IC_BOSLUGU
+	if sahip != null:
+		var bayrak: Rect2 = Rect2(Vector2(x, orta_y - BIRLIK_BAYRAK_BOYUTU.y * 0.5), BIRLIK_BAYRAK_BOYUTU)
+		_ust_katman.draw_texture_rect(Bayraklar.doku(sahip), bayrak, false)
+		_ust_katman.draw_rect(bayrak, Color(0.0, 0.0, 0.0, 0.5), false, 1.0)
+	x += BIRLIK_BAYRAK_BOYUTU.x + BIRLIK_KUTU_IC_BOSLUGU
 	for tur: String in BirlikTurleri.SIRA:
-		var sayi: int = ozet["sayilar"].get(tur, 0)
-		if sayi == 0:
+		if int(ozet["sayilar"].get(tur, 0)) == 0:
 			continue
-		x += BIRLIK_KUTU_IC_BOSLUGU
-		_tur_isareti_ciz(tur, Vector2(x + TUR_ISARETI_BOYUTU * 0.5, merkez.y))
+		_ust_katman.draw_texture_rect(Simgeler.doku(tur),
+				Rect2(Vector2(x, orta_y - TUR_ISARETI_BOYUTU * 0.5), Vector2.ONE * TUR_ISARETI_BOYUTU), false, BIRLIK_YAZI_RENGI)
 		x += TUR_ISARETI_BOYUTU + TUR_ISARETI_ARALIGI
-		var metin: String = str(sayi)
-		_yazi_ciz(metin, Vector2(x, taban_y), BIRLIK_YAZI_BOYUTU, 1.0)
-		x += _yazi_genisligi(metin)
+	x += 2.0
+	_ust_katman.draw_string(_kalin_yazi_tipi, Vector2(x, orta_y + BIRLIK_YAZI_BOYUTU * 0.36), str(_tumen_sayisi(ozet)),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, BIRLIK_YAZI_BOYUTU, BIRLIK_YAZI_RENGI)
+
+	# Alt: ortalama güç çubuğu.
+	var oran: float = clampf(float(ozet["guc"]) / maxf(_tumen_sayisi(ozet) * TAM_GUC, 1.0), 0.0, 1.0)
+	var cubuk: Rect2 = Rect2(alan.position.x + BIRLIK_KUTU_IC_BOSLUGU, alan.end.y - GUC_SERIDI_YUKSEKLIGI - 5.0,
+			alan.size.x - BIRLIK_KUTU_IC_BOSLUGU * 2.0, GUC_SERIDI_YUKSEKLIGI)
+	_ust_katman.draw_rect(cubuk, GUC_SERIDI_ZEMINI)
+	_ust_katman.draw_rect(Rect2(cubuk.position, Vector2(cubuk.size.x * oran, cubuk.size.y)), _guc_rengi(oran))
 
 
-## Tümen türünün sade işareti (TUR_ISARETI_BOYUTU'luk karede, koyu kenarlı beyaz):
-## piyade çarpı, zırhlı yatay oval, topçu dolu daire.
-func _tur_isareti_ciz(tur: String, merkez: Vector2) -> void:
-	var r: float = TUR_ISARETI_BOYUTU * 0.5
-	var kenar: Color = BIRLIK_KUTU_KENAR_RENGI
-	match tur:
-		"zirhli":
-			var oval: PackedVector2Array = PackedVector2Array()
-			for k: int in 21:
-				var aci: float = TAU * k / 20.0
-				oval.append(merkez + Vector2(cos(aci) * r, sin(aci) * r * 0.55))
-			_ust_katman.draw_polyline(oval, kenar, TUR_ISARETI_KALINLIGI + 3.0, true)
-			_ust_katman.draw_polyline(oval, Color.WHITE, TUR_ISARETI_KALINLIGI, true)
-		"topcu":
-			_ust_katman.draw_circle(merkez, r * 0.7 + 1.5, kenar)
-			_ust_katman.draw_circle(merkez, r * 0.7, Color.WHITE)
-		_:
-			var a: Vector2 = Vector2(r * 0.8, r * 0.8)
-			var b: Vector2 = Vector2(r * 0.8, -r * 0.8)
-			for renk_kalinlik: Array in [[kenar, TUR_ISARETI_KALINLIGI + 3.0], [Color.WHITE, TUR_ISARETI_KALINLIGI]]:
-				_ust_katman.draw_line(merkez - a, merkez + a, renk_kalinlik[0], renk_kalinlik[1], true)
-				_ust_katman.draw_line(merkez - b, merkez + b, renk_kalinlik[0], renk_kalinlik[1], true)
+static func _guc_rengi(oran: float) -> Color:
+	if oran > 0.66:
+		return Color("#4FB985")
+	if oran > 0.33:
+		return Color("#E6AE48")
+	return Color("#E25B5B")
 
 
-## Tahkimatlı bölgenin küçük kale işareti: gri, dişli bir kule ve içinde seviyesi.
+## Kart zemini: koyu yüzey, sahibinin renginde ince kenar, yumuşak gölge. Renk başına bir kez kurulur.
+func _kart_kutusu(renk: Color) -> StyleBoxFlat:
+	if _kart_kutulari.has(renk):
+		return _kart_kutulari[renk]
+	var kutu: StyleBoxFlat = StyleBoxFlat.new()
+	kutu.bg_color = BIRLIK_KART_RENGI
+	kutu.set_corner_radius_all(BIRLIK_KART_KOSESI)
+	kutu.set_border_width_all(BIRLIK_KART_KENARI)
+	kutu.border_color = renk
+	kutu.shadow_color = BIRLIK_GOLGE_RENGI
+	kutu.shadow_size = BIRLIK_GOLGE_BOYUTU
+	kutu.shadow_offset = Vector2(0.0, 2.0)
+	kutu.anti_aliasing = true
+	_kart_kutulari[renk] = kutu
+	return kutu
+
+
+## Tahkimatlı bölgenin küçük kale simgesi (art/icons/tahkimat.svg) ve yanında seviyesi.
 ## `merkez`, bölge etiketinin ölçeklenmiş yerel çerçevesindedir.
 func _tahkimat_isareti_ciz(merkez: Vector2, seviye: int, opaklik: float) -> void:
-	var y: float = TAHKIMAT_ISARETI_BOYUTU * 0.5
-	var d: float = y / 3.0
-	# Üstte üç diş olan bir kule silueti.
-	var kule: PackedVector2Array = PackedVector2Array([
-		merkez + Vector2(-y, y), merkez + Vector2(-y, -y), merkez + Vector2(-y + d, -y),
-		merkez + Vector2(-y + d, -y + d), merkez + Vector2(-d * 0.5, -y + d), merkez + Vector2(-d * 0.5, -y),
-		merkez + Vector2(d * 0.5, -y), merkez + Vector2(d * 0.5, -y + d), merkez + Vector2(y - d, -y + d),
-		merkez + Vector2(y - d, -y), merkez + Vector2(y, -y), merkez + Vector2(y, y),
-	])
-	_ust_katman.draw_colored_polygon(kule, Color(TAHKIMAT_ISARETI_RENGI, opaklik))
-	kule.append(kule[0])
-	_ust_katman.draw_polyline(kule, Color(BIRLIK_KUTU_KENAR_RENGI, opaklik), 2.0, true)
-	var metin: String = str(seviye)
-	var genislik: float = _yazi_tipi.get_string_size(metin, HORIZONTAL_ALIGNMENT_LEFT, -1.0, TAHKIMAT_YAZI_BOYUTU).x
-	_yazi_ciz(metin, merkez + Vector2(-genislik * 0.5, y * 0.2 + TAHKIMAT_YAZI_BOYUTU * 0.35), TAHKIMAT_YAZI_BOYUTU, opaklik)
+	_harita_simgesi_ciz("tahkimat", merkez, Color(TAHKIMAT_ISARETI_RENGI, opaklik), opaklik)
+	_yazi_ciz(str(seviye), merkez + Vector2(TAHKIMAT_ISARETI_BOYUTU * 0.55, TAHKIMAT_YAZI_BOYUTU * 0.75),
+			TAHKIMAT_YAZI_BOYUTU, opaklik)
+
+
+## Haritadaki küçük simge: koyu yuvarlak zemin üstünde verilen renkte simge (adlarla aynı
+## okunaklılık için).
+func _harita_simgesi_ciz(ad: String, merkez: Vector2, renk: Color, opaklik: float) -> void:
+	var r: float = TAHKIMAT_ISARETI_BOYUTU * 0.5
+	_ust_katman.draw_circle(merkez, r + 2.0, Color(BASKENT_ROZETI_RENGI, BASKENT_ROZETI_RENGI.a * opaklik))
+	var boyut: float = TAHKIMAT_ISARETI_BOYUTU * 0.78
+	_ust_katman.draw_texture_rect(Simgeler.doku(ad), Rect2(merkez - Vector2.ONE * boyut * 0.5, Vector2.ONE * boyut),
+			false, renk)
 
 
 ## Tümen kutusunun sağına, birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen
@@ -1516,8 +1629,12 @@ func _muharebe_isareti_ciz(kutu_merkezi: Vector2, ozet: Dictionary, bolge: Bolge
 	if _animasyon_acik():
 		yaricap *= 1.0 + MUHAREBE_ATIS_GENLIGI * sin(Time.get_ticks_msec() / 1000.0 * MUHAREBE_ATIS_HIZI)
 		_animasyon_suruyor = true
+	_ust_katman.draw_circle(merkez + Vector2(0.0, 2.0), yaricap + 1.5, BIRLIK_GOLGE_RENGI)
 	_ust_katman.draw_circle(merkez, yaricap, MUHAREBE_ISARETI_RENGI)
-	_ust_katman.draw_arc(merkez, yaricap, 0.0, TAU, 24, Color.WHITE, 2.0)
+	_ust_katman.draw_arc(merkez, yaricap, 0.0, TAU, 28, Color.WHITE, 2.0, true)
+	var simge: float = yaricap * 1.25
+	_ust_katman.draw_texture_rect(Simgeler.doku("muharebe"),
+			Rect2(merkez - Vector2.ONE * simge * 0.5, Vector2.ONE * simge), false, Color.WHITE)
 
 	var gucler: Dictionary = ozet["sahipler"]
 	var toplam: float = maxf(float(ozet["guc"]), 0.001)
@@ -1532,9 +1649,13 @@ func _muharebe_isareti_ciz(kutu_merkezi: Vector2, ozet: Dictionary, bolge: Bolge
 	var saldiran_rengi: Color = ulke_rengi(saldiran) if saldiran != null else Color.GRAY
 	var sol_ust: Vector2 = merkez + Vector2(-GUC_CUBUGU_BOYUTU.x * 0.5, MUHAREBE_ISARETI_YARICAPI + 6.0)
 	var savunan_payi: float = GUC_CUBUGU_BOYUTU.x * clampf(savunan_guc / toplam, 0.0, 1.0)
-	_ust_katman.draw_rect(Rect2(sol_ust, GUC_CUBUGU_BOYUTU), saldiran_rengi)
+	var cubuk: Rect2 = Rect2(sol_ust, GUC_CUBUGU_BOYUTU)
+	_ust_katman.draw_rect(cubuk.grow(2.0), BIRLIK_KUTU_KENAR_RENGI)
+	_ust_katman.draw_rect(cubuk, saldiran_rengi)
 	_ust_katman.draw_rect(Rect2(sol_ust, Vector2(savunan_payi, GUC_CUBUGU_BOYUTU.y)), savunan_rengi)
-	_ust_katman.draw_rect(Rect2(sol_ust, GUC_CUBUGU_BOYUTU), BIRLIK_KUTU_KENAR_RENGI, false, 2.0)
+	# Taraflar arasındaki ince beyaz çizgi: hangi rengin nerede bittiği net görünsün.
+	_ust_katman.draw_line(sol_ust + Vector2(savunan_payi, 0.0), sol_ust + Vector2(savunan_payi, GUC_CUBUGU_BOYUTU.y),
+			Color.WHITE, 2.0)
 
 
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.
@@ -1548,9 +1669,7 @@ func _yazi_ciz(metin: String, konum: Vector2, boyut: int, opaklik: float) -> voi
 ## Başkent rozeti (bkz. YILDIZ_YARICAPI).
 func _yildiz_ciz(konum: Vector2, opaklik: float) -> void:
 	_ust_katman.draw_circle(konum, YILDIZ_YARICAPI, Color(BASKENT_ROZETI_RENGI, BASKENT_ROZETI_RENGI.a * opaklik))
-	_ust_katman.draw_arc(konum, YILDIZ_YARICAPI - 1.0, 0.0, TAU, 24, Color(BASKENT_HALKASI_RENGI, opaklik), 2.0, true)
-	var noktalar: PackedVector2Array = PackedVector2Array()
-	for k: int in 10:
-		var yaricap: float = YILDIZ_YARICAPI * (0.55 if k % 2 == 0 else 0.23)
-		noktalar.append(konum + Vector2.UP.rotated(TAU * float(k) / 10.0) * yaricap)
-	_ust_katman.draw_colored_polygon(noktalar, Color(BASKENT_HALKASI_RENGI, opaklik))
+	# Simgenin kendi halkası (24'lük kutuda yarıçap 9) rozetin kenarına oturur.
+	var boyut: float = (YILDIZ_YARICAPI - 1.5) / 0.375
+	_ust_katman.draw_texture_rect(Simgeler.doku("baskent"), Rect2(konum - Vector2.ONE * boyut * 0.5, Vector2.ONE * boyut),
+			false, Color(BASKENT_HALKASI_RENGI, opaklik))

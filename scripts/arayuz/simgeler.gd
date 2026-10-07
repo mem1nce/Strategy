@@ -22,4 +22,6 @@ static func dugum(ad: String, boyut: float, renk: Color = ArayuzTemasi.IKINCIL_Y
 	simge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	simge.modulate = renk
 	simge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Simgeler 96 px'lik dokulardır; küçük çizilince mipmap'le pürüzsüz kalır.
+	simge.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return simge

@@ -269,6 +269,7 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 			_secili_birlikler = []
 			_secili_bolge_id = ""
 			_harita.secimi_ayarla("")
+			_harita.birlik_secimini_ayarla("")
 			_arayuz.bolgeyi_goster(null, false)
 			return
 
@@ -282,8 +283,10 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 		if not birlikler.is_empty():
 			_arayuz.birligi_goster(bolge, birlikler, _oyun.dunya.ulkeler[_oyun.oyuncu_ulkesi])
 			_secili_birlikler = birlikler
+			_harita.birlik_secimini_ayarla(bolge_id)
 			return
 	_secili_birlikler = []
+	_harita.birlik_secimini_ayarla("")
 	var yabanci_bolge: bool = bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip != _oyun.oyuncu_ulkesi
 	var savasta: bool = yabanci_bolge and _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip)
 	var savas_dugmesi_gorunur: bool = yabanci_bolge and not savasta \

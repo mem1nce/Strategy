@@ -83,6 +83,9 @@ func _calistir() -> void:
 		if oyun.bolgedeki_birlikler(bolge.id).is_empty():
 			bos = bolge.id
 			break
+	# Harita simgeleri görünsün diye bu bölgede tahkimat ve fabrika varmış gibi gösterilir.
+	oyun.dunya.bolgeler[bos].tahkimat = 2
+	oyun.dunya.bolgeler[bos].fabrika_sanayisi = 2.0
 	_ana.call("_bolgeyi_sec", bos)
 	await _cek("07_bolge_paneli")
 	arayuz.call("_insa_basildi", "tumen")

@@ -97,6 +97,16 @@ Sayılar kısaltılır (`Bicim`): 1 250 → "1,2 B", 3 400 000 → "3,4 Mn", 2,7
 - Bölge adları Inter 500, 20 px, koyu kenarlı beyaz. Başkent: koyu daire, altın halka, yıldız.
 - Oyuncunun ülkesi her zaman ince altın çerçeve; seçili bölge parlak kenar ve içe doğru
   solan açık parıltı.
+- Tümen kartı (bölge başına bir tane, sabit ekran boyu): koyu yüzey, köşe 8, kenarı en güçlü
+  tarafın ülke renginde, hafif gölge; içinde o tarafın bayrağı, bulunan türlerin simgeleri
+  (piyade / zırhlı / topçu), tümen sayısı ve altta ortalama güç çubuğu (yeşil > %66, altın
+  > %33, kırmızı). Birlik kartı açık olan bölgenin kartında parlak altın halka.
+- Yürüyüş yolu: koyu alt çizgili açık altın kesik çizgi, hedefte ok ucu; oyun akarken
+  kesikler hedefe doğru akar.
+- Muharebe: kırmızı daire içinde çapraz kılıçlar (hafifçe atar), altında savunan (sol) ve
+  saldıranın (sağ) renginde üstünlük çubuğu.
+- Bölge simgeleri koyu yuvarlak zemin üstünde: tahkimat (gri, yanında seviye), fabrika
+  (altın), başkent (altın halkalı yıldız).
 - Harita modları sol kenarda dikey sekmelerdir: Siyasi, Diplomasi (sen / savaştığın /
   tarafsız; ittifak olmadığı için müttefik rengi yok), Ekonomi (bölge sanayisi, logaritmik
   merdiven). Siyasi dışındaki modlarda renklerin anlamı küçük bir kartta yazar.
