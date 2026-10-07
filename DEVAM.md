@@ -589,7 +589,13 @@ Adımlar (her biri ayrı commit):
    eski kayıtta ana menü "Bu kayıt eski bir sürüme ait" der. Kara hareketi mesafeyle orantılı
    (0,33 sa/birim, 8-48 sa). Tahkimat taban maliyeti 80 → 40. Kırılan iki sınama (muharebe,
    YZ savaş) başlangıç ordusundan bağımsız hâle getirildi. 127/127.
-2. ⬜ Görünüm: yakınlaşma eşikleri, tümen kutusu çakışması, ekran görüntüleri.
+2. ✅ Görünüm: bölge ayrıntılarının belirme eşiği 1,7-2,6 → 2,4-3,4; tümen kutuları ancak
+   ayrıntılar en az yarı belirince (yakınlık ~2,9) çizilir (önceden yakınlık 2,5'te Avrupa
+   kutularla kaplanıyordu); kutu küçüldü (yazı 22, yükseklik 34); 4 kat × (üst, sol, sağ)
+   yedek konum denenir, yerinden kayan kutu bölgesine ince bir çizgiyle bağlanır.
+   Avrupa (uzak/yakın/Benelüks), Orta Doğu, Türkiye, Doğu Asya ve ABD doğusu ekran
+   görüntüleriyle denetlendi; kare süresi her yakınlıkta 7-12 ms. Kullanılmayan
+   ne_50m_populated_places.geojson silindi.
 3. ⬜ Denge ve performans: üç tohumla uzun koşu, harita akıcılığı.
 4. ⬜ Belgeler: TEST_LISTESI.md.
 
