@@ -1,5 +1,7 @@
 # tools/ altındaki betikler için gereken Python kütüphaneleri.
 # Kurmak için: python -m pip install -r tools/requirements.txt
 shapely>=2.0
-# tools/ses_uret.py ve tools/simge_uret.py
+# tools/ses_uret.py, tools/simge_uret.py ve tools/kabartma_uret.py
 numpy>=1.20
+# tools/kabartma_uret.py (TIFF okuma)
+pillow>=10.0

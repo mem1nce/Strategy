@@ -10,3 +10,6 @@ builds/
 *.apk
 *.aab
 *.idsig
+
+# Büyük kaynak dosyalar (betiklerin başında indirme adresi yazar).
+tools/kaynak/SR_50M.zip

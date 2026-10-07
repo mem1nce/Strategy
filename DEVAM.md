@@ -677,6 +677,27 @@ da `export_presets.cfg`'yi kendi bellekteki hâliyle yeniden kaydederse bu paket
 değişiklikler (simge, `quit_on_go_back`, Android ön ayarı) ezilebilir; düzenleyiciyi kapatıp
 açmak yeterli.
 
+## Paket: görsel yenileme (2026-10-07)
+
+Hedef: zengin, modern strateji haritası görünümü (başka oyundan görsel, simge, logo ya da
+düzen kopyalanmadan). Kurallar değişmiyor. Her adımın önce/sonra görüntüleri docs/gorsel/
+altında (`tests/gorsel_cek.gd`, JPG; 16:9 = 1600×900, 20:9 = 1924×900 — pencere bu ekrana
+sığacak kadar geniş).
+
+Adımlar:
+0. ✅ Önce görüntüleri: docs/gorsel/once/ (15 ekran × 2 oran).
+1. ✅ Dış kaynaklar (yalnızca izin verilenler):
+   - Bayraklar: lipis/flag-icons 4x3 SVG (MIT), `tools/bayrak_indir.py` (Natural Earth ISO_A2;
+     "-99" olan Fransa, Norveç vb. için Natural Earth'ün ISO_A2_EH alanı). 173 ülke; Kuzey
+     Kıbrıs, Somaliland ve Tayvan (ISO_A2 "CN-TW", depoda yok) yedek bayrak alır.
+     `tools/bayrak_atlasi.gd` Godot'nun SVG çiziciyle tek atlas yapar: assets/flags/flags.png
+     (96×72 hücre, 1536×792, 278 KB) + flags.json.
+   - Yazı tipleri (SIL OFL 1.1): Cinzel (başlık/harita, değişken ağırlık 400-900) ve Inter
+     (arayüz). fontTools ile ğ ş ı İ ö ü ç (büyükleri dahil) doğrulandı. assets/fonts/.
+   - Kabartma: Natural Earth SR_50M (kamu malı) → `tools/kabartma_uret.py` Miller'e çevirir:
+     assets/relief.png, 4096×2066 gri tek doku (1,8 MB). Kaynak zip depoya girmez.
+   - Lisans metinleri lisanslar/ (export'a `include_filter` ile dahil).
+
 ## Kararlar
 
 - 2026-10-07: Yapay zekânın "yalnızca kendi komşuluğunu bilmesi" savaş sisi seçeneğinden
