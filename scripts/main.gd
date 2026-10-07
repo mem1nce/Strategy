@@ -20,6 +20,7 @@ var _harita: HaritaGorunumu = null
 var _kamera: HaritaKamerasi = null
 var _arayuz: Arayuz = null
 var _ana_menu: AnaMenu = null
+var _ses: SesYoneticisi = null
 ## Açılışta bulunan kayıt (varsa); "Devam et" seçilince uygulanır (bkz. _devam_secildi).
 var _bekleyen_kayit: Dictionary = {}
 ## Birlik kartı açıkken, kartta gösterilen (ve bir sonraki hedef seçiminde yürütülecek)
@@ -30,6 +31,14 @@ var _secili_bolge_id: String = ""
 
 
 func _ready() -> void:
+	Ayarlar.yukle()
+	_ses = SesYoneticisi.new()
+	_ses.name = "Ses"
+	add_child(_ses)
+	# Bundan sonra eklenen her düğme basılınca tepki verir ve tıklama sesi çıkarır; her panel
+	# görünür olunca solarak belirir (bkz. Gecis).
+	get_tree().node_added.connect(_dugum_eklendi)
+
 	var dunya: Dunya = Dunya.yukle()
 	if dunya == null:
 		push_error("Dünya verisi yüklenemedi; oyun başlatılamıyor.")
@@ -60,6 +69,15 @@ func _ready() -> void:
 	_oyun.baris_yapildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.tahkimat_degisti.connect(_tahkimat_degisti)
 	_oyun.gorunurluk_degisti.connect(_gorunurluk_degisti)
+	_oyun.bolge_el_degistirdi.connect(_bolge_el_degistirdi)
+	_oyun.muharebe_basladi.connect(_muharebe_basladi)
+	_oyun.insa_tamamlandi.connect(func(ulke_id: String, _bolge_id: String) -> void:
+		if ulke_id == _oyun.oyuncu_ulkesi:
+			_ses.cal("uretim"))
+	_oyun.savas_ilan_edildi.connect(func(a: String, b: String) -> void:
+		if _oyun.oyuncu_ulkesi in [a, b]:
+			_ses.cal("savas_ilani"))
+	_oyun.ulke_teslim_oldu.connect(_ulke_teslim_oldu)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -104,6 +122,45 @@ func _ready() -> void:
 		_harita.ucgenlenemeyenler.size()])
 
 	_ekran_goruntusu_istendiyse_kaydet()
+
+
+## Sahneye eklenen her düğüme sunum katmanının ortak tepkilerini bağlar: düğmeler basılınca
+## hafifçe küçülür ve tıklama sesi çıkarır, paneller görünür olunca solarak belirir.
+func _dugum_eklendi(dugum: Node) -> void:
+	if dugum is BaseButton:
+		Gecis.dugmeyi_bagla(dugum)
+		(dugum as BaseButton).pressed.connect(func() -> void: _ses.cal("tiklama"))
+	elif dugum is PanelContainer:
+		Gecis.belirmeyi_bagla(dugum)
+
+
+## Bir bölge el değiştirdi: görünüyorsa kısa bir parlama; oyuncu aldıysa ses.
+func _bolge_el_degistirdi(bolge_id: String, _eski: String, yeni: String) -> void:
+	_harita.parlat(bolge_id)
+	if yeni == _oyun.oyuncu_ulkesi and yeni != "":
+		_ses.cal("ele_gecirme")
+
+
+## Yeni bir muharebe başladı: oyuncunun bölgesinde ya da oyuncunun tümenleriyle olduysa ses.
+func _muharebe_basladi(bolge_id: String) -> void:
+	if not _oyun.oyuncu_secildi_mi() or not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
+		return
+	var ilgili: bool = _oyun.dunya.bolgeler[bolge_id].sahip == _oyun.oyuncu_ulkesi
+	if not ilgili:
+		for birlik: Birlik in _oyun.bolgedeki_birlikler(bolge_id):
+			if birlik.sahip == _oyun.oyuncu_ulkesi:
+				ilgili = true
+				break
+	if ilgili:
+		_ses.cal("muharebe")
+
+
+## Oyuncunun savaştığı bir ülke teslim olunca tam ekran şerit ve ses.
+func _ulke_teslim_oldu(ulke_id: String, _galip_id: String) -> void:
+	if ulke_id == _oyun.oyuncu_ulkesi or not _oyun.savasta_mi(_oyun.oyuncu_ulkesi, ulke_id):
+		return
+	_arayuz.serit_goster("%s TESLİM OLDU" % _oyun.dunya.ulkeler[ulke_id].ad.to_upper(), ArayuzTemasi.ETKIN_RENK)
+	_ses.cal("ele_gecirme")
 
 
 ## Uygulama arka plana geçtiğinde (telefonda) ya da kapatılmak istendiğinde (bilgisayarda)
@@ -165,6 +222,7 @@ func _haritaya_dokunuldu(dunya_konumu: Vector2) -> void:
 func _bolgeyi_sec(bolge_id: String) -> void:
 	if not _secili_birlikler.is_empty() and bolge_id != "" and bolge_id != _secili_birlikler[0].bolge_id:
 		if _oyun.birlikleri_yurut(_secili_birlikler, bolge_id, Zaman.toplam_saat):
+			_ses.cal("emir")
 			_secili_birlikler = []
 			_secili_bolge_id = ""
 			_harita.secimi_ayarla("")
@@ -238,6 +296,7 @@ func _tumen_istendi(birlik_turu: String) -> void:
 
 
 func _siralama_sonucunu_bildir(kabul: bool, ad: String, maliyet: float) -> void:
+	_ses.cal("onay" if kabul else "hata")
 	if kabul:
 		_arayuz.bildirim_goster("%s sıraya alındı: %s." % [ad, _oyun.dunya.bolgeler[_secili_bolge_id].ad],
 				_secili_bolge_id)
@@ -294,7 +353,9 @@ func _teknoloji_ilerlemesini_guncelle() -> void:
 func _arastirma_istendi(dal: String) -> void:
 	var ulke_id: String = _oyun.oyuncu_ulkesi
 	if _oyun.arastirma_baslat(ulke_id, dal):
+		_ses.cal("onay")
 		return
+	_ses.cal("hata")
 	if not _oyun.suren_arastirma(ulke_id).is_empty():
 		_arayuz.bildirim_goster("Aynı anda tek araştırma yapılabilir.", "")
 	else:
@@ -318,12 +379,14 @@ func _hazine_degisti() -> void:
 ## olduğu için oyun durur; oyuncu "Kapat"tan sonra "Devam"a basarak sürdürebilir.
 func _oyun_kazanildi() -> void:
 	_arayuz.zaferi_goster()
+	_ses.cal("zafer")
 	Zaman.durdur()
 
 
 ## Oyuncunun ülkesi teslim olunca çağrılır.
 func _oyun_kaybedildi() -> void:
 	_arayuz.kaybi_goster()
+	_ses.cal("kaybetme")
 	Zaman.durdur()
 
 
@@ -337,7 +400,10 @@ func _savas_istendi(hedef_ulke_id: String) -> void:
 ## taraf kaybediyorsa ya da savaş 180 günden uzun sürdüyse) seçim kaldırılır.
 func _baris_istendi(hedef_ulke_id: String) -> void:
 	if _oyun.baris_teklif_et(_oyun.oyuncu_ulkesi, hedef_ulke_id, Zaman.toplam_saat):
+		_ses.cal("onay")
 		_bolgeyi_sec("")
+	else:
+		_ses.cal("hata")
 
 
 ## Birlik kartındaki "Yarısını ayır" düğmesine basıldığında çağrılır. Ayrılan yarı sonraki

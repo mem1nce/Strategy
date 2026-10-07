@@ -1,3 +1,5 @@
-# tools/dunya_donustur.py için gereken Python kütüphaneleri.
+# tools/ altındaki betikler için gereken Python kütüphaneleri.
 # Kurmak için: python -m pip install -r tools/requirements.txt
 shapely>=2.0
+# tools/ses_uret.py ve tools/simge_uret.py
+numpy>=1.20

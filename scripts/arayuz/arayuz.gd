@@ -56,6 +56,7 @@ var _siralama_paneli: SiralamaPaneli = null
 var _bildirim_kutusu: BildirimKutusu = null
 var _tumen_secim_paneli: TumenSecimPaneli = null
 var _teknoloji_paneli: TeknolojiPaneli = null
+var _serit: SeritPaneli = null
 
 
 func kur(dunya: Dunya) -> void:
@@ -153,12 +154,21 @@ func kur(dunya: Dunya) -> void:
 	bildirim_konumu.add_child(_bildirim_kutusu)
 	_bildirim_kutusu.bildirime_dokunuldu.connect(func(bolge_id: String) -> void: bildirime_dokunuldu.emit(bolge_id))
 
+	_serit = SeritPaneli.new()
+	kok.add_child(_serit)
+
 	get_viewport().size_changed.connect(_guvenli_alani_uygula)
 	_guvenli_alani_uygula()
 
 
+## Ekranın ortasından geçen kısa, tam genişlikte bir şerit gösterir (bkz. SeritPaneli).
+func serit_goster(metin: String, renk: Color) -> void:
+	_serit.goster(metin, renk)
+
+
 ## Zafer bildirimini ortada gösterir. Oyun kilitlenmez; "sonrasında oynamaya devam edilebilir".
 func zaferi_goster() -> void:
+	serit_goster("ZAFER", ArayuzTemasi.ETKIN_RENK)
 	_sonuc_paneli.goster("Zafer!",
 			"Kıtandaki bölgelerin en az %%%d'i artık senin. Oynamaya devam edebilirsin." % roundi(Oyun.ZAFER_ORANI * 100),
 			ArayuzTemasi.ETKIN_RENK)
@@ -166,6 +176,7 @@ func zaferi_goster() -> void:
 
 ## Kaybetme bildirimini ortada gösterir.
 func kaybi_goster() -> void:
+	serit_goster("ÜLKEN TESLİM OLDU", KAYBETME_RENGI)
 	_sonuc_paneli.goster("Kaybettin", "Ülken teslim oldu.", KAYBETME_RENGI)
 
 
@@ -235,7 +246,7 @@ func teknoloji_ilerlemesini_goster(seviyeler: Dictionary, suren: Dictionary) -> 
 
 
 func _teknoloji_panelini_kapat() -> void:
-	_teknoloji_paneli.hide()
+	Gecis.kapat(_teknoloji_paneli)
 	_ust_cubuk.teknoloji_dugmesini_kapat()
 
 
@@ -258,16 +269,16 @@ func _siralama_degisti(acik: bool) -> void:
 		_teknoloji_panelini_kapat()
 		siralama_istendi.emit()
 	else:
-		_siralama_paneli.hide()
+		Gecis.kapat(_siralama_paneli)
 
 
 func _teknoloji_degisti(acik: bool) -> void:
 	if acik:
-		_siralama_paneli.hide()
+		Gecis.kapat(_siralama_paneli)
 		_ust_cubuk.siralama_dugmesini_kapat()
 		teknoloji_istendi.emit()
 	else:
-		_teknoloji_paneli.hide()
+		Gecis.kapat(_teknoloji_paneli)
 
 
 ## Arayüzü çentik ve yuvarlak köşelerin dışında, güvenli alanın içinde tutar.

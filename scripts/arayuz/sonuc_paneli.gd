@@ -37,7 +37,7 @@ func _ready() -> void:
 	kapat.focus_mode = Control.FOCUS_NONE
 	kapat.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
 	kapat.pressed.connect(func() -> void:
-		hide()
+		Gecis.kapat(self)
 		kapat_basildi.emit())
 	dikey.add_child(kapat)
 

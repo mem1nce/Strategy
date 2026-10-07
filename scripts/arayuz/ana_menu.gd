@@ -20,6 +20,9 @@ const METIN_YUKSEKLIGI: float = 720.0
 const METIN_YAZI_BOYUTU: int = 30
 ## Paragraflar arasındaki boşluk (piksel); boş satırdan daha az yer kaplar.
 const PARAGRAF_ARALIGI: int = 18
+## Ses düzeyi "−" / "+" düğmelerinin boyutu ve her basışta değişim miktarı.
+const KUCUK_DUGME_BOYUTU: Vector2 = Vector2(112.0, 112.0)
+const SES_ADIMI: float = 0.1
 
 const NASIL_OYNANIR_METNI_BICIMI: String = (
 		"Bir bölgeye dokunup \"Bu ülkeyle oyna\" ile ülkeni seç.\n" +
@@ -51,6 +54,9 @@ var _yeni_oyun_paneli: CenterContainer = null
 ## Ana düğmelerin paneli; bir alt panel (yeni oyun, ayarlar) açıkken gizlenir ki arkadan sızmasın.
 var _ana_ortalayici: CenterContainer = null
 var _savas_sisi: Button = null
+var _animasyonlar: Button = null
+var _ses_duzeyi: Label = null
+var _sessiz: Button = null
 
 
 func kur() -> void:
@@ -204,6 +210,38 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dikey.add_child(baslik)
 
+	_animasyonlar = _dugme_ekle(dikey, "")
+	_animasyonlar.toggle_mode = true
+	_animasyonlar.button_pressed = not Ayarlar.animasyonlar_azaltilmis
+	_animasyonlar.toggled.connect(func(acik: bool) -> void:
+		Ayarlar.animasyonlar_azaltilmis = not acik
+		Ayarlar.kaydet()
+		_ayar_yazilarini_yenile())
+
+	var ses_sirasi: HBoxContainer = HBoxContainer.new()
+	ses_sirasi.alignment = BoxContainer.ALIGNMENT_CENTER
+	ses_sirasi.add_theme_constant_override("separation", 12)
+	dikey.add_child(ses_sirasi)
+	var azalt: Button = _dugme_ekle(ses_sirasi, "−")
+	azalt.custom_minimum_size = KUCUK_DUGME_BOYUTU
+	azalt.pressed.connect(_ses_duzeyini_degistir.bind(-SES_ADIMI))
+	_ses_duzeyi = Label.new()
+	_ses_duzeyi.custom_minimum_size = Vector2(200.0, 0.0)
+	_ses_duzeyi.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ses_sirasi.add_child(_ses_duzeyi)
+	var artir: Button = _dugme_ekle(ses_sirasi, "+")
+	artir.custom_minimum_size = KUCUK_DUGME_BOYUTU
+	artir.pressed.connect(_ses_duzeyini_degistir.bind(SES_ADIMI))
+
+	_sessiz = _dugme_ekle(dikey, "")
+	_sessiz.toggle_mode = true
+	_sessiz.button_pressed = Ayarlar.sessiz
+	_sessiz.toggled.connect(func(acik: bool) -> void:
+		Ayarlar.sessiz = acik
+		Ayarlar.kaydet()
+		_ayar_yazilarini_yenile())
+	_ayar_yazilarini_yenile()
+
 	_kaydi_sil = _dugme_ekle(dikey, "Kaydı sil")
 	_kaydi_sil.pressed.connect(func() -> void: _kaydi_sil_onayi.popup_centered())
 
@@ -219,14 +257,26 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	return ortalayici
 
 
+func _ses_duzeyini_degistir(fark: float) -> void:
+	Ayarlar.ses_duzeyi = clampf(snappedf(Ayarlar.ses_duzeyi + fark, SES_ADIMI), 0.0, 1.0)
+	Ayarlar.kaydet()
+	_ayar_yazilarini_yenile()
+
+
+func _ayar_yazilarini_yenile() -> void:
+	_animasyonlar.text = "Animasyonlar: Açık" if _animasyonlar.button_pressed else "Animasyonlar: Azaltılmış"
+	_ses_duzeyi.text = "Ses: %%%d" % roundi(Ayarlar.ses_duzeyi * 100.0)
+	_sessiz.text = "Sessiz: Açık" if _sessiz.button_pressed else "Sessiz: Kapalı"
+
+
 func _alt_paneli_ac(panel: CenterContainer) -> void:
 	_ana_ortalayici.hide()
-	panel.show()
+	Gecis.ac(panel)
 
 
 func _alt_paneli_kapat(panel: CenterContainer) -> void:
 	panel.hide()
-	_ana_ortalayici.show()
+	Gecis.ac(_ana_ortalayici)
 
 
 ## Yeni oyun seçenekleri: "Savaş sisi: Açık / Kapalı" ve "Başla" / "Vazgeç".

@@ -36,6 +36,12 @@ signal oyun_kazanildi
 ## bölge id'siyle yayılır. Bölge id'si yoksa (ör. gelecekte eklenebilecek bölgesiz bir
 ## olay) boş metindir.
 signal bildirim_gonder(metin: String, bolge_id: String)
+## Bir bölgede yeni bir muharebe başladığında (önceki saatte çekişmeli değilken) yayılır.
+signal muharebe_basladi(bolge_id: String)
+## Bir bölge (işgal, muharebe ya da teslimle) el değiştirdiğinde yayılır.
+signal bolge_el_degistirdi(bolge_id: String, eski_sahip: String, yeni_sahip: String)
+## Bir inşa işi (tümen, fabrika, tahkimat) tamamlandığında yayılır.
+signal insa_tamamlandi(ulke_id: String, bolge_id: String)
 ## Savaş sisi açıkken oyuncunun gördüğü bölgeler değiştiğinde yayılır (bkz. oyuncu_bolgeyi_goruyor_mu).
 signal gorunurluk_degisti
 
@@ -133,6 +139,8 @@ var _tarama_gerekli: bool = true
 var _son_tarama_tumen_sayisi: int = -1
 var _en_yakin_varis: int = -1
 var _son_tarama_saati: int = -1
+## Son taramada muharebe olan bölgeler (muharebe_basladi yalnızca yenilerde yayılsın diye).
+var _onceki_cekismeliler: Dictionary[String, bool] = {}
 
 ## Ülke id'si -> {dal: seviye} (bkz. Teknoloji). Kaydı olmayan dal 0. seviyededir.
 var teknolojiler: Dictionary[String, Dictionary] = {}
@@ -188,7 +196,9 @@ func _init(yeni_dunya: Dunya) -> void:
 	_tahkimat_suresi_saat = int(tahkimat_ayarlari.get("sure_saat", _tahkimat_suresi_saat))
 	birlikler_degisti.connect(_oyuncu_gorunurlugunu_guncelle)
 	bolge_sahipligi_degisti.connect(_oyuncu_gorunurlugunu_guncelle)
-	oyuncu_secildi.connect(func(_ulke_id: String) -> void: _oyuncu_gorunurlugunu_guncelle())
+	# Lambda değil yöntem bağlanır: kendine bağlı bir lambda Oyun'u kendi sinyalinde tutup
+	# hiç serbest bırakılmamasına (sızıntı) yol açıyordu.
+	oyuncu_secildi.connect(_oyuncu_secilince)
 
 	var ordu_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("ordu", {})
 	_baslangic_gucu = float(ordu_ayarlari.get("baslangic_gucu", _baslangic_gucu))
@@ -249,6 +259,7 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 	for birlik: Birlik in tasinacaklar:
 		birlik.hedef_bolge_id = hedef_bolge_id
 		birlik.varis_saati = varis
+		birlik.cikis_saati = su_anki_saat
 		birlik.son_adim_deniz_mi = denizden
 	_en_yakin_varis = varis if _en_yakin_varis < 0 else mini(_en_yakin_varis, varis)
 	birlikler_degisti.emit()
@@ -380,10 +391,14 @@ func _dizini_kur(su_anki_saat: int, varanlar: Variant = null) -> Array[Bolge]:
 func _muharebeleri_coz(dolu_bolgeler: Array[Bolge], su_anki_saat: int) -> bool:
 	var muharebe_oldu: bool = false
 	var dizin: Dictionary[String, Array] = _saat_dizini
+	var cekismeliler: Dictionary[String, bool] = {}
 	for bolge: Bolge in dolu_bolgeler:
 		if not bolge.dizin_cekismeli:
 			continue
 		muharebe_oldu = true
+		cekismeliler[bolge.id] = true
+		if not _onceki_cekismeliler.has(bolge.id):
+			muharebe_basladi.emit(bolge.id)
 		var bolge_id: String = bolge.id
 		var katilanlar: Array[Birlik] = []
 		for birlik: Birlik in (dizin[bolge_id] as Array):
@@ -403,6 +418,7 @@ func _muharebeleri_coz(dolu_bolgeler: Array[Bolge], su_anki_saat: int) -> bool:
 				yeni_liste.append(birlik)
 				dizin[birlik.bolge_id] = yeni_liste
 		dizin[bolge_id] = kalanlar
+	_onceki_cekismeliler = cekismeliler
 	return muharebe_oldu
 
 
@@ -503,6 +519,8 @@ func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> voi
 	bolge.sahip = yeni_sahip
 	bolge.isgal_saati = su_anki_saat
 	bolge_sahipligi_degisti.emit()
+	if eski_sahip != yeni_sahip:
+		bolge_el_degistirdi.emit(bolge.id, eski_sahip, yeni_sahip)
 	if oyuncu_ulkesi != "" and eski_sahip != yeni_sahip:
 		if yeni_sahip == oyuncu_ulkesi:
 			bildirim_gonder.emit("%s bölgesini ele geçirdin." % bolge.ad, bolge.id)
@@ -531,6 +549,7 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	var galip_id: String = baskent_sahibi.id
 	for bolge: Bolge in su_anki_bolgeler:
 		bolge.sahip = galip_id
+		bolge_el_degistirdi.emit(bolge.id, ulke_id, galip_id)
 		bolge.isgal_saati = su_anki_saat
 		bolge.tahkimat = maxi(0, bolge.tahkimat - 1)
 	var kalanlar: Array[Birlik] = []
@@ -858,6 +877,7 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 		_:
 			if bolge != null:
 				bolge.fabrika_sanayisi += _fabrika_sanayi_artisi
+	insa_tamamlandi.emit(is_.sahip, is_.bolge_id)
 	if is_.sahip == oyuncu_ulkesi and bolge != null:
 		bildirim_gonder.emit("%s tamamlandı: %s." % [ne, bolge.ad], is_.bolge_id)
 
@@ -1250,6 +1270,10 @@ func oyuncu_bolgeyi_goruyor_mu(bolge_id: String) -> bool:
 	return _oyuncu_gorunenleri.has(bolge_id)
 
 
+func _oyuncu_secilince(_ulke_id: String) -> void:
+	_oyuncu_gorunurlugunu_guncelle()
+
+
 func _oyuncu_gorunurlugunu_guncelle() -> void:
 	var yeni: Dictionary[String, bool] = {}
 	if savas_sisi and oyuncu_ulkesi != "":
@@ -1296,6 +1320,7 @@ func kaydet_icin_veri() -> Dictionary:
 		birlik_verisi.append({
 			"sahip": birlik.sahip, "tur": birlik.tur, "bolge_id": birlik.bolge_id, "guc": birlik.guc,
 			"hedef_bolge_id": birlik.hedef_bolge_id, "varis_saati": birlik.varis_saati,
+			"cikis_saati": birlik.cikis_saati,
 			"son_adim_deniz_mi": birlik.son_adim_deniz_mi,
 		})
 
@@ -1355,6 +1380,7 @@ func kayittan_yukle(veri: Dictionary) -> void:
 		birlik.guc = float(b.get("guc", 0.0))
 		birlik.hedef_bolge_id = str(b.get("hedef_bolge_id", ""))
 		birlik.varis_saati = int(b.get("varis_saati", -1))
+		birlik.cikis_saati = int(b.get("cikis_saati", birlik.varis_saati))
 		birlik.son_adim_deniz_mi = bool(b.get("son_adim_deniz_mi", false))
 		birlikler.append(birlik)
 

@@ -636,7 +636,17 @@ Adımlar (her biri ayrı commit):
    zekâ savaş ilanında ve tür seçiminde yalnızca gördüğünü kullanıyor. Kayıt sürümü 4
    (3 açılır). Yeni sınamalar: savas_sisi_testi (10), kayıt 3. sürüm. 137/137. Uzun koşu
    tohum 1: 14 teslim, en büyük %4,7, süre 62 sn.
-2. ⬜ Animasyon ve ses.
+2. ✅ Animasyon ve ses: `Ayarlar` (user://ayarlar.json; animasyonlar, ses düzeyi, sessiz;
+   ana menü → Ayarlar). Harita: kayan tümenler (`Birlik.cikis_saati`, `Zaman.saat_kesri`),
+   atan muharebe işareti + güç çubuğu, ele geçirme parlaması; üst katman yalnızca animasyon
+   sürerken her kare çizilir, en yüksek hızda ve "Azaltılmış"ta animasyon yok. `Gecis`:
+   panellerin solarak açılıp kapanması, düğme basma tepkisi (main.gd'de `node_added` ile her
+   düğmeye/panele bağlanır); bildirimler sağdan kayar; `SeritPaneli` (zafer, kaybetme, düşman
+   teslimi). Sim olayları: `muharebe_basladi`, `bolge_el_degistirdi`, `insa_tamamlandi`.
+   `tools/ses_uret.py` 10 WAV sentezler (sounds/); `SesYoneticisi` bekleme süresi ve 4 kanal.
+   Bulunan sızıntı: Oyun kendi sinyaline kendini yakalayan bir lambda bağlamıştı (çıkışta
+   "8 resources still in use"); yöntemle değiştirildi. Yeni sınamalar: ayarlar_testi (6).
+   143/143. Ekran görüntüleriyle denetlendi (kayan kutu, muharebe çubuğu, parlama, şerit).
 3. ⬜ Android.
 4. ⬜ Ülke bonusları.
 5. ⬜ Denge, sınama, belgeler.

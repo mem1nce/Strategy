@@ -29,16 +29,20 @@ const SINAMA_SINIFLARI: Array[Script] = [
 	preload("res://tests/sim/teknoloji_testi.gd"),
 	preload("res://tests/sim/tahkimat_testi.gd"),
 	preload("res://tests/sim/savas_sisi_testi.gd"),
+	preload("res://tests/sim/ayarlar_testi.gd"),
 ]
 
 
 ## Sınamaların kullandığı kayıt dosyası; oyuncunun gerçek kaydı (user://kayit.json)
 ## sınamalarda hiçbir zaman okunmaz, yazılmaz ve silinmez.
 const SINAMA_KAYIT_DOSYASI: String = "user://sinama_kayit.json"
+## Sınamaların kullandığı ayar dosyası; oyuncunun ayarlarına (user://ayarlar.json) dokunulmaz.
+const SINAMA_AYAR_DOSYASI: String = "user://sinama_ayarlar.json"
 
 
 func _init() -> void:
 	KayitYoneticisi.kayit_dosyasi = SINAMA_KAYIT_DOSYASI
+	Ayarlar.ayar_dosyasi = SINAMA_AYAR_DOSYASI
 	var toplam: int = 0
 	var basarisiz: int = 0
 	for sinif: Script in SINAMA_SINIFLARI:
@@ -52,7 +56,8 @@ func _init() -> void:
 			if hata != "":
 				basarisiz += 1
 				print("BAŞARISIZ %s.%s: %s" % [sinif.resource_path.get_file(), ad, hata])
-	if FileAccess.file_exists(SINAMA_KAYIT_DOSYASI):
-		DirAccess.remove_absolute(SINAMA_KAYIT_DOSYASI)
+	for dosya: String in [SINAMA_KAYIT_DOSYASI, SINAMA_AYAR_DOSYASI]:
+		if FileAccess.file_exists(dosya):
+			DirAccess.remove_absolute(dosya)
 	print("%d / %d sınama geçti." % [toplam - basarisiz, toplam])
 	quit(1 if basarisiz > 0 else 0)

@@ -61,6 +61,13 @@ const VURGU_OPAKLIGI: float = 0.62
 ## Savaş sisi: oyuncunun görmediği bölgelerin dolgusu bu oranda koyulaşır (harita okunaklı
 ## kalsın diye hafif). Sahiplik rengi yine anlaşılır.
 const SIS_KARARTMASI: float = 0.32
+## Animasyonlar (Ayarlar.animasyonlar_azaltilmis değilse ve en yüksek hızda değilken):
+## muharebe işaretinin atışı, altındaki güç çubuğu ve ele geçirilen bölgenin parlaması.
+const MUHAREBE_ATIS_HIZI: float = 6.0
+const MUHAREBE_ATIS_GENLIGI: float = 0.15
+const GUC_CUBUGU_BOYUTU: Vector2 = Vector2(44.0, 8.0)
+const PARLAMA_SURESI_MS: int = 700
+const PARLAMA_OPAKLIGI: float = 0.55
 
 # Yazılar.
 const YAZI_RENGI: Color = Color.WHITE
@@ -145,6 +152,13 @@ var _oyuncu: String = ""
 var _komsular_gorunur: bool = false
 
 var _yazi_tipi: Font = null
+## Ele geçirilip parlayan bölgeler: bölge id'si -> {"bas": başlangıç (ms), "ag": beyaz ağ}.
+var _parlamalar: Dictionary[String, Dictionary] = {}
+## Yürüyen tümenler (kayarak çizilir): "kaynak>hedef|sahip" -> özet.
+var _yuruyen_ozetler: Dictionary[String, Dictionary] = {}
+## Son çizimde ekranda süren bir animasyon (kayan tümen, atan muharebe işareti, parlama)
+## vardı mı? Varsa üst katman her kare yeniden çizilir; yoksa yalnızca bir şey değişince.
+var _animasyon_suruyor: bool = false
 var _ag: ArrayMesh = null
 var _vurgu_agi: ArrayMesh = null
 var _ust_katman: Node2D = null
@@ -234,6 +248,50 @@ func sisi_yenile() -> void:
 	_dolgu_agini_kur()
 	queue_redraw()
 	_ust_katmani_yenile()
+
+
+func _process(_delta: float) -> void:
+	if _animasyon_suruyor:
+		_ust_katmani_yenile()
+
+
+## Animasyonlar şu an oynatılsın mı? Ayarlarda azaltılmışsa ya da oyun en yüksek hızda
+## akarken oynatılmaz (simülasyonu yavaşlatmasın, göz yormasın).
+func _animasyon_acik() -> bool:
+	if Ayarlar.animasyonlar_azaltilmis:
+		return false
+	return not (Zaman.hiz >= Zaman.hiz_sayisi() and not Zaman.durdu)
+
+
+## Ele geçirilen bölgeyi kısa bir parlamayla vurgular (Oyun.bolge_el_degistirdi). Oyuncunun
+## görmediği bölgede ya da animasyonlar kapalıyken bir şey yapmaz.
+func parlat(bolge_id: String) -> void:
+	if _oyun == null or not _animasyon_acik() or not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
+		return
+	if not _bolge_cokgenleri.has(bolge_id):
+		return
+	var siralar: PackedInt32Array = _bolge_cokgenleri[bolge_id]
+	var renkler: PackedColorArray = PackedColorArray()
+	for i: int in siralar.size():
+		renkler.append(Color.WHITE)
+	var ag: ArrayMesh = _ucgen_agi(siralar, renkler)
+	if ag == null:
+		return
+	_parlamalar[bolge_id] = {"bas": Time.get_ticks_msec(), "ag": ag}
+	_animasyon_suruyor = true
+	_ust_katmani_yenile()
+
+
+func _parlamalari_ciz() -> void:
+	var simdi: int = Time.get_ticks_msec()
+	for bolge_id: String in _parlamalar.keys():
+		var t: float = float(simdi - int(_parlamalar[bolge_id]["bas"])) / PARLAMA_SURESI_MS
+		if t >= 1.0:
+			_parlamalar.erase(bolge_id)
+			continue
+		_ust_katman.draw_mesh(_parlamalar[bolge_id]["ag"], null, Transform2D.IDENTITY,
+				Color(1.0, 1.0, 1.0, PARLAMA_OPAKLIGI * (1.0 - t)))
+		_animasyon_suruyor = true
 
 
 ## Tümenler hareket edince ya da güçleri değişince çağrılır.
@@ -542,6 +600,9 @@ func _ust_katmani_ciz() -> void:
 	var olcek: float = 1.0 / _yakinlik
 	var gorunen: Rect2 = Rect2(_merkez - _ekran * 0.5 * olcek, _ekran * olcek).grow(GORUNUM_PAYI * olcek)
 
+	_animasyon_suruyor = false
+	if not _parlamalar.is_empty():
+		_parlamalari_ciz()
 	if _vurgu_agi != null:
 		_ust_katman.draw_mesh(_vurgu_agi, null)
 	_cerceve_ciz(_savastaki_ulke_sinirlari, SAVAS_RENGI, SAVAS_KALINLIGI, olcek)
@@ -559,6 +620,7 @@ func _ust_katmani_ciz() -> void:
 	_ulke_adlarini_ciz(gorunen, olcek)
 	_bolge_adlarini_ciz(gorunen, olcek, kutu_alanlari)
 	_birlikleri_ciz(olcek, ozetler, kutu_yerleri)
+	_yuruyenleri_ciz(gorunen, olcek)
 	_ust_katman.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -731,9 +793,14 @@ func _yol_cizgilerini_ciz(olcek: float) -> void:
 ## yüzlerce kutu haritayı karmaşıklaştırmasın diye.
 func _birlik_ozetleri(gorunen: Rect2) -> Dictionary[String, Dictionary]:
 	var ozetler: Dictionary[String, Dictionary] = {}
+	_yuruyen_ozetler = {}
 	if _oyun == null or _bolge_gorunurlugu() < BIRLIK_GORUNURLUK_ESIGI:
 		return ozetler
+	var kaydir: bool = _animasyon_acik()
 	for birlik: Birlik in _oyun.birlikler:
+		if kaydir and birlik.hedef_bolge_id != "":
+			_yuruyene_ekle(birlik)
+			continue
 		var ozet: Dictionary = ozetler.get(birlik.bolge_id, {})
 		if ozet.is_empty():
 			var bolge: Bolge = _dunya.bolgeler.get(birlik.bolge_id)
@@ -747,10 +814,51 @@ func _birlik_ozetleri(gorunen: Rect2) -> Dictionary[String, Dictionary]:
 			ozetler[birlik.bolge_id] = ozet
 		ozet["guc"] += birlik.guc
 		ozet["sayilar"][birlik.tur] = int(ozet["sayilar"].get(birlik.tur, 0)) + 1
-		ozet["sahipler"][birlik.sahip] = true
+		ozet["sahipler"][birlik.sahip] = float(ozet["sahipler"].get(birlik.sahip, 0.0)) + birlik.guc
 	for bolge_id: String in ozetler:
 		ozetler[bolge_id]["genislik"] = _birlik_kutusu_genisligi(ozetler[bolge_id])
 	return ozetler
+
+
+## Yürüyen tümeni, aynı yolda aynı ülkenin yürüyen tümenleriyle tek kutuda toplar. Savaş
+## sisi: yabancı tümen yalnızca yola çıktığı bölge görünüyorsa gösterilir.
+func _yuruyene_ekle(birlik: Birlik) -> void:
+	if birlik.sahip != _oyun.oyuncu_ulkesi and not _oyun.oyuncu_bolgeyi_goruyor_mu(birlik.bolge_id):
+		return
+	var anahtar: String = "%s>%s|%s" % [birlik.bolge_id, birlik.hedef_bolge_id, birlik.sahip]
+	var ozet: Dictionary = _yuruyen_ozetler.get(anahtar, {})
+	if ozet.is_empty():
+		ozet = {"guc": 0.0, "sayilar": {}, "sahipler": {}, "birlik": birlik}
+		_yuruyen_ozetler[anahtar] = ozet
+	ozet["guc"] += birlik.guc
+	ozet["sayilar"][birlik.tur] = int(ozet["sayilar"].get(birlik.tur, 0)) + 1
+	ozet["sahipler"][birlik.sahip] = true
+
+
+## Yürüyen tümen kutularını kaynakla hedef arasındaki yolda, geçen zamana göre kaydırarak
+## çizer (saatler arasında da akıcı olsun diye Zaman.saat_kesri kullanılır).
+func _yuruyenleri_ciz(gorunen: Rect2, olcek: float) -> void:
+	if _yuruyen_ozetler.is_empty():
+		return
+	var simdi: float = float(Zaman.toplam_saat) + (0.0 if Zaman.durdu else Zaman.saat_kesri())
+	for anahtar: String in _yuruyen_ozetler:
+		var ozet: Dictionary = _yuruyen_ozetler[anahtar]
+		var birlik: Birlik = ozet["birlik"]
+		var kaynak: Bolge = _dunya.bolgeler.get(birlik.bolge_id)
+		var hedef: Bolge = _dunya.bolgeler.get(birlik.hedef_bolge_id)
+		if kaynak == null or hedef == null:
+			continue
+		var cikis: int = birlik.cikis_saati if birlik.cikis_saati >= 0 else birlik.varis_saati
+		var t: float = clampf((simdi - cikis) / maxf(1.0, float(birlik.varis_saati - cikis)), 0.0, 1.0)
+		var konum: Vector2 = kaynak.etiket.lerp(hedef.etiket, t)
+		if not gorunen.has_point(konum):
+			continue
+		ozet["genislik"] = _birlik_kutusu_genisligi(ozet)
+		var sahip: Ulke = _dunya.ulkeler.get(birlik.sahip)
+		_ust_katman.draw_set_transform(konum, 0.0, Vector2(olcek, olcek))
+		_birlik_kutusu_ciz(ulke_rengi(sahip) if sahip != null else Color.GRAY, ozet, Vector2.ZERO)
+		if not Zaman.durdu:
+			_animasyon_suruyor = true
 
 
 ## Kutunun genişliği: iç boşluk + güç yazısı + her tür için (aralık + işaret + sayı).
@@ -783,7 +891,7 @@ func _birlikleri_ciz(olcek: float, ozetler: Dictionary[String, Dictionary],
 					BIRLIK_BAG_CIZGISI_RENGI, BIRLIK_BAG_CIZGISI_KALINLIGI, true)
 		_birlik_kutusu_ciz(renk, ozetler[bolge_id], yer)
 		if ozetler[bolge_id]["sahipler"].size() > 1:
-			_muharebe_isareti_ciz(yer, ozetler[bolge_id]["genislik"])
+			_muharebe_isareti_ciz(yer, ozetler[bolge_id], bolge)
 
 
 ## Ekrandaki tümen kutularına, birbirlerinin üstüne binmeyecek yerler seçer: güçlü bölgeden
@@ -902,10 +1010,33 @@ func _tahkimat_isareti_ciz(merkez: Vector2, seviye: int, opaklik: float) -> void
 
 ## Tümen kutusunun sağına, birden çok ülkenin tümeni bulunan (savaşan) bölgeyi işaretleyen
 ## kırmızı bir daire çizer. `_birlik_kutusu_ciz` ile aynı ölçeklenmiş yerel çerçevede çalışır.
-func _muharebe_isareti_ciz(kutu_merkezi: Vector2, kutu_genisligi: float) -> void:
-	var merkez: Vector2 = kutu_merkezi + Vector2(kutu_genisligi * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
-	_ust_katman.draw_circle(merkez, MUHAREBE_ISARETI_YARICAPI, MUHAREBE_ISARETI_RENGI)
-	_ust_katman.draw_arc(merkez, MUHAREBE_ISARETI_YARICAPI, 0.0, TAU, 24, Color.WHITE, 2.0)
+## Animasyonlar açıksa işaret hafifçe atar. Altındaki küçük çubuk tarafların güç oranını
+## gösterir: solda savunanın (bölgenin sahibi), sağda saldıranların rengi.
+func _muharebe_isareti_ciz(kutu_merkezi: Vector2, ozet: Dictionary, bolge: Bolge) -> void:
+	var merkez: Vector2 = kutu_merkezi + Vector2(float(ozet["genislik"]) * 0.5 + MUHAREBE_ISARETI_YARICAPI + 10.0, 0.0)
+	var yaricap: float = MUHAREBE_ISARETI_YARICAPI
+	if _animasyon_acik():
+		yaricap *= 1.0 + MUHAREBE_ATIS_GENLIGI * sin(Time.get_ticks_msec() / 1000.0 * MUHAREBE_ATIS_HIZI)
+		_animasyon_suruyor = true
+	_ust_katman.draw_circle(merkez, yaricap, MUHAREBE_ISARETI_RENGI)
+	_ust_katman.draw_arc(merkez, yaricap, 0.0, TAU, 24, Color.WHITE, 2.0)
+
+	var gucler: Dictionary = ozet["sahipler"]
+	var toplam: float = maxf(float(ozet["guc"]), 0.001)
+	var savunan_guc: float = float(gucler.get(bolge.sahip, 0.0))
+	var saldiran_sahip: String = ""
+	for sahip: String in gucler:
+		if sahip != bolge.sahip:
+			saldiran_sahip = sahip
+			break
+	var savunan_rengi: Color = ulke_rengi(_dunya.ulkeler[bolge.sahip])
+	var saldiran: Ulke = _dunya.ulkeler.get(saldiran_sahip)
+	var saldiran_rengi: Color = ulke_rengi(saldiran) if saldiran != null else Color.GRAY
+	var sol_ust: Vector2 = merkez + Vector2(-GUC_CUBUGU_BOYUTU.x * 0.5, MUHAREBE_ISARETI_YARICAPI + 6.0)
+	var savunan_payi: float = GUC_CUBUGU_BOYUTU.x * clampf(savunan_guc / toplam, 0.0, 1.0)
+	_ust_katman.draw_rect(Rect2(sol_ust, GUC_CUBUGU_BOYUTU), saldiran_rengi)
+	_ust_katman.draw_rect(Rect2(sol_ust, Vector2(savunan_payi, GUC_CUBUGU_BOYUTU.y)), savunan_rengi)
+	_ust_katman.draw_rect(Rect2(sol_ust, GUC_CUBUGU_BOYUTU), BIRLIK_KUTU_KENAR_RENGI, false, 2.0)
 
 
 ## Yazıyı okunaklı olsun diye koyu kenarlıkla çizer. `konum`, yazının sol alt köşesidir.

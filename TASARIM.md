@@ -548,6 +548,28 @@ Dört dal, her biri 3 seviye (`sim/teknoloji.gd`, sayılar data/balance.json →
   gördüğü bölgelerdeki yabancı tümenlerin türlerine bakar. Saldırı ve tahkimat kararları
   zaten yalnızca komşu bölgelere bakıyordu.
 
+## 10d. Animasyon ve ses
+
+Animasyonlar ve sesler yalnızca sunumdur; simülasyonu değiştirmez ve yavaşlatmaz.
+
+- **Ayarlar** (ana menü → Ayarlar, `user://ayarlar.json`, `sim/ayarlar.gd`): "Animasyonlar: Açık /
+  Azaltılmış", ses düzeyi ("−" / "+", %10 adımla) ve "Sessiz: Açık / Kapalı". Kayıttan ayrıdır.
+- **Harita:** yürüyen tümen kutuları kaynakla hedef arasında, geçen zamana göre kayar
+  (`Birlik.cikis_saati`, `Zaman.saat_kesri`). Muharebe işareti hafifçe atar; altındaki küçük
+  çubuk savunanın (solda) ve saldıranın güç oranını gösterir. El değiştiren bölge 0,7 saniyelik
+  beyaz bir parlamayla yeni sahibinin rengine döner (`Oyun.bolge_el_degistirdi`).
+- **Arayüz:** paneller solarak açılıp kapanır, düğmeler basılınca hafifçe küçülür, bildirim
+  kartları sağdan kayarak gelir (`arayuz/gecis.gd`). Zafer, kaybetme ve oyuncunun savaştığı bir
+  ülkenin teslimi ekranın ortasında kısa, tam genişlikte bir şeritle duyurulur (`SeritPaneli`).
+- Üst katman yalnızca ekranda süren bir animasyon varken her kare yeniden çizilir. Ekran dışındaki
+  tümenler ve parlamalar çizilmez. En yüksek oyun hızında ve "Azaltılmış" seçiliyken tümenler
+  kaymaz (eskisi gibi bölgelerinde görünür), işaret atmaz, parlama ve panel geçişi olmaz.
+- **Ses** (`tools/ses_uret.py` sentezler, `sounds/*.wav`; dışarıdan dosya yok, müzik yok):
+  tıklama (her düğme), onay ve hata (inşa, araştırma, barış sonucu), emir (yürüyüş), muharebe
+  başlangıcı, bölge ele geçirme, savaş ilanı, üretim bitti, zafer, kaybetme. Yalnızca oyuncuyu
+  ilgilendiren olaylarda çalar (`SesYoneticisi`); aynı ses 0,25 sn'de (en yüksek hızda 1,2 sn'de)
+  bir kereden sık çalmaz, aynı anda en çok 4 ses çalar.
+
 ## 11. Kayıt
 
 Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve

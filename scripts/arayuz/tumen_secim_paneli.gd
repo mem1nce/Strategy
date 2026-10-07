@@ -41,13 +41,13 @@ func _ready() -> void:
 	vazgec.custom_minimum_size = VAZGEC_BOYUTU
 	vazgec.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vazgec.focus_mode = Control.FOCUS_NONE
-	vazgec.pressed.connect(hide)
+	vazgec.pressed.connect(func() -> void: Gecis.kapat(self))
 	dikey.add_child(vazgec)
 	hide()
 
 
 func _secildi(tur: String) -> void:
-	hide()
+	Gecis.kapat(self)
 	tur_secildi.emit(tur)
 
 

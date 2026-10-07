@@ -14,6 +14,8 @@ var guc: float = 0.0
 var hedef_bolge_id: String = ""
 ## Yürüyorsa vardığı an (Zaman.toplam_saat cinsinden); durağansa -1.
 var varis_saati: int = -1
+## Yürüyorsa yola çıktığı an; harita kutuyu yol boyunca kaydırmak için kullanır.
+var cikis_saati: int = -1
 ## Son emrinin son adımı deniz yoluyla mıydı? Muharebede saldırgan deniz cezası için.
 var son_adim_deniz_mi: bool = false
 
