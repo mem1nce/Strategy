@@ -140,3 +140,46 @@ kaydırma, tekerlek = yakınlaştırma.
     Antalya, Tarsus, Gaziantep, Diyarbakır, Van, Trabzon, Samsun. Rusya, ABD, Çin, Kanada,
     Brezilya, Hindistan ve Avustralya'da 25 ile 40 arası, Hollanda ve Portekiz'de 3 bölge
     görmelisin. Sibirya ve Avustralya'nın içi de birkaç bölgeye bölünmüş olmalı.
+
+26. **Savaş sisi** — Ana menüde "Yeni oyun"a bas → "Savaş sisi: Açık" düğmesi, "Başla" ve
+    "Vazgeç" görünmeli. Açık bırakıp Türkiye ile başla, Orta Doğu'ya yakınlaş → İran'ın ve
+    Irak'ın içerideki bölgeleri biraz daha koyu olmalı, oralarda tümen kutusu görünmemeli;
+    sınırdaki komşu bölgelerin kutuları görünmeli. Koyu bir bölgeye dokun → panelde
+    "Birlikler: bilinmiyor" yazmalı. Bir tümeni İran içine yürüt → yürürken ve vardığında
+    çevresi aydınlanmalı.
+
+27. **Sis kapalı** — Yeni oyunda "Savaş sisi: Kapalı" seç → hiçbir bölge koyu olmamalı, her
+    yerde tümenler görünmeli, panelde "Birlikler: 2 (güç 200)" gibi sayı yazmalı.
+
+28. **Kayan tümen ve muharebe** — Bir tümeni uzak bir bölgeye yürüt ve 1x hızda izle → kutu
+    yol çizgisi boyunca kayarak ilerlemeli (sıçramamalı). Bir muharebe başlayınca kırmızı
+    daire hafifçe atmalı, altında iki renkli küçük bir güç çubuğu olmalı. Bir bölge ele
+    geçirince bölge kısa bir beyaz parlamayla yeni rengine dönmeli. 3x hızda tümenler
+    kaymamalı (eskisi gibi bölgede durup varınca geçmeli).
+
+29. **Panel ve düğme tepkileri** — Teknoloji, Sıralama ve "Tümen kur" panelleri solarak açılıp
+    kapanmalı; bir düğmeye basılı tutunca hafifçe küçülmeli. Yeni bildirim sağdan kayarak
+    gelmeli. Bir düşman ülke teslim olunca ekranın ortasından "… TESLİM OLDU" şeridi geçmeli.
+
+30. **Sesler** — Düğmelere basınca kısa bir tık; tümen/fabrika/araştırma sıralayınca onay,
+    hazine yetmeyince hata sesi; yürüyüş emri, savaş ilanı, muharebe başlangıcı, bölge ele
+    geçirme, üretim bitti, zafer ve kaybetmede ayrı kısa sesler duyulmalı. Başka ülkeler
+    arasındaki olaylar ses çıkarmamalı. 3x hızda sesler üst üste binip gürültü yapmamalı.
+
+31. **Ayarlar** — Ana menü → Ayarlar: "Animasyonlar: Azaltılmış" yap → tümenler kaymamalı,
+    paneller anında açılmalı. "−" / "+" ile ses düzeyini değiştir (yazı %10 adımla değişmeli);
+    "Sessiz: Açık" yap → hiç ses çıkmamalı. Oyunu kapatıp aç → ayarlar aynı kalmalı.
+
+32. **Ülke bonusu** — Ülke seçerken bir bölgeye dokun → panelde sarı "Bonus · …" satırı
+    olmalı (ör. Fransa "Verimli tarım toprakları: bakım %15 ucuz", Rusya "En geniş topraklar:
+    kendi toprağında savunma +%15"). Hindistan ile başla → "Tümen kur"da piyade fiyatı 34
+    olmalı (40 değil). Çin ile başla → "Fabrika kur" düğmesi 425 yazmalı. Almanya ile başla →
+    Teknoloji panelinde 1. seviyeler 26 gün yazmalı (30 değil).
+
+33. **Android (telefonda)** — ANDROID_KURULUM.md'deki adımlarla APK'yı yükle. Uygulama yatay ve
+    tam ekran açılmalı; simgesi sade bir yerküre olmalı. Bir panel açıkken geri tuşu paneli
+    kapatmalı; panel yokken "Ana menüye dönülsün mü?" sormalı, "Evet" deyince ana menü
+    "Devam et" etkin gelmeli. Ana menüde geri tuşu uygulamadan çıkmalı. Oyun akarken telefonu
+    ana ekrana al ve geri dön → oyun durmuş olmalı, kaldığı yerden devam etmeli. Zaman akarken
+    ekran kendiliğinden kararmamalı; durdurunca normal süresinde kararmalı. Çentikli
+    telefonda üst çubuk ve paneller çentiğe girmemeli.

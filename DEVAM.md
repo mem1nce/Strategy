@@ -666,7 +666,16 @@ Adımlar (her biri ayrı commit):
    görür. Bölge panelinde "Bonus · …" satırı; oyuncunun tümen fiyatları, fabrika düğmesi ve
    araştırma süreleri bonuslu. Yeni sınamalar: bonus_testi (11). Hareket sınaması tümenin
    kendi varış saatine baktırıldı (Türkiye'nin hareket bonusu yüzünden). 154/154.
-5. ⬜ Denge, sınama, belgeler.
+5. ✅ Denge, sınama, belgeler: uzun koşu (tohum 1/2/3): teslim 10/16/24, en büyük ülke Çin
+   %4,0/%4,3/%5,2, piyade ~%40, zırhlı ~%36, topçu ~%24, süre 65/64/60 sn — bütün hedefler
+   tutuyor; bonuslar hiçbir ülkeyi ezici yapmadı (önceki pakete göre en büyük ülke payı
+   değişmedi). Kayıt sürümü 4 (3 açılır). "Nasıl oynanır"a savaş sisi ve bonus; TASARIM.md
+   10c-10f; TEST_LISTESI.md 26-33. 154/154 sınama.
+
+Not: Godot düzenleyicisi bu oturum sırasında projede açıktı. Düzenleyici `project.godot` ya
+da `export_presets.cfg`'yi kendi bellekteki hâliyle yeniden kaydederse bu pakette yapılan
+değişiklikler (simge, `quit_on_go_back`, Android ön ayarı) ezilebilir; düzenleyiciyi kapatıp
+açmak yeterli.
 
 ## Kararlar
 

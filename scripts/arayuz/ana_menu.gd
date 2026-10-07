@@ -37,6 +37,9 @@ const NASIL_OYNANIR_METNI_BICIMI: String = (
 		"Silah saldırıyı, Savunma dayanıklılığı, Lojistik hızı artırır.\n" +
 		"Tahkimat: her seviye bölgeni savunanlara %%15 güç katar; bölge el değiştirince " +
 		"bir seviye düşer.\n" +
+		"Savaş sisi: yalnızca kendi bölgelerini, tümenlerinin olduğu yerleri ve bunların " +
+		"komşularını görürsün; karanlık bölgelerdeki düşman tümenleri görünmez.\n" +
+		"Her ülkenin küçük bir bonusu var (en çok %%15); bölge panelinde yazar.\n" +
 		"Amaç: kıtandaki bölgelerin %%%d'ı ya da daha fazlasını ele geçirmek ya da " +
 		"ülkeni teslim olmaktan korumak.")
 
