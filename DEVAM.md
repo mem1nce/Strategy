@@ -625,7 +625,27 @@ Gözlem (kural değişmediği için dokunulmadı): bir ülke teslim olunca onunl
 barıştaki üretimi yapmıyor ve en çok 2 savaş sınırına takılıp yeni savaş ilan edemiyor.
 Ayrı bir iş olarak düzeltilmesi önerilir.
 
+## Paket: savaş sisi, animasyon ve ses, Android, ülke bonusları (2026-10-07)
+
+Adımlar (her biri ayrı commit):
+1. ✅ Savaş sisi: `Gorunurluk` (kendi bölgeleri + tümenlerin bölgeleri + kara/deniz
+   komşuları), `Oyun.savas_sisi`, `oyuncu_bolgeyi_goruyor_mu`, `gorunurluk_degisti` (yalnızca
+   tümen/sahiplik değişince, sonuç değişirse). Harita: görünmeyen bölge %32 koyu, orada
+   yabancı tümen/muharebe/yürüyüş/tahkimat çizilmez. Bölge paneli "Birlikler: bilinmiyor".
+   Ana menü "Yeni oyun" → seçenek paneli (Savaş sisi: Açık/Kapalı, Başla, Vazgeç). Yapay
+   zekâ savaş ilanında ve tür seçiminde yalnızca gördüğünü kullanıyor. Kayıt sürümü 4
+   (3 açılır). Yeni sınamalar: savas_sisi_testi (10), kayıt 3. sürüm. 137/137. Uzun koşu
+   tohum 1: 14 teslim, en büyük %4,7, süre 62 sn.
+2. ⬜ Animasyon ve ses.
+3. ⬜ Android.
+4. ⬜ Ülke bonusları.
+5. ⬜ Denge, sınama, belgeler.
+
 ## Kararlar
+
+- 2026-10-07: Yapay zekânın "yalnızca kendi komşuluğunu bilmesi" savaş sisi seçeneğinden
+  bağımsız uygulandı: seçenek oyuncunun ne gördüğünü belirler; yapay zekânın kararlarını
+  oyuncunun ayarına bağlamak iki farklı oyun dengesi demek olurdu.
 
 - 2026-10-06: Bölge sayısı ayarları `data/balance.json` yerine `tools/bolge_ayarlari.json`'da:
   oyun bunları okumaz, yalnızca dönüştürücü okur (CLAUDE.md: "oyun kaynak dosyaları okumaz").

@@ -200,6 +200,30 @@ func sina_eski_surum_kaydi_acilmaz_ve_eski_sayilir() -> String:
 	return ""
 
 
+## 3. sürüm kayıt (savaş sisi alanı yok) açılabilmeli; eski sayılmamalı.
+func sina_ucuncu_surum_kayit_acilir() -> String:
+	_kayit_dosyasini_sil()
+	var oyun: Oyun = _kurulu_oyun()
+	oyun.oyuncuyu_sec("TUR")
+	KayitYoneticisi.kaydet(oyun, {})
+	var veri: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(KayitYoneticisi.kayit_dosyasi))
+	veri["surum"] = 3
+	veri.erase("savas_sisi")
+	var dosya: FileAccess = FileAccess.open(KayitYoneticisi.kayit_dosyasi, FileAccess.WRITE)
+	dosya.store_string(JSON.stringify(veri))
+	dosya.close()
+	var kayit: Dictionary = KayitYoneticisi.yukle()
+	var eski: bool = KayitYoneticisi.eski_kayit_mi()
+	_kayit_dosyasini_sil()
+	if kayit.is_empty() or eski:
+		return "3. sürüm kayıt açılabilmeli ve eski sayılmamalı."
+	var yeni_oyun: Oyun = _kurulu_oyun()
+	yeni_oyun.kayittan_yukle(kayit["oyun_verisi"])
+	if yeni_oyun.oyuncu_ulkesi != "TUR" or not yeni_oyun.savas_sisi:
+		return "3. sürüm kayıt TUR ile ve savaş sisi açık olarak yüklenmeli."
+	return ""
+
+
 func sina_guncel_kayit_eski_sayilmaz() -> String:
 	_kayit_dosyasini_sil()
 	if KayitYoneticisi.eski_kayit_mi():

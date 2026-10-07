@@ -37,6 +37,8 @@ var _ulke: Label = null
 var _kara_sayisi: Label = null
 var _deniz_sayisi: Label = null
 var _tahkimat: Label = null
+## Bölgedeki tümenler; savaş sisi altında görünmeyen bölgede "Birlikler: bilinmiyor".
+var _birlikler: Label = null
 var _komsular: Button = null
 var _oyna: Button = null
 var _savas: Button = null
@@ -85,9 +87,10 @@ func _ready() -> void:
 	komsu_sirasi.add_child(ara)
 	_renk_kutusu_ekle(komsu_sirasi, 30.0, HaritaGorunumu.DENIZ_GECISI_RENGI)
 	_deniz_sayisi = _etiket_ekle(komsu_sirasi)
+	_birlikler = _etiket_ekle(komsu_sirasi)
+	_birlikler.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_birlikler.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_tahkimat = _etiket_ekle(komsu_sirasi)
-	_tahkimat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tahkimat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	_komsular = Button.new()
 	_komsular.custom_minimum_size = KOMSU_DUGMESI_BOYUTU
@@ -166,6 +169,14 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	_tahkimat.visible = not insa_dugmeleri_gorunur and bolge.tahkimat > 0
 	_tahkimat.text = "Tahkimat: %d/%d" % [bolge.tahkimat, InsaDugmeleri.tahkimat_azami]
 	show()
+
+
+## Bölgedeki tümenlerin bilgisini yazar (bkz. main.gd: savaş sisi altında görünmeyen bölgede
+## "Birlikler: bilinmiyor"). `gorunur` false ise yabancı tahkimat da gizlenir.
+func birlikleri_yaz(metin: String, gorunur: bool) -> void:
+	_birlikler.text = metin
+	if not gorunur:
+		_tahkimat.hide()
 
 
 func _savas_basildi() -> void:

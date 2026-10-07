@@ -530,6 +530,24 @@ Dört dal, her biri 3 seviye (`sim/teknoloji.gd`, sayılar data/balance.json →
 - **Arayüz:** haritada tahkimatlı bölgenin adının solunda gri bir kule ve içinde seviyesi;
   kendi bölgende düğmede "Tahkimat 2/3", başkasının bölgesinde bölge panelinde "Tahkimat: 2/3".
 
+## 10c. Savaş sisi
+
+- Yeni oyun ekranında "Savaş sisi: Açık / Kapalı" seçilir (`Oyun.savas_sisi`, kayıtta saklanır).
+- **Görünen bölgeler** (`sim/gorunurluk.gd`): ülkenin kendi bölgeleri, kendi tümenlerinin
+  bulunduğu bölgeler ve bunlara kara ya da deniz yoluyla komşu bölgeler. İttifak yok.
+- Oyuncunun görmediği bölgelerde yabancı tümenler, muharebe işaretleri, yürüyüş çizgileri ve
+  tahkimat işaretleri çizilmez; bölgelerin sahibi (rengi) her zaman görünür. Görünmeyen
+  bölgelerin dolgusu %32 koyulaşır. Bölge panelinde "Birlikler: bilinmiyor" yazar (görülen
+  bölgede "Birlikler: 3 (güç 280)" ya da "Birlikler: yok").
+- Görünürlük her karede değil, yalnızca tümenler ya da sahiplikler değişince
+  (`birlikler_degisti`, `bolge_sahipligi_degisti`) yeniden hesaplanır; sonuç değişirse
+  `Oyun.gorunurluk_degisti` yayılır ve harita dolgu ağını bir kez yeniden kurar.
+- Sis kapalıyken ya da oyuncu henüz ülke seçmemişken her yer görünür.
+- **Yapay zekâ da aynı kuralla görür** (sis seçeneğinden bağımsız): savaş ilanında komşusunun
+  gücünü yalnızca gördüğü bölgelerdeki tümenlerinden bilir; tümen türü seçerken yalnızca
+  gördüğü bölgelerdeki yabancı tümenlerin türlerine bakar. Saldırı ve tahkimat kararları
+  zaten yalnızca komşu bölgelere bakıyordu.
+
 ## 11. Kayıt
 
 Tek kayıt yuvası: `user://kayit.json`. Oyun verisi `data/` altındaki dosyalardan ayrıdır ve
@@ -542,7 +560,8 @@ okur" kuralı); kayıt, oyunun DURUMUNU tutar, coğrafyayı değil.
   hazineler; inşa kuyrukları; teknoloji seviyeleri ve süren araştırmalar.
   Zaman durumu (`Zaman.durumu_al()`) ayrıca eklenir; `KayitYoneticisi` Zaman autoload'ına
   bağlı olmasın diye bu, çağıran taraftan (main.gd) parametre olarak verilir.
-- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`, şu an 3). 3. sürümde
+- **Sürüm:** dosyada bir `surum` sayısı durur (`KayitYoneticisi.SURUM`, şu an 4; 4. sürümde
+  savaş sisi tercihi eklendi, 3. sürüm kayıt da açılır ve sis açık sayılır). 3. sürümde
   bölgeler yeniden üretildi ve bölge kimlikleri değişti; bu yüzden yalnızca 3. sürüm açılır.
   Daha eski bir kayıt bulunursa ana menüde "Bu kayıt eski bir sürüme ait. Yeni oyun başlat."
   yazar, "Devam et" kapalı kalır, "Yeni oyun" onay sormadan eski kaydı silip başlar. Oyun

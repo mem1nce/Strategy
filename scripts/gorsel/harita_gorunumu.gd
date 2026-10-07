@@ -58,6 +58,9 @@ const CERCEVE_ALT_PAYI: float = 4.0
 const KARA_KOMSUSU_RENGI: Color = Color("#2fe0b5")
 const DENIZ_GECISI_RENGI: Color = Color("#ff8a2b")
 const VURGU_OPAKLIGI: float = 0.62
+## Savaş sisi: oyuncunun görmediği bölgelerin dolgusu bu oranda koyulaşır (harita okunaklı
+## kalsın diye hafif). Sahiplik rengi yine anlaşılır.
+const SIS_KARARTMASI: float = 0.32
 
 # Yazılar.
 const YAZI_RENGI: Color = Color.WHITE
@@ -225,6 +228,14 @@ func komsulari_goster(acik: bool) -> void:
 	_ust_katmani_yenile()
 
 
+## Oyuncunun gördüğü bölgeler değişince (Oyun.gorunurluk_degisti) çağrılır: karartma ağı
+## yeniden kurulur, görünmeyen bölgelerdeki yabancı tümenler çizilmez olur.
+func sisi_yenile() -> void:
+	_dolgu_agini_kur()
+	queue_redraw()
+	_ust_katmani_yenile()
+
+
 ## Tümenler hareket edince ya da güçleri değişince çağrılır.
 func birlikleri_yenile() -> void:
 	_ust_katmani_yenile()
@@ -303,13 +314,18 @@ func _cokgenleri_hazirla() -> void:
 
 
 ## Bütün dolguları tek bir ağda toplar. Üçgenler çokgen sırasıyla (büyükten küçüğe)
-## eklendiği için küçük parçalar büyüklerin üstünde kalır.
+## eklendiği için küçük parçalar büyüklerin üstünde kalır. Oyuncunun görmediği bölgeler
+## (savaş sisi) hafifçe koyu boyanır.
 func _dolgu_agini_kur() -> void:
 	var siralar: PackedInt32Array = PackedInt32Array()
 	var renkler: PackedColorArray = PackedColorArray()
 	for i: int in _dunya.cokgenler.size():
+		var bolge_id: String = _dunya.cokgenler[i].bolge_id
+		var renk: Color = ulke_rengi(_dunya.bolgenin_sahibi(bolge_id))
+		if _oyun != null and not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
+			renk = renk.darkened(SIS_KARARTMASI)
 		siralar.append(i)
-		renkler.append(ulke_rengi(_dunya.bolgenin_sahibi(_dunya.cokgenler[i].bolge_id)))
+		renkler.append(renk)
 	_ag = _ucgen_agi(siralar, renkler)
 
 
@@ -674,7 +690,7 @@ func _bolge_adlarini_ciz(gorunen: Rect2, olcek: float, kutu_alanlari: Array[Rect
 		var oge_opakligi: float = 1.0 if secili else opaklik
 
 		_ust_katman.draw_set_transform(bolge.etiket, 0.0, Vector2(olcek, olcek))
-		if bolge.tahkimat > 0:
+		if bolge.tahkimat > 0 and _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id):
 			# Ad yazılıyorsa solunda, yazılmıyorsa etiket noktasının biraz altında durur.
 			var tahkimat_yeri: Vector2 = Vector2(0.0, TAHKIMAT_ISARETI_BOYUTU)
 			if ad_gorunur:
@@ -696,6 +712,8 @@ func _yol_cizgilerini_ciz(olcek: float) -> void:
 	for birlik: Birlik in _oyun.birlikler:
 		if not birlik.yuruyor_mu():
 			continue
+		if birlik.sahip != _oyun.oyuncu_ulkesi and not _oyun.oyuncu_bolgeyi_goruyor_mu(birlik.bolge_id):
+			continue  # Savaş sisi: görmediği yerdeki yabancı yürüyüşü bilmez.
 		var anahtar: String = "%s>%s" % [birlik.bolge_id, birlik.hedef_bolge_id]
 		if cizilen.has(anahtar):
 			continue
@@ -720,6 +738,10 @@ func _birlik_ozetleri(gorunen: Rect2) -> Dictionary[String, Dictionary]:
 		if ozet.is_empty():
 			var bolge: Bolge = _dunya.bolgeler.get(birlik.bolge_id)
 			if bolge == null or not gorunen.has_point(bolge.etiket):
+				continue
+			# Savaş sisi: görünmeyen bölgede (orada oyuncunun tümeni de olamaz) hiçbir tümen ve
+			# dolayısıyla muharebe işareti çizilmez.
+			if not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id):
 				continue
 			ozet = {"guc": 0.0, "sayilar": {}, "sahipler": {}}
 			ozetler[birlik.bolge_id] = ozet

@@ -1,12 +1,14 @@
 class_name AnaMenu
 extends CanvasLayer
-## Açılışta gösterilen ana menü: Yeni oyun, Devam et, Nasıl oynanır, Ayarlar.
+## Açılışta gösterilen ana menü: Yeni oyun, Devam et, Nasıl oynanır, Ayarlar. "Yeni oyun"
+## önce oyun seçeneklerini (savaş sisi) soran küçük bir panel açar.
 ##
 ## Oyuncu bir seçim yapana kadar haritanın üstünde durur ve dokunuşu yutar. "Devam et" ve
 ## "Ayarlar -> Kaydı sil" yalnızca bir kayıt varken etkindir.
 
-## Oyuncu "Yeni oyun"u onayladığında (varsa eski kayıt zaten silindikten sonra) yayılır.
-signal yeni_oyun_istendi
+## Oyuncu yeni oyun panelinde "Başla"yı onayladığında (varsa eski kayıt zaten silindikten
+## sonra) seçtiği savaş sisi tercihiyle yayılır.
+signal yeni_oyun_istendi(savas_sisi: bool)
 ## Oyuncu "Devam et"e bastığında yayılır (yalnızca kayıt varken düğme etkindir).
 signal devam_istendi
 
@@ -45,6 +47,10 @@ var _yeni_oyun_onayi: ConfirmationDialog = null
 var _kaydi_sil_onayi: ConfirmationDialog = null
 var _nasil_oynanir_paneli: CenterContainer = null
 var _ayarlar_paneli: CenterContainer = null
+var _yeni_oyun_paneli: CenterContainer = null
+## Ana düğmelerin paneli; bir alt panel (yeni oyun, ayarlar) açıkken gizlenir ki arkadan sızmasın.
+var _ana_ortalayici: CenterContainer = null
+var _savas_sisi: Button = null
 
 
 func kur() -> void:
@@ -58,6 +64,7 @@ func kur() -> void:
 	var ana_ortalayici: CenterContainer = CenterContainer.new()
 	ana_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_kok.add_child(ana_ortalayici)
+	_ana_ortalayici = ana_ortalayici
 
 	var ana_panel: PanelContainer = PanelContainer.new()
 	ana_ortalayici.add_child(ana_panel)
@@ -101,8 +108,9 @@ func kur() -> void:
 	nasil_oynanir.pressed.connect(func() -> void: _nasil_oynanir_paneli.show())
 
 	_ayarlar_paneli = _ayarlar_paneli_olustur()
+	_yeni_oyun_paneli = _yeni_oyun_paneli_olustur()
 	var ayarlar: Button = _dugme_ekle(dikey, "Ayarlar")
-	ayarlar.pressed.connect(func() -> void: _ayarlar_paneli.show())
+	ayarlar.pressed.connect(func() -> void: _alt_paneli_ac(_ayarlar_paneli))
 
 	_kok.hide()
 
@@ -205,13 +213,68 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	panel.add_child(_kaydi_sil_onayi)
 
 	var kapat: Button = _dugme_ekle(dikey, "Kapat")
-	kapat.pressed.connect(func() -> void: ortalayici.hide())
+	kapat.pressed.connect(func() -> void: _alt_paneli_kapat(ortalayici))
 
 	ortalayici.hide()
 	return ortalayici
 
 
+func _alt_paneli_ac(panel: CenterContainer) -> void:
+	_ana_ortalayici.hide()
+	panel.show()
+
+
+func _alt_paneli_kapat(panel: CenterContainer) -> void:
+	panel.hide()
+	_ana_ortalayici.show()
+
+
+## Yeni oyun seçenekleri: "Savaş sisi: Açık / Kapalı" ve "Başla" / "Vazgeç".
+func _yeni_oyun_paneli_olustur() -> CenterContainer:
+	var ortalayici: CenterContainer = CenterContainer.new()
+	ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_kok.add_child(ortalayici)
+
+	var panel: PanelContainer = PanelContainer.new()
+	ortalayici.add_child(panel)
+	var dikey: VBoxContainer = VBoxContainer.new()
+	dikey.custom_minimum_size = Vector2(DUGME_BOYUTU.x + 80.0, 0.0)
+	dikey.alignment = BoxContainer.ALIGNMENT_CENTER
+	dikey.add_theme_constant_override("separation", 20)
+	panel.add_child(dikey)
+
+	var baslik: Label = Label.new()
+	baslik.text = "Yeni oyun"
+	baslik.add_theme_font_size_override("font_size", 56)
+	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dikey.add_child(baslik)
+
+	_savas_sisi = _dugme_ekle(dikey, "")
+	_savas_sisi.toggle_mode = true
+	_savas_sisi.button_pressed = true
+	_savas_sisi.toggled.connect(func(_acik: bool) -> void: _savas_sisi_yazisini_yenile())
+	_savas_sisi_yazisini_yenile()
+
+	var basla: Button = _dugme_ekle(dikey, "Başla")
+	basla.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
+	basla.pressed.connect(_basla_basildi)
+
+	var vazgec: Button = _dugme_ekle(dikey, "Vazgeç")
+	vazgec.pressed.connect(func() -> void: _alt_paneli_kapat(ortalayici))
+
+	ortalayici.hide()
+	return ortalayici
+
+
+func _savas_sisi_yazisini_yenile() -> void:
+	_savas_sisi.text = "Savaş sisi: Açık" if _savas_sisi.button_pressed else "Savaş sisi: Kapalı"
+
+
 func _yeni_oyun_basildi() -> void:
+	_alt_paneli_ac(_yeni_oyun_paneli)
+
+
+func _basla_basildi() -> void:
 	if _kayit_var:
 		_yeni_oyun_onayi.popup_centered()
 	else:
@@ -220,8 +283,9 @@ func _yeni_oyun_basildi() -> void:
 
 func _yeni_oyun_onaylandi() -> void:
 	KayitYoneticisi.sil()
+	_alt_paneli_kapat(_yeni_oyun_paneli)
 	_kok.hide()
-	yeni_oyun_istendi.emit()
+	yeni_oyun_istendi.emit(_savas_sisi.button_pressed)
 
 
 func _kaydi_silindi() -> void:

@@ -28,6 +28,7 @@ const SINAMA_SINIFLARI: Array[Script] = [
 	preload("res://tests/sim/birlik_turu_testi.gd"),
 	preload("res://tests/sim/teknoloji_testi.gd"),
 	preload("res://tests/sim/tahkimat_testi.gd"),
+	preload("res://tests/sim/savas_sisi_testi.gd"),
 ]
 
 

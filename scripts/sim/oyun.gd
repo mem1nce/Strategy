@@ -36,6 +36,8 @@ signal oyun_kazanildi
 ## bölge id'siyle yayılır. Bölge id'si yoksa (ör. gelecekte eklenebilecek bölgesiz bir
 ## olay) boş metindir.
 signal bildirim_gonder(metin: String, bolge_id: String)
+## Savaş sisi açıkken oyuncunun gördüğü bölgeler değiştiğinde yayılır (bkz. oyuncu_bolgeyi_goruyor_mu).
+signal gorunurluk_degisti
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
@@ -108,9 +110,10 @@ var _yz_tahkimat_olasiligi: float = 0.08
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## Ülke id'si -> günde bir kez düşündüğü saat (bkz. _ulkenin_dusunme_saati).
 var _dusunme_saatleri: Dictionary[String, int] = {}
-## Ülke id'si -> {tür: toplam güç}; her oyun günü başında bir kez hesaplanır, yapay zekânın
-## tür seçimi için (bkz. _yz_tur_sec).
-var _ulke_tur_gucleri: Dictionary[String, Dictionary] = {}
+## Ülke id'si -> {tümenlerinin bulunduğu bölge id'si: true}; her oyun günü başında bir kez
+## hesaplanır. Yapay zekânın savaş sisi altında neyi gördüğünü bulmak için (bkz.
+## _yz_gorunur_bolgeler).
+var _ulke_birlik_bolgeleri: Dictionary[String, Dictionary] = {}
 ## Ülke id'si -> yapay zekânın kurmaya karar verdiği ama henüz parası yetmeyen tümen türü.
 ## Para birikene kadar karar değişmez; yoksa ucuz piyade hep önce alınır, pahalı türler
 ## neredeyse hiç kurulmazdı. Kaydedilmez (yüklenince yeniden seçilir).
@@ -147,6 +150,15 @@ var _zafer_kazanildi: bool = false
 ## Açıksa, oyuncunun ülkesi de (barışta kurma, savaşta saldırma, savaş ilanı) aynı yapay
 ## zekâ tarafından yönetilir.
 var yz_oyuncuyu_yonetsin: bool = false
+## Savaş sisi: açıksa oyuncu yalnızca gördüğü bölgelerdeki yabancı tümenleri bilir (bkz.
+## Gorunurluk). Yeni oyunda seçilir, kayıtta saklanır.
+var savas_sisi: bool = true:
+	set(deger):
+		savas_sisi = deger
+		_oyuncu_gorunurlugunu_guncelle()
+## Oyuncunun o an gördüğü bölgeler; yalnızca tümenler ya da sahiplikler değişince yeniden
+## hesaplanır (bkz. _oyuncu_gorunurlugunu_guncelle), her karede değil.
+var _oyuncu_gorunenleri: Dictionary[String, bool] = {}
 
 
 func _init(yeni_dunya: Dunya) -> void:
@@ -174,6 +186,9 @@ func _init(yeni_dunya: Dunya) -> void:
 	_tahkimat_avantaji = float(tahkimat_ayarlari.get("seviye_avantaji", _tahkimat_avantaji))
 	_tahkimat_taban_maliyet = float(tahkimat_ayarlari.get("taban_maliyet", _tahkimat_taban_maliyet))
 	_tahkimat_suresi_saat = int(tahkimat_ayarlari.get("sure_saat", _tahkimat_suresi_saat))
+	birlikler_degisti.connect(_oyuncu_gorunurlugunu_guncelle)
+	bolge_sahipligi_degisti.connect(_oyuncu_gorunurlugunu_guncelle)
+	oyuncu_secildi.connect(func(_ulke_id: String) -> void: _oyuncu_gorunurlugunu_guncelle())
 
 	var ordu_ayarlari: Dictionary = VeriOkuyucu.sozluk_oku(DENGE_DOSYASI).get("ordu", {})
 	_baslangic_gucu = float(ordu_ayarlari.get("baslangic_gucu", _baslangic_gucu))
@@ -190,7 +205,7 @@ func _init(yeni_dunya: Dunya) -> void:
 	_yz_karsi_tur_bonusu = float(yz_ayarlari.get("karsi_tur_bonusu", _yz_karsi_tur_bonusu))
 	_yz_arastirma_olasiligi = float(yz_ayarlari.get("arastirma_olasiligi", _yz_arastirma_olasiligi))
 	_yz_tahkimat_olasiligi = float(yz_ayarlari.get("tahkimat_olasiligi", _yz_tahkimat_olasiligi))
-	_ulke_tur_guclerini_hesapla()
+	_ulke_birlik_bolgelerini_hesapla()
 
 
 ## Verilen bölgedeki tümenler.
@@ -598,6 +613,7 @@ func _geri_cek(liste: Array[Birlik], bolge_id: String) -> void:
 		else:
 			birlik.guc = 0.0
 			birlikler.erase(birlik)
+	birlikler_degisti.emit()
 
 
 ## İki ülke savaşta mı?
@@ -677,7 +693,7 @@ func gun_basladi(su_anki_saat: int) -> void:
 		var gelir: float = gelirler[ulke_id] * Teknoloji.gelir_carpani(teknoloji_seviyesi(ulke_id, "sanayi"))
 		hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) + gelir
 	_bakimi_uygula()
-	_ulke_tur_guclerini_hesapla()
+	_ulke_birlik_bolgelerini_hesapla()
 	hazine_degisti.emit()
 	birlikler_degisti.emit()
 
@@ -1056,20 +1072,19 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 
 
 ## Yapay zekânın kuracağı tümen türü: taban ağırlıklara (karışık ordu) göre rastgele seçilir;
-## komşu ülkelerin en çok kullandığı türe üstün gelen türün ağırlığı `karsi_tur_bonusu` kadar
-## artırılır (bkz. _ulke_tur_gucleri, her gün başında hesaplanır).
+## gördüğü bölgelerdeki (bkz. _yz_gorunur_bolgeler) yabancı tümenlerin en çok kullandığı türe
+## üstün gelen türün ağırlığı `karsi_tur_bonusu` kadar artırılır. Uzaktaki tümenleri bilmez.
 func _yz_tur_sec(ulke_id: String) -> String:
 	var agirliklar: Dictionary[String, float] = {}
 	for tur: String in BirlikTurleri.SIRA:
 		agirliklar[tur] = float(_yz_tur_agirliklari.get(tur, 0.0))
 
 	var komsu_gucleri: Dictionary[String, float] = {}
-	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
-	if ulke != null:
-		for komsu_id: String in ulke.komsular:
-			var gucler: Dictionary = _ulke_tur_gucleri.get(komsu_id, {})
-			for tur: String in gucler:
-				komsu_gucleri[tur] = komsu_gucleri.get(tur, 0.0) + float(gucler[tur])
+	var dizin: Dictionary[String, Array] = _yz_dizini()
+	for bolge_id: String in _yz_gorunur_bolgeler(ulke_id):
+		for birlik: Birlik in (dizin.get(bolge_id, []) as Array):
+			if birlik.sahip != ulke_id:
+				komsu_gucleri[birlik.tur] = komsu_gucleri.get(birlik.tur, 0.0) + birlik.guc
 	var en_cok: String = ""
 	var en_cok_guc: float = 0.0
 	for tur: String in komsu_gucleri:
@@ -1091,13 +1106,38 @@ func _yz_tur_sec(ulke_id: String) -> String:
 	return BirlikTurleri.VARSAYILAN
 
 
-## Her ülkenin tümenlerinin türlere göre toplam gücü (yapay zekânın tür seçimi için).
-func _ulke_tur_guclerini_hesapla() -> void:
-	_ulke_tur_gucleri = {}
+## Her ülkenin tümenlerinin bulunduğu bölgeler (yapay zekânın görüşü için, günde bir kez).
+func _ulke_birlik_bolgelerini_hesapla() -> void:
+	_ulke_birlik_bolgeleri = {}
 	for birlik: Birlik in birlikler:
-		var gucler: Dictionary = _ulke_tur_gucleri.get(birlik.sahip, {})
-		gucler[birlik.tur] = float(gucler.get(birlik.tur, 0.0)) + birlik.guc
-		_ulke_tur_gucleri[birlik.sahip] = gucler
+		var bolgeler: Dictionary = _ulke_birlik_bolgeleri.get(birlik.sahip, {})
+		bolgeler[birlik.bolge_id] = true
+		_ulke_birlik_bolgeleri[birlik.sahip] = bolgeler
+
+
+## Yapay zekâ ülkesinin gördüğü bölgeler (bkz. Gorunurluk): kendi bölgeleri, tümenlerinin
+## bulunduğu bölgeler ve bunların komşuları. Yapay zekâ kararlarında yalnızca bunlardaki
+## yabancı tümenleri hesaba katar.
+func _yz_gorunur_bolgeler(ulke_id: String) -> Dictionary[String, bool]:
+	return Gorunurluk.gorunur_bolgeler(dunya, ulke_id, _ulke_birlik_bolgeleri.get(ulke_id, {}))
+
+
+## Yapay zekânın kullandığı bölge -> tümen dizini: bu saatinki geçerliyse o, değilse yeni kurulur.
+func _yz_dizini() -> Dictionary[String, Array]:
+	if _saat_dizini_saati >= 0:
+		return _saat_dizini
+	return _bolgelere_gore_birlikler()
+
+
+## `gorunenler` bölgelerindeki, `hedef` ülkesine ait tümenlerin toplam gücü.
+func _gorunen_guc(hedef: String, gorunenler: Dictionary[String, bool]) -> float:
+	var dizin: Dictionary[String, Array] = _yz_dizini()
+	var toplam: float = 0.0
+	for bolge_id: String in gorunenler:
+		for birlik: Birlik in (dizin.get(bolge_id, []) as Array):
+			if birlik.sahip == hedef:
+				toplam += birlik.guc
+	return toplam
 
 
 ## Bir araştırması yoksa ara sıra (arastirma_olasiligi) en geride kalan dalda araştırma başlatır.
@@ -1160,6 +1200,9 @@ func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
 	var kendi_guc: float = _ulkenin_toplam_gucu(ulke_id)
 	if kendi_guc <= 0.0:
 		return
+	# Komşunun gücü yalnızca görülen bölgelerinden (sınır boyundan) bilinir; uzaktaki
+	# tümenleri savaş sisi yüzünden hesaba katılmaz.
+	var gorunenler: Dictionary[String, bool] = _yz_gorunur_bolgeler(ulke_id)
 	var dokunulmazlik_saati: int = _yz_oyuncuya_dokunulmazlik_gun * 24
 	for diger: Ulke in dunya.ulke_listesi:
 		if diger.id == ulke_id or savasta_mi(ulke_id, diger.id):
@@ -1168,7 +1211,7 @@ func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
 			continue
 		if not dunya.ulkeler_komsu_mu(ulke_id, diger.id):
 			continue
-		var diger_guc: float = _ulkenin_toplam_gucu(diger.id)
+		var diger_guc: float = _gorunen_guc(diger.id, gorunenler)
 		if diger_guc <= 0.0 or kendi_guc < _yz_savas_ilani_esigi * diger_guc:
 			continue
 		savas_ilan_et(ulke_id, diger.id, su_anki_saat)
@@ -1196,6 +1239,28 @@ func _savas_dizinini_kur() -> void:
 			var karsilar: Dictionary = _ulke_savaslari.get(taraflar[i], {})
 			karsilar[taraflar[1 - i]] = true
 			_ulke_savaslari[taraflar[i]] = karsilar
+
+
+## Oyuncu bu bölgeyi görüyor mu? Savaş sisi kapalıysa ya da oyuncu henüz seçilmediyse her yer
+## görünür. Görünmeyen bölgede yabancı tümenler ve muharebeler gösterilmez; bölgenin sahibi
+## her zaman görünür.
+func oyuncu_bolgeyi_goruyor_mu(bolge_id: String) -> bool:
+	if not savas_sisi or oyuncu_ulkesi == "":
+		return true
+	return _oyuncu_gorunenleri.has(bolge_id)
+
+
+func _oyuncu_gorunurlugunu_guncelle() -> void:
+	var yeni: Dictionary[String, bool] = {}
+	if savas_sisi and oyuncu_ulkesi != "":
+		var birlik_bolgeleri: Dictionary = {}
+		for birlik: Birlik in birlikler:
+			if birlik.sahip == oyuncu_ulkesi:
+				birlik_bolgeleri[birlik.bolge_id] = true
+		yeni = Gorunurluk.gorunur_bolgeler(dunya, oyuncu_ulkesi, birlik_bolgeleri)
+	if yeni != _oyuncu_gorunenleri:
+		_oyuncu_gorunenleri = yeni
+		gorunurluk_degisti.emit()
 
 
 func oyuncu_secildi_mi() -> bool:
@@ -1257,6 +1322,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"insa_kuyruklari": kuyruk_verisi,
 		"zafer_kazanildi": _zafer_kazanildi,
 		"yz_oyuncuyu_yonetsin": yz_oyuncuyu_yonetsin,
+		"savas_sisi": savas_sisi,
 		"teknolojiler": teknolojiler,
 		"arastirmalar": arastirmalar,
 	}
@@ -1319,6 +1385,8 @@ func kayittan_yukle(veri: Dictionary) -> void:
 
 	_zafer_kazanildi = bool(veri.get("zafer_kazanildi", false))
 	yz_oyuncuyu_yonetsin = bool(veri.get("yz_oyuncuyu_yonetsin", false))
+	# 3. sürüm kayıtlarda bu alan yok: savaş sisi açık sayılır.
+	savas_sisi = bool(veri.get("savas_sisi", true))
 
 	teknolojiler = {}
 	var teknoloji_verisi: Dictionary = veri.get("teknolojiler", {})
@@ -1336,7 +1404,7 @@ func kayittan_yukle(veri: Dictionary) -> void:
 		if Teknoloji.DALLAR.has(str(a.get("dal", ""))):
 			arastirmalar[ulke_id] = {"dal": str(a["dal"]), "kalan_saat": int(a.get("kalan_saat", 1)),
 					"toplam_saat": int(a.get("toplam_saat", 1))}
-	_ulke_tur_guclerini_hesapla()
+	_ulke_birlik_bolgelerini_hesapla()
 
 
 ## Kayıttaki tür bilinmiyorsa (ör. eski kayıt) piyade sayılır.

@@ -8,9 +8,10 @@ extends RefCounted
 ## 2: tümen türleri, teknoloji ve tahkimat eklendi.
 ## 3: bölgeler daha ayrıntılı şehir verisiyle yeniden üretildi; bölge kimlikleri değişti, bu
 ## yüzden 1. ve 2. sürüm kayıtlar artık açılamaz (bkz. eski_kayit_mi).
-const SURUM: int = 3
+## 4: savaş sisi tercihi eklendi. 3. sürüm kayıt açılınca sis açık sayılır.
+const SURUM: int = 4
 ## Açılabilen sürümler.
-const ACILABILEN_SURUMLER: Array[int] = [3]
+const ACILABILEN_SURUMLER: Array[int] = [3, 4]
 
 ## Kayıt dosyasının yolu. Sınamalar bunu ayrı bir dosyaya çevirir ki oyuncunun gerçek
 ## kaydına dokunmasınlar (bkz. tests/calistirici.gd).
@@ -25,7 +26,8 @@ static func kayit_var_mi() -> bool:
 ## bunu "Bu kayıt eski bir sürüme ait" diye gösterir (bkz. main.gd).
 static func eski_kayit_mi() -> bool:
 	var veri: Dictionary = _oku()
-	return not veri.is_empty() and int(veri.get("surum", -1)) < SURUM
+	var surum: int = int(veri.get("surum", -1))
+	return not veri.is_empty() and surum < SURUM and not ACILABILEN_SURUMLER.has(surum)
 
 
 ## Kayıt dosyasını siler (yoksa bir şey yapmaz). Ana menüdeki "Yeni oyun" ve "Ayarlar ->

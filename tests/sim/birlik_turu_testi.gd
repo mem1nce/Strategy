@@ -170,7 +170,7 @@ func sina_yz_komsunun_cok_kullandigi_ture_karsi_tur_secer() -> String:
 			for birlik: Birlik in oyun.birlikler:
 				if birlik.sahip == ulke_id:
 					birlik.tur = "piyade"
-	oyun._ulke_tur_guclerini_hesapla()
+	oyun._ulke_birlik_bolgelerini_hesapla()
 	var sayac: Dictionary[String, int] = {"piyade": 0, "zirhli": 0, "topcu": 0}
 	for i: int in 3000:
 		sayac[oyun._yz_tur_sec("TUR")] += 1

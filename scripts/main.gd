@@ -59,6 +59,7 @@ func _ready() -> void:
 	_oyun.savas_ilan_edildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.baris_yapildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.tahkimat_degisti.connect(_tahkimat_degisti)
+	_oyun.gorunurluk_degisti.connect(_gorunurluk_degisti)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -119,10 +120,10 @@ func _otomatik_kaydet() -> void:
 
 
 ## Ana menüde "Yeni oyun" onaylandı (AnaMenu eski kaydı zaten sildi). _oyun ve dünya hiç
-## kayıt uygulanmadan taze kurulmuştu; yapacak başka bir şey yok, oyuncu normal "Ülkeni
-## seç" akışıyla karşılaşır.
-func _yeni_oyun_secildi() -> void:
-	pass
+## kayıt uygulanmadan taze kurulmuştu; yalnızca seçilen savaş sisi tercihi uygulanır, oyuncu
+## normal "Ülkeni seç" akışıyla karşılaşır.
+func _yeni_oyun_secildi(savas_sisi: bool) -> void:
+	_oyun.savas_sisi = savas_sisi
 
 
 ## Ana menüde "Devam et" seçildi: açılışta okunan kaydı şimdi uygular.
@@ -187,6 +188,29 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	var savas_dugmesi_gorunur: bool = yabanci_bolge and not savasta \
 			and _oyun.dunya.ulkeler_komsu_mu(_oyun.oyuncu_ulkesi, bolge.sahip)
 	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen)
+	if bolge != null:
+		_arayuz.bolge_birliklerini_yaz(_birlik_bilgisi(bolge), _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id))
+
+
+## Bölge panelindeki birlik satırı. Savaş sisi altında görünmeyen bölge için "bilinmiyor".
+func _birlik_bilgisi(bolge: Bolge) -> String:
+	if not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id):
+		return "Birlikler: bilinmiyor"
+	var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge.id)
+	if birlikler.is_empty():
+		return "Birlikler: yok"
+	var guc: float = 0.0
+	for birlik: Birlik in birlikler:
+		guc += birlik.guc
+	return "Birlikler: %d (güç %d)" % [birlikler.size(), roundi(guc)]
+
+
+## Oyuncunun gördüğü bölgeler değişti: harita karartmasını ve açık bölge panelini yeniler.
+func _gorunurluk_degisti() -> void:
+	_harita.sisi_yenile()
+	if _secili_bolge_id != "" and _secili_birlikler.is_empty():
+		var bolge: Bolge = _oyun.dunya.bolgeler[_secili_bolge_id]
+		_arayuz.bolge_birliklerini_yaz(_birlik_bilgisi(bolge), _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id))
 
 
 ## Bölge ya da birlik panelinde "Fabrika kur" / "Tahkimat kur"a basıldı: seçili (kendi)

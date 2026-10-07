@@ -181,6 +181,11 @@ func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
 			insa_dugmeleri_gorunur)
 
 
+## Bölge panelindeki "Birlikler: …" satırını yazar (bkz. BolgePaneli.birlikleri_yaz).
+func bolge_birliklerini_yaz(metin: String, gorunur: bool) -> void:
+	_bolge_paneli.birlikleri_yaz(metin, gorunur)
+
+
 ## Alt panelde, verilen bölgedeki oyuncu tümenlerini gösterir (bölge paneli yerine).
 func birligi_goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 	_teknoloji_panelini_kapat()
