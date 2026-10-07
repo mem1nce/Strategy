@@ -596,8 +596,34 @@ Adımlar (her biri ayrı commit):
    Avrupa (uzak/yakın/Benelüks), Orta Doğu, Türkiye, Doğu Asya ve ABD doğusu ekran
    görüntüleriyle denetlendi; kare süresi her yakınlıkta 7-12 ms. Kullanılmayan
    ne_50m_populated_places.geojson silindi.
-3. ⬜ Denge ve performans: üç tohumla uzun koşu, harita akıcılığı.
-4. ⬜ Belgeler: TEST_LISTESI.md.
+3. Denge ve performans: yeni haritada uzun koşu ilk denemede bütün denge hedeflerini tuttu
+   ama süre 103-119 sn idi (sınıra çok yakın). Ölçünce (5 yıl, bölüm bölüm) asıl yükün her saat
+   bütün tümenleri gezip bölge dizini kurmak olduğu görüldü (~111 sn, muharebe yalnızca 699
+   bölge-saat). Yapılanlar:
+   - Saatlik tarama yalnızca bir şey değişebilecekken yapılır: varış vakti gelen tümen,
+     önceki saatte muharebe, tümen sayısı değişimi, teslim/yükleme ya da 24 saattir tarama
+     yapılmamışsa (`_tarama_gerekli`, `_en_yakin_varis`, `_son_tarama_*`). Değişmeyen saatte
+     önceki (yamalanmış) dizin kullanılır.
+   - Varışlar, bölge dizini ve çekişmeli bölgeler tek geçişte (`_dizini_kur`); listeler bölge
+     nesnesinde damgayla toplanır. Dizin muharebeden sonra yamalanır ve aynı saat yapay
+     zekâya verilir (yapay zekâ artık her saat kendi dizinini kurmuyor).
+   - Savaş sorguları ülke başına dizinden (`_ulke_savaslari`; önceden her çağrıda metin
+     anahtarı kuruluyor ya da bütün savaşlar bölünüyordu). Ülke-bölge önbelleği artımlı
+     (`Bolge.sahip_dinleyicisi`). Gelir tek geçişte, bölgenin ev sahibi yüklemede bir kez.
+     Hareket emri yolu iki kez değil bir kez arıyor.
+   - Uzun koşu betiği üretimi olaydan sayıyor (her saat 176 kuyruğu gezmiyor).
+   Ölçüm sırasında bilgisayarda bir oyun açıktı (Steam/Overwolf); süreler bu yüzden 95-195 sn
+   arasında oynadı. Karşılaştırma aynı koşulda art arda yapıldı.
+   ✅ Sonuç (tohum 1/2/3): teslim 24/22/24, en büyük ülke %4,2/%5,0/%3,7, piyade ~%42,
+   zırhlı ~%36, topçu ~%22, süre 55/49/52 sn. Aynı koşulda optimizasyon öncesi sürüm 103 sn
+   (tohum 2). Sonuçlar optimizasyondan önceki koşularla birebir aynı. 127/127.
+4. ✅ Belgeler: TEST_LISTESI.md 4, 21, 22 güncel; 24 (yeni bölgeler, yakınlaşma) ve 25 (bölge
+   sayıları, Türkiye'nin bölgeleri) eklendi.
+
+Gözlem (kural değişmediği için dokunulmadı): bir ülke teslim olunca onunla süren savaşlar
+`_savaslar`'dan silinmiyor. Galip, artık var olmayan bir ülkeyle "savaşta" kalıyor; bu yüzden
+barıştaki üretimi yapmıyor ve en çok 2 savaş sınırına takılıp yeni savaş ilan edemiyor.
+Ayrı bir iş olarak düzeltilmesi önerilir.
 
 ## Kararlar
 

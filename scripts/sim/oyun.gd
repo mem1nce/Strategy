@@ -55,6 +55,10 @@ var birlikler: Array[Birlik] = []
 ## Savaştaki ülke çiftleri. Anahtar iki ülke id'sinin sıralı birleşimi (bkz. _savas_anahtari),
 ## değer savaşın ilan edildiği saat (Zaman.toplam_saat) — barış teklifinde süreyi ölçmek için.
 var _savaslar: Dictionary[String, int] = {}
+## Ülke id'si -> {savaştığı ülke id'si: true}. _savaslar ile birlikte güncellenir (bkz.
+## _savas_dizinini_kur); savasta_mi() gibi saatte binlerce kez yapılan sorgular metin anahtarı
+## kurmadan buradan yanıtlanır.
+var _ulke_savaslari: Dictionary[String, Dictionary] = {}
 
 # Muharebe sabitleri (data/balance.json -> "savas"); varsayılanlar dosya okunamazsa kullanılır.
 var _savunan_avantaji: float = 1.25
@@ -111,6 +115,21 @@ var _ulke_tur_gucleri: Dictionary[String, Dictionary] = {}
 ## Para birikene kadar karar değişmez; yoksa ucuz piyade hep önce alınır, pahalı türler
 ## neredeyse hiç kurulmazdı. Kaydedilmez (yüklenince yeniden seçilir).
 var _yz_bekleyen_tur: Dictionary[String, String] = {}
+## Bölge id'si -> o bölgedeki tümenler; her saat muharebede kurulur, muharebeden ve inşadan
+## sonra yamalanır ve aynı saatin yapay zekâ kararlarında kullanılır. Bir ülke teslim olunca
+## ya da tümen bölününce geçersiz sayılır (_saat_dizini_saati -1 olur) ve gerekirse yeniden kurulur.
+var _saat_dizini: Dictionary[String, Array] = {}
+var _saat_dizini_saati: int = -1
+## Her dizin kuruluşunda artar (bkz. Bolge.dizin_damgasi).
+var _dizin_damgasi: int = 0
+## Saatlik tarama (bkz. saat_ilerledi) yalnızca bir şey değişmiş olabilecekken yapılır:
+## önceki saatte muharebe sürdüyse ya da bir teslim/yükleme olduysa (_tarama_gerekli), tümen
+## sayısı son taramadan beri değiştiyse, bir tümenin varış vakti geldiyse (_en_yakin_varis,
+## yürüyen yoksa -1) ya da son tam taramanın üstünden 24 saat geçtiyse.
+var _tarama_gerekli: bool = true
+var _son_tarama_tumen_sayisi: int = -1
+var _en_yakin_varis: int = -1
+var _son_tarama_saati: int = -1
 
 ## Ülke id'si -> {dal: seviye} (bkz. Teknoloji). Kaydı olmayan dal 0. seviyededir.
 var teknolojiler: Dictionary[String, Dictionary] = {}
@@ -201,9 +220,7 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 	var yol: Array[String] = dunya.yol_bulucu.en_kisa_yol(kaynak_bolge_id, hedef_bolge_id)
 	if yol.size() < 2:
 		return false
-	var sure: float = dunya.yol_bulucu.en_kisa_sure(kaynak_bolge_id, hedef_bolge_id)
-	if sure < 0.0:
-		return false
+	var sure: float = dunya.yol_bulucu.yol_suresi(yol)
 	# Yığın en yavaş türünün hızıyla yürür; Lojistik teknolojisi süreyi kısaltır.
 	var carpan: float = 0.0
 	for birlik: Birlik in tasinacaklar:
@@ -218,6 +235,7 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 		birlik.hedef_bolge_id = hedef_bolge_id
 		birlik.varis_saati = varis
 		birlik.son_adim_deniz_mi = denizden
+	_en_yakin_varis = varis if _en_yakin_varis < 0 else mini(_en_yakin_varis, varis)
 	birlikler_degisti.emit()
 	return true
 
@@ -240,6 +258,7 @@ func yariya_ayir(stok: Array[Birlik]) -> Array[Birlik]:
 		yeni.guc = tek.guc / 2.0
 		tek.guc -= yeni.guc
 		birlikler.append(yeni)
+		_saat_dizini_saati = -1
 		birlikler_degisti.emit()
 		return [yeni]
 	return stok.slice(0, stok.size() / 2)
@@ -247,68 +266,129 @@ func yariya_ayir(stok: Array[Birlik]) -> Array[Birlik]:
 
 ## Zaman ilerledikçe çağrılır; varış saatine ulaşan tümenleri hedeflerine taşır. Boş bir
 ## düşman bölgesine varan tümen orayı ele geçirir. Ardından bütün muharebeler bir saat ilerler.
+##
+## Bu işlev her oyun saatinde bütün tümenleri gezer; varışlar, bölge dizini ve çekişmeli
+## bölgeler tek geçişte bulunur (bkz. _dizini_kur).
 func saat_ilerledi(su_anki_saat: int) -> void:
-	var tasima_oldu: bool = false
-	for birlik: Birlik in birlikler:
-		# yuruyor_mu() yerine alan doğrudan okunur: bu döngü her saat bütün tümenleri gezer.
-		if birlik.hedef_bolge_id != "" and su_anki_saat >= birlik.varis_saati:
-			birlik.bolge_id = birlik.hedef_bolge_id
-			birlik.hedef_bolge_id = ""
-			birlik.varis_saati = -1
-			tasima_oldu = true
-			_bos_dusman_bolgesini_isgal_et(birlik, su_anki_saat)
-	if tasima_oldu:
-		birlikler_degisti.emit()
-	_muharebeleri_isle(su_anki_saat)
+	var tara: bool = _tarama_gerekli or birlikler.size() != _son_tarama_tumen_sayisi 			or (_en_yakin_varis >= 0 and su_anki_saat >= _en_yakin_varis) 			or su_anki_saat - _son_tarama_saati >= 24 or su_anki_saat < _son_tarama_saati
+	if tara:
+		var varanlar: Array[Birlik] = []
+		var dolu_bolgeler: Array[Bolge] = _dizini_kur(su_anki_saat, varanlar)
+		if not varanlar.is_empty():
+			birlikler_degisti.emit()
+			_bos_dusman_bolgelerini_isgal_et(varanlar, su_anki_saat)
+			if _saat_dizini_saati != su_anki_saat:
+				# Bir ülke teslim olup tümenleri silindi; dizin baştan kurulur.
+				dolu_bolgeler = _dizini_kur(su_anki_saat)
+		_tarama_gerekli = _muharebeleri_coz(dolu_bolgeler, su_anki_saat)
+		_son_tarama_tumen_sayisi = birlikler.size()
+		_son_tarama_saati = su_anki_saat
+	else:
+		# Hiçbir şey değişmedi: önceki saatin (yamalanmış) dizini hâlâ doğru.
+		_saat_dizini_saati = su_anki_saat
 	_insa_islerini_isle()
 	_arastirmalari_isle()
 	_yapay_zekayi_isle(su_anki_saat)
 
 
-## Gelen tümen, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait) tümen
-## kalmamış bir düşman bölgesine girdiyse orayı ele geçirir. Savunan varsa (muharebe
-## sürüyorsa) işgal gerçekleşmez.
-func _bos_dusman_bolgesini_isgal_et(gelen: Birlik, su_anki_saat: int) -> void:
-	var bolge: Bolge = dunya.bolgeler.get(gelen.bolge_id)
-	if bolge == null or bolge.sahip == gelen.sahip or not savasta_mi(bolge.sahip, gelen.sahip):
-		return
-	for digeri: Birlik in bolgedeki_birlikler(gelen.bolge_id):
-		if digeri.sahip == bolge.sahip:
-			return
-	_bolgeyi_devret(bolge, gelen.sahip, su_anki_saat)
+## Bu saat varan tümenlerden, savaşta olduğu ve içinde savunan (bölgenin o anki sahibine ait)
+## tümen kalmamış bir düşman bölgesine girenler orayı ele geçirir. Savunan varsa (muharebe
+## sürüyorsa) işgal gerçekleşmez. Bölgelerdeki tümenler bu saatin dizininden okunur.
+func _bos_dusman_bolgelerini_isgal_et(varanlar: Array[Birlik], su_anki_saat: int) -> void:
+	var dizin: Dictionary[String, Array] = _saat_dizini
+	for gelen: Birlik in varanlar:
+		var bolge: Bolge = dunya.bolgeler.get(gelen.bolge_id)
+		if bolge == null or bolge.sahip == gelen.sahip or not savasta_mi(bolge.sahip, gelen.sahip):
+			continue
+		var savunan_var: bool = false
+		for digeri: Birlik in (dizin.get(bolge.id, []) as Array):
+			if digeri.sahip == bolge.sahip:
+				savunan_var = true
+				break
+		if not savunan_var:
+			_bolgeyi_devret(bolge, gelen.sahip, su_anki_saat)
 
 
 ## Birden çok ülkenin tümeni bulunan (dolayısıyla savaşan) her bölgede muharebeyi bir saat
-## ilerletir.
-##
-## Bu işlev her oyun saatinde çalışır ve dünyadaki bütün tümenlere bakar; o yüzden önce
-## yalnızca hangi bölgelerde birden çok ülkenin tümeni olduğu (çekişmeli bölgeler) bulunur,
-## tümen listeleri yalnızca o bölgeler için kurulur. Bölgeler, ilk tümenlerinin listede
-## göründüğü sırayla işlenir.
+## ilerletir (sınamalar ve saat_ilerledi dışından çağrılmak için; dizini kendisi kurar).
 func _muharebeleri_isle(su_anki_saat: int) -> void:
-	var ilk_sahip: Dictionary[String, String] = {}
-	var cekismeli: Dictionary[String, bool] = {}
-	for birlik: Birlik in birlikler:
-		if birlik.hedef_bolge_id != "":
-			continue  # Yürüyor.
-		var sahip: String = ilk_sahip.get(birlik.bolge_id, "")
-		if sahip == "":
-			ilk_sahip[birlik.bolge_id] = birlik.sahip
-		elif sahip != birlik.sahip:
-			cekismeli[birlik.bolge_id] = true
-	if cekismeli.is_empty():
-		return
+	_muharebeleri_coz(_dizini_kur(su_anki_saat), su_anki_saat)
 
-	var bolge_gruplari: Dictionary[String, Array] = {}
+
+## Bütün tümenleri tek geçişte gezer: `varanlar` verilirse varış saati gelenleri hedeflerine
+## taşıyıp oraya ekler; her tümeni bölgesinin listesine koyar (yürüyenler dahil) ve yürümeyen
+## tümenleri birden çok ülkeye ait bölgeleri çekişmeli işaretler. Listeler sözlük yerine
+## bölge nesnelerinin üstünde toplanır (bkz. Bolge.dizin_damgasi); sonuç _saat_dizini'ne
+## yazılır ve aynı saat yapay zekâya verilir. Tümeni olan bölgeleri, ilk tümenlerinin
+## listede göründüğü sırayla döndürür.
+func _dizini_kur(su_anki_saat: int, varanlar: Variant = null) -> Array[Bolge]:
+	var varislari_uygula: bool = varanlar != null
+	_dizin_damgasi += 1
+	_en_yakin_varis = -1
+	var dolu_bolgeler: Array[Bolge] = []
 	for birlik: Birlik in birlikler:
-		if birlik.hedef_bolge_id != "" or not cekismeli.has(birlik.bolge_id):
+		# Önce tamsayı karşılaştırılır (yürümeyen tümende varis_saati -1'dir).
+		if varislari_uygula and birlik.varis_saati >= 0 and su_anki_saat >= birlik.varis_saati 				and birlik.hedef_bolge_id != "":
+			birlik.bolge_id = birlik.hedef_bolge_id
+			birlik.hedef_bolge_id = ""
+			birlik.varis_saati = -1
+			(varanlar as Array[Birlik]).append(birlik)
+		var bolge: Bolge = dunya.bolgeler.get(birlik.bolge_id)
+		if bolge == null:
 			continue
-		if not bolge_gruplari.has(birlik.bolge_id):
-			bolge_gruplari[birlik.bolge_id] = [] as Array[Birlik]
-		(bolge_gruplari[birlik.bolge_id] as Array[Birlik]).append(birlik)
+		if bolge.dizin_damgasi != _dizin_damgasi:
+			bolge.dizin_damgasi = _dizin_damgasi
+			bolge.dizin_birlikleri = [birlik]
+			bolge.dizin_ilk_sahip = ""
+			bolge.dizin_cekismeli = false
+			dolu_bolgeler.append(bolge)
+		else:
+			bolge.dizin_birlikleri.append(birlik)
+		if birlik.hedef_bolge_id != "":
+			if _en_yakin_varis < 0 or birlik.varis_saati < _en_yakin_varis:
+				_en_yakin_varis = birlik.varis_saati
+			continue  # Yürüyor.
+		if bolge.dizin_ilk_sahip == "":
+			bolge.dizin_ilk_sahip = birlik.sahip
+		elif bolge.dizin_ilk_sahip != birlik.sahip:
+			bolge.dizin_cekismeli = true
+	var dizin: Dictionary[String, Array] = {}
+	for bolge: Bolge in dolu_bolgeler:
+		dizin[bolge.id] = bolge.dizin_birlikleri
+	_saat_dizini = dizin
+	_saat_dizini_saati = su_anki_saat
+	return dolu_bolgeler
 
-	for bolge_id: String in bolge_gruplari:
-		_muharebeyi_coz(dunya.bolgeler[bolge_id], bolge_gruplari[bolge_id], su_anki_saat)
+
+## _dizini_kur()'un çekişmeli işaretlediği bölgelerde muharebeleri çözer ve dizini yamalar.
+## En az bir muharebe olduysa true döner.
+func _muharebeleri_coz(dolu_bolgeler: Array[Bolge], su_anki_saat: int) -> bool:
+	var muharebe_oldu: bool = false
+	var dizin: Dictionary[String, Array] = _saat_dizini
+	for bolge: Bolge in dolu_bolgeler:
+		if not bolge.dizin_cekismeli:
+			continue
+		muharebe_oldu = true
+		var bolge_id: String = bolge.id
+		var katilanlar: Array[Birlik] = []
+		for birlik: Birlik in (dizin[bolge_id] as Array):
+			if birlik.hedef_bolge_id == "":
+				katilanlar.append(birlik)
+		_muharebeyi_coz(bolge, katilanlar, su_anki_saat)
+		# Dizini yamala: ölenler (ya da geri çekilecek yeri olmadığı için yok olanlar) çıkar,
+		# geri çekilenler yeni bölgelerine geçer.
+		var kalanlar: Array = []
+		for birlik: Birlik in (dizin[bolge_id] as Array):
+			if birlik.guc < ASGARI_GUC:
+				continue
+			if birlik.bolge_id == bolge_id:
+				kalanlar.append(birlik)
+			else:
+				var yeni_liste: Array = dizin.get(birlik.bolge_id, [])
+				yeni_liste.append(birlik)
+				dizin[birlik.bolge_id] = yeni_liste
+		dizin[bolge_id] = kalanlar
+	return muharebe_oldu
 
 
 ## Bir bölgedeki muharebeyi bir saat ilerletir: her iki taraf, karşı tarafın verdiği hasarla
@@ -443,6 +523,8 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 		if birlik.sahip != ulke_id:
 			kalanlar.append(birlik)
 	birlikler = kalanlar
+	_saat_dizini_saati = -1
+	_tarama_gerekli = true
 
 	bolge_sahipligi_degisti.emit()
 	birlikler_degisti.emit()
@@ -514,12 +596,14 @@ func _geri_cek(liste: Array[Birlik], bolge_id: String) -> void:
 		if hedef != null:
 			birlik.bolge_id = hedef.id
 		else:
+			birlik.guc = 0.0
 			birlikler.erase(birlik)
 
 
 ## İki ülke savaşta mı?
 func savasta_mi(ulke_a: String, ulke_b: String) -> bool:
-	return _savaslar.has(_savas_anahtari(ulke_a, ulke_b))
+	var karsilar: Variant = _ulke_savaslari.get(ulke_a)
+	return karsilar != null and (karsilar as Dictionary).has(ulke_b)
 
 
 ## Savaş ilan eder. Yalnızca doğrudan (kara ya da deniz yoluyla) komşu, henüz savaşılmayan,
@@ -531,6 +615,7 @@ func savas_ilan_et(ilan_eden: String, hedef: String, su_anki_saat: int) -> bool:
 	if savasta_mi(ilan_eden, hedef) or not dunya.ulkeler_komsu_mu(ilan_eden, hedef):
 		return false
 	_savaslar[_savas_anahtari(ilan_eden, hedef)] = su_anki_saat
+	_savas_dizinini_kur()
 	savas_ilan_edildi.emit(ilan_eden, hedef)
 	if hedef == oyuncu_ulkesi and ilan_eden != oyuncu_ulkesi:
 		var ilan_eden_ulke: Ulke = dunya.ulkeler[ilan_eden]
@@ -549,6 +634,7 @@ func baris_teklif_et(teklif_eden: String, hedef: String, su_anki_saat: int) -> b
 	if not uzun_surdu and _ulkenin_toplam_gucu(hedef) >= _ulkenin_toplam_gucu(teklif_eden):
 		return false
 	_savaslar.erase(anahtar)
+	_savas_dizinini_kur()
 	baris_yapildi.emit(teklif_eden, hedef)
 	return true
 
@@ -582,9 +668,14 @@ func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:
 ## hazinesine eklenir, ardından tümen bakımı düşülür. `su_anki_saat`, gün başındaki
 ## Zaman.toplam_saat değeridir.
 func gun_basladi(su_anki_saat: int) -> void:
-	for ulke: Ulke in dunya.ulke_listesi:
-		var gelir: float = ulkenin_geliri(ulke.id, su_anki_saat)
-		hazineler[ulke.id] = hazineler.get(ulke.id, 0.0) + gelir
+	# Gelir, ulkenin_geliri() ile aynı hesaptır ama bütün ülkeler için bölgeler üzerinden tek
+	# geçişte yapılır (ülke ülke ayrı ayrı toplamak her gün ~1100 bölgeyi defalarca geziyordu).
+	var gelirler: Dictionary[String, float] = {}
+	for bolge: Bolge in dunya.bolge_listesi:
+		gelirler[bolge.sahip] = gelirler.get(bolge.sahip, 0.0) + bolge_sanayisi(bolge, su_anki_saat)
+	for ulke_id: String in gelirler:
+		var gelir: float = gelirler[ulke_id] * Teknoloji.gelir_carpani(teknoloji_seviyesi(ulke_id, "sanayi"))
+		hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) + gelir
 	_bakimi_uygula()
 	_ulke_tur_guclerini_hesapla()
 	hazine_degisti.emit()
@@ -736,6 +827,10 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 			yeni.bolge_id = is_.bolge_id
 			yeni.guc = _baslangic_gucu
 			birlikler.append(yeni)
+			if _saat_dizini_saati >= 0:
+				var liste: Array = _saat_dizini.get(yeni.bolge_id, [])
+				liste.append(yeni)
+				_saat_dizini[yeni.bolge_id] = liste
 			birlikler_degisti.emit()
 			ne = "%s tümen" % BirlikTurleri.ad(is_.birlik_turu)
 		InsaIsi.Tur.TAHKIMAT:
@@ -843,7 +938,7 @@ func bolge_isgal_altinda_mi(bolge: Bolge, su_anki_saat: int) -> bool:
 
 
 func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:
-	return dunya.ulkeler.get(bolge.id.split("_")[0])
+	return dunya.ulkeler.get(bolge.ev_sahibi)
 
 
 ## Her saat çağrılır; o saat "düşünme sırası" gelen (elenmemiş) her ülke bir karar verir.
@@ -852,15 +947,17 @@ func _bolge_ev_sahibi(bolge: Bolge) -> Ulke:
 ## "ordumu yapay zekâ yönetsin" (yz_oyuncuyu_yonetsin) açık değilse atlanır.
 func _yapay_zekayi_isle(su_anki_saat: int) -> void:
 	var saat_dilimi: int = su_anki_saat % 24
-	# Tümenlerin bölgelere göre dizini, bu saat savaştaki bir ülke düşündüğünde bir kez
-	# kurulur ve o saatin bütün kararlarında kullanılır (bkz. _ulke_dusun).
+	# Tümenlerin bölgelere göre dizini: bu saatin muharebesinde kurulmuşsa o kullanılır,
+	# yoksa savaştaki bir ülke düşündüğünde bir kez kurulur (bkz. _ulke_dusun).
 	var onbellek: Dictionary = {}
+	if _saat_dizini_saati == su_anki_saat:
+		onbellek["birlik_dizini"] = _saat_dizini
 	for ulke: Ulke in dunya.ulke_listesi:
 		if ulke.id == oyuncu_ulkesi and not yz_oyuncuyu_yonetsin:
 			continue
 		if _ulkenin_dusunme_saati(ulke.id) != saat_dilimi:
 			continue
-		if dunya.ulkenin_bolgeleri(ulke.id).is_empty():
+		if dunya.ulkenin_bolge_sayisi(ulke.id) == 0:
 			continue  # Teslim olmuş; artık yok.
 		_ulke_dusun(ulke.id, su_anki_saat, onbellek)
 
@@ -874,16 +971,10 @@ func _ulkenin_dusunme_saati(ulke_id: String) -> int:
 
 
 ## Bölge id'si -> o bölgedeki tümenler (yürüyenler dahil; bolgedeki_birlikler() ile aynı).
-## Her saat çalışabildiği için tipsiz dizilerle, tek geçişte kurulur (daha hızlı).
+## Bu saatin dizini (bkz. _dizini_kur) geçerli değilse yeniden kurulur.
 func _bolgelere_gore_birlikler() -> Dictionary[String, Array]:
-	var dizin: Dictionary[String, Array] = {}
-	for birlik: Birlik in birlikler:
-		var liste: Variant = dizin.get(birlik.bolge_id)
-		if liste == null:
-			dizin[birlik.bolge_id] = [birlik]
-		else:
-			(liste as Array).append(birlik)
-	return dizin
+	_dizini_kur(_saat_dizini_saati)
+	return _saat_dizini
 
 
 ## Bir ülkenin günlük kararı: önce (savaşta olsun olmasın) savaş ilanını değerlendirir,
@@ -1085,20 +1176,26 @@ func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
 
 
 func _ulkenin_savas_sayisi(ulke_id: String) -> int:
-	var sayi: int = 0
-	for anahtar: String in _savaslar:
-		if anahtar.split("|").has(ulke_id):
-			sayi += 1
-	return sayi
+	return (_ulke_savaslari.get(ulke_id, {}) as Dictionary).size()
 
 
 ## Ülke herhangi bir savaştaysa true döner.
 func _ulkenin_savasta_mi(ulke_id: String) -> bool:
+	return _ulkenin_savas_sayisi(ulke_id) > 0
+
+
+## _savaslar'dan _ulke_savaslari dizinini yeniden kurar (savaş ilanı, barış ve yüklemede;
+## savaşlar seyrek değiştiği için baştan kurmak yeterince ucuzdur).
+func _savas_dizinini_kur() -> void:
+	_ulke_savaslari = {}
 	for anahtar: String in _savaslar:
 		var taraflar: PackedStringArray = anahtar.split("|")
-		if taraflar.has(ulke_id):
-			return true
-	return false
+		if taraflar.size() != 2:
+			continue
+		for i: int in 2:
+			var karsilar: Dictionary = _ulke_savaslari.get(taraflar[i], {})
+			karsilar[taraflar[1 - i]] = true
+			_ulke_savaslari[taraflar[i]] = karsilar
 
 
 func oyuncu_secildi_mi() -> bool:
@@ -1121,7 +1218,7 @@ func kaydet_icin_veri() -> Dictionary:
 	var bolgeler: Array = []
 	for bolge: Bolge in dunya.bolge_listesi:
 		if bolge.isgal_saati == -1 and bolge.fabrika_sanayisi == 0.0 and bolge.tahkimat == 0 \
-				and bolge.sahip == bolge.id.split("_")[0]:
+				and bolge.sahip == bolge.ev_sahibi:
 			continue  # Hiç değişmemiş bölge; yer kaplamasın.
 		bolgeler.append({
 			"id": bolge.id, "sahip": bolge.sahip,
@@ -1182,6 +1279,8 @@ func kayittan_yukle(veri: Dictionary) -> void:
 		bolge.tahkimat = clampi(int(b.get("tahkimat", 0)), 0, _tahkimat_azami)
 
 	birlikler = []
+	_saat_dizini_saati = -1
+	_tarama_gerekli = true
 	for b: Dictionary in (veri.get("birlikler", []) as Array):
 		var birlik: Birlik = Birlik.new()
 		birlik.sahip = str(b.get("sahip", ""))
@@ -1196,6 +1295,7 @@ func kayittan_yukle(veri: Dictionary) -> void:
 	_savaslar = {}
 	for s: Dictionary in (veri.get("savaslar", []) as Array):
 		_savaslar[str(s.get("anahtar", ""))] = int(s.get("ilan_saati", 0))
+	_savas_dizinini_kur()
 
 	hazineler = {}
 	var hazine_verisi: Dictionary = veri.get("hazineler", {})

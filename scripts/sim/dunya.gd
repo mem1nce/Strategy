@@ -17,10 +17,9 @@ var bolge_listesi: Array[Bolge] = []
 ## parçalar üstte kalır (ör. Lesotho, Güney Afrika'nın üstünde).
 var cokgenler: Array[Cokgen] = []
 var sinirlar: Array[Sinir] = []
-## Ülke id'si -> o ülkenin bölgeleri (bkz. ulkenin_bolgeleri). `_onbellek_surumu`,
-## önbelleğin hangi Bolge.sahiplik_surumu'na göre kurulduğunu tutar.
+## Ülke id'si -> o ülkenin bölgeleri (bkz. ulkenin_bolgeleri). Yüklerken kurulur, sonra her
+## sahiplik değişiminde yalnızca o bölge eski sahibinin listesinden yenisininkine taşınır.
 var _ulke_bolgeleri_onbellegi: Dictionary[String, Array] = {}
-var _onbellek_surumu: int = -1
 ## Bölgeler arası, saat cinsinden süreye göre en hızlı yolu bulur (kara + deniz yolu).
 var yol_bulucu: YolBulucu = null
 
@@ -56,6 +55,11 @@ static func yukle() -> Dunya:
 	if not dunya._dogrula():
 		return null
 	dunya.yol_bulucu = YolBulucu.kur(dunya)
+	for bolge: Bolge in dunya.bolge_listesi:
+		var liste: Array = dunya._ulke_bolgeleri_onbellegi.get(bolge.sahip, [])
+		liste.append(bolge)
+		dunya._ulke_bolgeleri_onbellegi[bolge.sahip] = liste
+		bolge.sahip_dinleyicisi = dunya._bolgenin_sahibi_degisti
 	return dunya
 
 
@@ -71,24 +75,26 @@ func bolgenin_sahibi(bolge_id: String) -> Ulke:
 ## Ülkenin o an elinde tuttuğu bölgeler.
 ##
 ## Bu sorgu yapay zekâ, ekonomi ve teslim denetiminden saatte yüzlerce kez çağrılır. Her
-## seferinde 516 bölgeyi taramamak için sonuçlar ülkelere göre önbellekte tutulur; herhangi
-## bir bölgenin sahibi değişince (Bolge.sahiplik_surumu artınca) önbellek yeniden kurulur.
+## seferinde ~1100 bölgeyi taramamak için sonuçlar ülkelere göre önbellekte tutulur ve bir
+## bölgenin sahibi değişince yalnızca o bölge taşınır (bkz. _bolgenin_sahibi_degisti).
 ## Dönen dizi önbelleğin bir kopyasıdır; çağıran onu değiştirebilir.
 func ulkenin_bolgeleri(ulke_id: String) -> Array[Bolge]:
-	if _onbellek_surumu != Bolge.sahiplik_surumu:
-		_ulke_bolgeleri_onbellegini_kur()
 	var sonuc: Array[Bolge] = []
 	sonuc.assign(_ulke_bolgeleri_onbellegi.get(ulke_id, []))
 	return sonuc
 
 
-func _ulke_bolgeleri_onbellegini_kur() -> void:
-	_ulke_bolgeleri_onbellegi = {}
-	for bolge: Bolge in bolge_listesi:
-		var liste: Array = _ulke_bolgeleri_onbellegi.get(bolge.sahip, [])
-		liste.append(bolge)
-		_ulke_bolgeleri_onbellegi[bolge.sahip] = liste
-	_onbellek_surumu = Bolge.sahiplik_surumu
+## Ülkenin o an elinde tuttuğu bölge sayısı (kopya oluşturmadan).
+func ulkenin_bolge_sayisi(ulke_id: String) -> int:
+	return (_ulke_bolgeleri_onbellegi.get(ulke_id, []) as Array).size()
+
+
+func _bolgenin_sahibi_degisti(bolge: Bolge, eski_sahip: String) -> void:
+	var eski_liste: Array = _ulke_bolgeleri_onbellegi.get(eski_sahip, [])
+	eski_liste.erase(bolge)
+	var yeni_liste: Array = _ulke_bolgeleri_onbellegi.get(bolge.sahip, [])
+	yeni_liste.append(bolge)
+	_ulke_bolgeleri_onbellegi[bolge.sahip] = yeni_liste
 
 
 ## Bölgeyle ortak sınırı olan bölgeler (başka ülkelerinkiler dahil).

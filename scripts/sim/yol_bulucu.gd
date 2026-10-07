@@ -63,6 +63,12 @@ func en_kisa_sure(bolge_a: String, bolge_b: String) -> float:
 	var yol: Array[String] = en_kisa_yol(bolge_a, bolge_b)
 	if yol.is_empty():
 		return -1.0
+	return yol_suresi(yol)
+
+
+## en_kisa_yol()'un döndürdüğü bir yolun toplam süresi (saat). Yolu zaten bulmuş olan
+## çağıran, aramayı ikinci kez yaptırmamak için bunu kullanır.
+func yol_suresi(yol: Array[String]) -> float:
 	var toplam: float = 0.0
 	for i: int in yol.size() - 1:
 		toplam += _compute_cost(_bolge_id[yol[i]], _bolge_id[yol[i + 1]])

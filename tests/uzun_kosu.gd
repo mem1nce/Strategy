@@ -35,21 +35,29 @@ func _init() -> void:
 	var uretim: Dictionary[String, int] = {}
 	for tur: String in BirlikTurleri.SIRA:
 		uretim[tur] = 0
+	# Üretim olaydan sayılır: kuyruk değiştiğinde, önceki öndeki iş süresini doldurduysa
+	# tamamlanmıştır (her saat bütün kuyrukları gezmek koşuyu belirgin yavaşlatıyordu).
+	var ondeki: Dictionary[String, InsaIsi] = {}
+	oyun.insa_kuyrugu_degisti.connect(func(ulke_id: String) -> void:
+		var onceki: InsaIsi = ondeki.get(ulke_id)
+		if onceki != null and onceki.kalan_saat <= 0 and onceki.tur == InsaIsi.Tur.TUMEN:
+			uretim[onceki.birlik_turu] += 1
+		var kuyruk: Array = oyun.insa_kuyruklari.get(ulke_id, [])
+		ondeki[ulke_id] = kuyruk[0] if not kuyruk.is_empty() else null)
 	var en_buyuk_pay: float = 0.0
 	var en_buyuk_ulke: String = ""
 	var toplam_bolge: float = float(dunya.bolge_listesi.size())
 
 	var son_saat: int = YIL * 365 * 24
+	var olculen_surum: int = -1
 	for saat: int in range(1, son_saat + 1):
-		# Bu saat bitecek tümen işleri, türüne göre sayılır.
-		for kuyruk: Array in oyun.insa_kuyruklari.values():
-			if not kuyruk.is_empty():
-				var on: InsaIsi = kuyruk[0]
-				if on.tur == InsaIsi.Tur.TUMEN and on.kalan_saat == 1:
-					uretim[on.birlik_turu] += 1
 		oyun.saat_ilerledi(saat)
 		if saat % 24 == 0:
 			oyun.gun_basladi(saat)
+			# Bölge payları yalnızca sahiplik değiştiyse yeniden sayılır.
+			if Bolge.sahiplik_surumu == olculen_surum:
+				continue
+			olculen_surum = Bolge.sahiplik_surumu
 			var sayilar: Dictionary[String, int] = {}
 			for bolge: Bolge in dunya.bolge_listesi:
 				sayilar[bolge.sahip] = sayilar.get(bolge.sahip, 0) + 1

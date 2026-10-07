@@ -33,8 +33,9 @@ kaydırma, tekerlek = yakınlaştırma.
 
 4. **Birlik yürütme** — Kendi ülkende üstünde sayılı kutu (tümen) olan bir bölgeye tıkla →
    alt panelde "Tümen: N (Piyade … · Zırhlı … · Topçu …)", "Toplam güç: …" kartı açılmalı. Sonra komşu kendi bölgene tıkla
-   → iki bölge arasında sarı yol çizgisi çıkmalı. "Devam"a bas; yaklaşık 24 oyun saati
-   sonra kutu hedef bölgeye geçmeli.
+   → iki bölge arasında sarı yol çizgisi çıkmalı. "Devam"a bas; kutu hedef bölgeye geçmeli.
+   Süre bölgeler arasındaki uzaklığa bağlıdır (en az 8, en çok 48 oyun saati): Hollanda'da
+   iki komşu bölge arası, Rusya'da ya da Kanada'da iki komşu bölge arasından belirgin kısa sürmeli.
 
 5. **Yarısını ayırma** — İki ya da daha fazla tümenli bir bölgenin kartını aç, "Yarısını
    ayır"a bas → karttaki tümen sayısı yarıya inmeli (tek tümense güç ikiye bölünmeli).
@@ -113,17 +114,29 @@ kaydırma, tekerlek = yakınlaştırma.
     olmalı ve 2. seviye basılabilir hâle gelmeli. Sanayi'den sonra günlük hazine artışı
     biraz büyümeli.
 
-21. **Tahkimat** — Kendi bölgende "Tahkimat 0/3 · Kur (80)" düğmesine bas → hazine 80 düşmeli,
-    düğme "Tahkimat 0/3 · Kur (160)" olmalı (kuyruktaki iş sayılır). 10 gün sonra haritada
+21. **Tahkimat** — Kendi bölgende "Tahkimat 0/3 · Kur (40)" düğmesine bas → hazine 40 düşmeli,
+    düğme "Tahkimat 0/3 · Kur (80)" olmalı (kuyruktaki iş sayılır). 10 gün sonra haritada
     bölge adının solunda gri kule ve içinde "1" görünmeli. Üç seviye sıralayınca düğme
     "Tam" yazıp soluklaşmalı. Başka bir ülkenin tahkimatlı bölgesine dokununca panelde
     "Tahkimat: n/3" yazmalı. Tahkimatlı bir bölge el değiştirince seviyesi bir düşmeli.
 
-22. **Eski kayıt** — Bu güncellemeden önce kaydedilmiş bir oyunun varsa "Devam et"e bas →
-    oyun çökmeden açılmalı, bütün tümenler piyade (yalnız çarpı işareti) olmalı, teknolojiler
-    ve tahkimatlar sıfır olmalı.
+22. **Eski kayıt** — Bölgeler yeniden üretilmeden önce kaydedilmiş bir oyunun varsa oyunu aç →
+    ana menüde başlığın altında sarı "Bu kayıt eski bir sürüme ait. Yeni oyun başlat." yazmalı,
+    "Devam et" soluk (basılamaz) olmalı. "Yeni oyun"a bas → onay sormadan yeni oyun başlamalı;
+    oyunu kapatıp açınca uyarı kalkmış olmalı. Oyun hiçbir adımda çökmemeli.
 
 23. **Nasıl oynanır ve geniş ekran** — Ana menüde "Nasıl oynanır"a bas → tümen türleri,
     teknoloji ve tahkimat paragrafları görünmeli, "Kapat" ekranın içinde olmalı. Pencereyi
     genişletip (ör. 2400 × 1080 gibi geniş, telefona benzer oran) ve daraltıp (16:9) üst
     çubuğa, alt panele ve teknoloji paneline bak → hiçbir düğme ekran dışına taşmamalı.
+
+24. **Yeni bölgeler** — Haritayı uzaktan aç → yalnızca ülkeler, ülke sınırları ve ülke adları
+    görünmeli (bölge sınırı, kutu yok). Avrupa'ya yavaşça yakınlaş → önce ince bölge sınırları
+    ve adlar, biraz daha yakında tümen kutuları belirmeli; adlar ve kutular üst üste binmemeli.
+    Benelüks, Lübnan-İsrail ve Kore gibi sık yerlerde kutu yerinden kaydıysa bölgesine ince
+    siyah bir çizgiyle bağlı olmalı.
+
+25. **Bölge sayıları ve adları** — Türkiye'yi seç → 10 bölge olmalı: Ankara, İstanbul, İzmir,
+    Antalya, Tarsus, Gaziantep, Diyarbakır, Van, Trabzon, Samsun. Rusya, ABD, Çin, Kanada,
+    Brezilya, Hindistan ve Avustralya'da 25 ile 40 arası, Hollanda ve Portekiz'de 3 bölge
+    görmelisin. Sibirya ve Avustralya'nın içi de birkaç bölgeye bölünmüş olmalı.

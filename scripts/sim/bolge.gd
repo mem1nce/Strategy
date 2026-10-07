@@ -4,17 +4,27 @@ extends RefCounted
 
 ## Örnek: "TUR_1"
 var id: String = ""
+## Bölgenin "ev sahibi" ülkesinin id'si: id'nin öneki ("TUR_1" -> "TUR"). Sahip değişse de
+## değişmez; ekonomi (bkz. Oyun.bolge_sanayisi) her gün her bölge için okuduğu için yüklerken
+## bir kez çıkarılır.
+var ev_sahibi: String = ""
 var ad: String = ""
-## Herhangi bir bölgenin sahibi her değiştiğinde bir artar. Dunya.ulkenin_bolgeleri()
-## önbelleğini ne zaman yeniden kuracağını buradan anlar.
+## Herhangi bir bölgenin sahibi her değiştiğinde bir artar (ör. uzun koşu, bölge paylarını
+## yalnızca sahiplik değişince yeniden sayar).
 static var sahiplik_surumu: int = 0
+## Sahip değişince (bölge, eski sahip) ile çağrılır. Bölgeyi kuran Dunya bunu ayarlar ki
+## ülke-bölge önbelleğini (bkz. Dunya.ulkenin_bolgeleri) baştan kurmadan güncelleyebilsin.
+var sahip_dinleyicisi: Callable = Callable()
 
 ## Bölgenin şu anki sahibi olan ülkenin id'si. Oyun içinde değişebilir.
 var sahip: String = "":
 	set(deger):
 		if deger != sahip:
+			var eski: String = sahip
 			sahip = deger
 			Bolge.sahiplik_surumu += 1
+			if sahip_dinleyicisi.is_valid():
+				sahip_dinleyicisi.call(self, eski)
 ## Bu bölge, başlangıçtaki sahibinin başkenti mi?
 var baskent: bool = false
 var nufus: int = 0
@@ -40,6 +50,15 @@ var cokgenler: Array[Cokgen] = []
 ## Çokgenlerin toplam alanı (harita birimi kare).
 var alan: float = 0.0
 
+## Oyun._muharebeleri_isle'nin her saat kurduğu tümen dizininin bu bölgedeki parçası. Sözlük
+## yerine bölgenin üstünde tutulur, çünkü dizin her saat bütün tümenler için kurulur ve metin
+## anahtarlı sözlük işlemleri ~1100 bölgede belirgin yavaştı. `dizin_damgasi` dizinin hangi
+## kuruluşuna ait olduğunu gösterir; eskiyse liste boş sayılır. Yalnızca Oyun kullanır.
+var dizin_damgasi: int = -1
+var dizin_birlikleri: Array = []
+var dizin_ilk_sahip: String = ""
+var dizin_cekismeli: bool = false
+
 
 ## Bölgenin bütün çokgenlerini kapsayan sınır kutusu (bildirime dokununca kamerayı
 ## bölgeye odaklamak için, bkz. HaritaKamerasi.odaklan).
@@ -53,6 +72,7 @@ func sinir_kutusu() -> Rect2:
 static func sozlukten(veri: Dictionary) -> Bolge:
 	var bolge: Bolge = Bolge.new()
 	bolge.id = str(veri.get("id", ""))
+	bolge.ev_sahibi = bolge.id.get_slice("_", 0)
 	bolge.ad = str(veri.get("ad", bolge.id))
 	bolge.sahip = str(veri.get("sahip", ""))
 	bolge.baskent = bool(veri.get("baskent", false))

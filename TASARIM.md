@@ -205,8 +205,10 @@ Formüllerde kullanılan sabitler `data/balance.json` dosyasındadır (şimdilik
 - **Sınırlar:** kıyı ince, ülke sınırı kalın, bölge sınırı ince ve soluktur. Hepsi
   yakınlıktan bağımsız olarak ekranda aynı kalınlıkta görünür.
 - **Uzaktan** harita sadedir: yalnızca ülkeler, ülke sınırları ve büyük ülkelerin adları.
-- **Yakınlaşınca** (yakınlık 1,7 ile 2,6 arasında yavaşça) bölge sınırları, bölge adları ve
-  başkent bölgelerindeki yıldızlar belirir; ülke adları solar ve daha da yakında kaybolur.
+- **Yakınlaşınca** (yakınlık 2,4 ile 3,4 arasında yavaşça; bölgeler sıklaştığı için eskiden
+  1,7-2,6 idi) bölge sınırları, bölge adları ve başkent bölgelerindeki yıldızlar belirir; ülke
+  adları solar ve daha da yakında kaybolur. Tümen kutuları bu belirme en az yarıya varınca
+  (yakınlık ~2,9) çizilir.
 - **Adlar:** bir ad, ülke ya da bölge ekranda adına yetecek kadar büyükse yazılır. Adlar üst
   üste binmez; çakışmada büyük ülkenin, bölgelerde başkentin ve kalabalık bölgenin adı kalır.
 - Seçili bölge parlak sarı, ülkesi daha hafif bir çerçeveyle; oyuncunun ülkesi kalın beyaz
@@ -353,7 +355,9 @@ vardır (`sim/birlik_turleri.gd`, sayılar data/balance.json → "birlik_turleri
 - **Gösterim:** aynı bölgedeki bütün tümenler haritada tek bir kutu olarak görünür; kutu
   bölgenin sahibinin renginde, solunda toplam güç, sağında her tür için sade bir işaret ve
   tümen sayısı yazar (piyade çarpı, zırhlı yatay oval, topçu dolu daire; ör. "520 ✕3 ⬭2 ●1").
-  Kutu, bölge adları gibi yakınlıktan bağımsız, sabit ekran boyutundadır. Birlik kartında
+  Kutu, bölge adları gibi yakınlıktan bağımsız, sabit ekran boyutundadır. Kutular üst üste
+  binmez: güçlü bölgeden zayıfa, her kutu için etiketin üstü, solu ve sağı, gerekirse 4 kata
+  kadar daha üstü denenir; yerinden kayan kutu bölgesine ince bir çizgiyle bağlanır. Birlik kartında
   tümen sayısı türlere göre yazar ("Tümen: 6 (Piyade 3 · Zırhlı 2 · Topçu 1)").
 - **Seçme ve emir:** oyuncunun kendi tümenlerinin olduğu bölgeye dokununca birlik kartı
   açılır. Kart açıkken başka bir bölgeye dokunmak hareket emridir: tümenler
