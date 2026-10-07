@@ -730,6 +730,24 @@ Adımlar:
    - Tahkimat / fabrika / başkent simgeleri art/icons'tan; simge ve bayrak dokularına mipmap
      açıldı (küçük çizilince pürüzsüz).
    - `tests/gorsel_cek.gd` 07 görüntüsünde boş bölgeye tahkimat ve fabrika koyar (simgeler görünsün).
+5. ✅ Arayüz. Sonra: docs/gorsel/adim4_arayuz/.
+   - Üst çubuk: bayraklı ülke kartı + simgeli kaynaklar (hazine, günlük gelir, tümen, bölge;
+     main.gd `_kaynaklari_guncelle`), süren inşa; tarih + durdur/oynat + 1×/2×/3× tek hapta;
+     "Ordu YZ" / "Sıralama" / "Teknoloji" simgeli araç düğmeleri (`Bilesenler.arac_dugmesi`).
+   - Alt panel: bayraklı başlık, ilişki rozeti (Senin / Savaşta / Tarafsız), simgeli istatistik
+     satırları, bonus satırı; tek birincil düğme (Tümen kur / Bu ülkeyle oyna / Barış);
+     "Savaş ilan et" tehlike renginde (`ArayuzTemasi.TEHLIKE_DUGME`).
+   - Ülke seçimi kartı: büyük bayrak, ad, nüfus / sanayi / ordu çubukları (dünyadaki en büyüğe
+     karekök oranı; main.gd `_ulke_ozeti`), "Bu ülkeyle oyna".
+   - Birlik paneli, sıralama (bayrak + güç çubuğu), teknoloji (dal simgeleri), tümen seçimi,
+     sonuç, şerit, ayarlar / yeni oyun / nasıl oynanır aynı başlıklı panel düzeninde.
+   - Bildirimler: konu simgesi + ilgili ülkenin bayrağı + renkli sol kenar (`Arayuz._bildirim_turu`
+     metinden seçer).
+   - Ana menü: arkada harita yavaşça kayar (`HaritaKamerasi.menu_gezintisi`, animasyonlar
+     azaltılmışsa durur), soldan koyulaşan örtü, Cinzel başlık; oyun arayüzü menüdeyken gizli.
+   - Lisanslar ekranı: Ayarlar → Lisanslar (lisanslar/*.txt).
+   - Cinzel artık sabit 700 örnek (`tools/cinzel_sabitle.py`, çakışmalar kaldırıldı): değişken
+     sürümde MSDF harflerin üstünde leke bırakıyordu. Özgün dosya tools/kaynak/fontlar/.
 
 ## Kararlar
 

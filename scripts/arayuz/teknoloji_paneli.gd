@@ -10,10 +10,13 @@ signal arastirma_istendi(dal: String)
 
 const DAL_ADI_GENISLIGI: float = 220.0
 const KUTU_BOYUTU: Vector2 = Vector2(430.0, 112.0)
-const KUTU_YAZI_BOYUTU: int = 27
+const KUTU_YAZI_BOYUTU: int = ArayuzTemasi.YAZI_KUCUK
+## Dalların simgeleri (art/icons).
+const DAL_SIMGELERI: Dictionary[String, String] = {
+	"sanayi": "sanayi", "silah": "muharebe", "savunma": "tahkimat", "lojistik": "uretim"}
 const CUBUK_BOYUTU: Vector2 = Vector2(420.0, 40.0)
 ## Kapalı kutuların yazısı da okunabilsin diye temadakinden açık.
-const KAPALI_YAZI_RENGI: Color = Color(0.72, 0.74, 0.78)
+const KAPALI_YAZI_RENGI: Color = ArayuzTemasi.IKINCIL_YAZI
 
 ## Dal -> o dalın seviye kutuları (seviye 1'den başlayarak).
 var _kutular: Dictionary[String, Array] = {}
@@ -24,36 +27,30 @@ var sure_carpani: float = 1.0
 
 
 func _ready() -> void:
-	var dikey: VBoxContainer = VBoxContainer.new()
-	dikey.add_theme_constant_override("separation", 10)
-	add_child(dikey)
-
-	var ust: HBoxContainer = HBoxContainer.new()
-	ust.add_theme_constant_override("separation", 20)
-	dikey.add_child(ust)
-	var baslik: Label = Label.new()
-	baslik.text = "Teknoloji"
-	baslik.custom_minimum_size = Vector2(DAL_ADI_GENISLIGI, 0.0)
-	baslik.add_theme_font_size_override("font_size", ArayuzTemasi.BASLIK_BOYUTU)
-	ust.add_child(baslik)
-	_durum = Label.new()
-	_durum.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ust.add_child(_durum)
-	_cubuk = ProgressBar.new()
-	_cubuk.custom_minimum_size = CUBUK_BOYUTU
-	_cubuk.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_cubuk.max_value = 1.0
-	_cubuk.step = 0.0
-	_cubuk.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ust.add_child(_cubuk)
+	# Başlıklı panel kendi zeminini çizer; bu düğüm yalnızca kap.
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var panel: BaslikliPanel = BaslikliPanel.new("Teknoloji")
+	panel.isaret_ayarla(Simgeler.dugum("teknoloji", 40.0, ArayuzTemasi.VURGU))
+	add_child(panel)
+	var dikey: VBoxContainer = panel.govde
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_1)
+	_durum = Bilesenler.ikincil_yazi()
+	panel.sag_alan.add_child(_durum)
+	_cubuk = Bilesenler.ilerleme_cubugu(ArayuzTemasi.VURGU, 16.0)
+	_cubuk.custom_minimum_size = Vector2(CUBUK_BOYUTU.x, 16.0)
+	panel.sag_alan.add_child(_cubuk)
 
 	for dal: String in Teknoloji.DALLAR:
 		var satir: HBoxContainer = HBoxContainer.new()
 		satir.add_theme_constant_override("separation", 12)
 		dikey.add_child(satir)
-		var ad: Label = Label.new()
-		ad.text = Teknoloji.ad(dal)
+		var ad: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_1)
 		ad.custom_minimum_size = Vector2(DAL_ADI_GENISLIGI, 0.0)
+		ad.add_child(Simgeler.dugum(DAL_SIMGELERI.get(dal, "teknoloji"), 34.0))
+		var ad_yazisi: Label = Label.new()
+		ad_yazisi.text = Teknoloji.ad(dal)
+		ad_yazisi.add_theme_font_override("font", ArayuzTemasi.arayuz_fontu(600))
+		ad.add_child(ad_yazisi)
 		satir.add_child(ad)
 		var liste: Array[Button] = []
 		for seviye: int in range(1, Teknoloji.azami_seviye() + 1):

@@ -242,12 +242,12 @@ func kaybi_goster() -> void:
 ## Teknoloji paneli alt panelle aynı yeri kapladığı için bir bölge gösterilince kapanır.
 func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
 		savas_dugmesi_gorunur: bool = false, baris_dugmesi_gorunur: bool = false,
-		insa_dugmeleri_gorunur: bool = false) -> void:
+		insa_dugmeleri_gorunur: bool = false, ulke_ozeti: Dictionary = {}) -> void:
 	if bolge != null:
 		_teknoloji_panelini_kapat()
 	_birlik_paneli.hide()
 	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur,
-			insa_dugmeleri_gorunur)
+			insa_dugmeleri_gorunur, ulke_ozeti)
 
 
 ## Bölge panelindeki "Birlikler: …" satırını yazar (bkz. BolgePaneli.birlikleri_yaz).
@@ -268,9 +268,9 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_mod_secici.show()
 
 
-## Oyuncunun hazinesini üst çubuğa yazar.
-func hazineyi_goster(miktar: float) -> void:
-	_ust_cubuk.hazineyi_goster(miktar)
+## Oyuncunun kaynaklarını (hazine, günlük gelir, tümen ve bölge sayısı) üst çubuğa yazar.
+func kaynaklari_goster(hazine: float, gelir: float, tumen: int, bolge: int) -> void:
+	_ust_cubuk.kaynaklari_goster(hazine, gelir, tumen, bolge)
 
 
 ## Oyuncunun inşa kuyruğunun önündeki işi üst çubukta gösterir (bkz. UstCubuk.uretimi_goster).
@@ -290,7 +290,26 @@ func siralamayi_goster(siralama: Array[Dictionary], oyuncu_ulkesi: String) -> vo
 
 ## Yeni bir bildirim kartı gösterir (bkz. Oyun.bildirim_gonder).
 func bildirim_goster(metin: String, bolge_id: String) -> void:
-	_bildirim_kutusu.ekle(metin, bolge_id)
+	var ulke: Ulke = null
+	if _dunya.bolgeler.has(bolge_id):
+		ulke = _dunya.bolgenin_sahibi(bolge_id)
+	var tur: Array = _bildirim_turu(metin)
+	_bildirim_kutusu.ekle(metin, bolge_id, ulke, tur[0], tur[1])
+
+
+## Bildirim metninden kartın simgesini ve rengini seçer (simülasyon yalnızca metin gönderir).
+static func _bildirim_turu(metin: String) -> Array:
+	var kucuk: String = metin.to_lower()
+	for kural: Array in [
+			["savaş ilan", "savas", ArayuzTemasi.TEHLIKE], ["muharebe", "muharebe", ArayuzTemasi.TEHLIKE],
+			["kaybett", "savas", ArayuzTemasi.TEHLIKE], ["teslim", "baris", ArayuzTemasi.VURGU],
+			["barış", "baris", ArayuzTemasi.BASARI], ["ele geçir", "ordu", ArayuzTemasi.BASARI],
+			["araştırma", "teknoloji", ArayuzTemasi.VURGU], ["hazine", "para", ArayuzTemasi.TEHLIKE],
+			["kuyruğu", "uretim", ArayuzTemasi.TEHLIKE], ["sıraya", "uretim", ArayuzTemasi.IKINCIL_YAZI],
+			["tamamlandı", "uretim", ArayuzTemasi.BASARI], ["hazır", "uretim", ArayuzTemasi.BASARI]]:
+		if kucuk.contains(kural[0]):
+			return [kural[1], kural[2]]
+	return ["bildirim", ArayuzTemasi.VURGU]
 
 
 ## Teknoloji panelini oyuncunun güncel durumuyla açar (bkz. TeknolojiPaneli.goster).

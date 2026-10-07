@@ -68,6 +68,7 @@ func _ready() -> void:
 	add_child(_harita)
 	_harita.kur(dunya, _oyun)
 	_oyun.bolge_sahipligi_degisti.connect(_harita.yenile)
+	_oyun.bolge_sahipligi_degisti.connect(_kaynaklari_guncelle)
 	_oyun.savas_ilan_edildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.baris_yapildi.connect(func(_a: String, _b: String) -> void: _harita.savaslari_yenile())
 	_oyun.tahkimat_degisti.connect(_tahkimat_degisti)
@@ -123,6 +124,11 @@ func _ready() -> void:
 	_ana_menu.devam_istendi.connect(_devam_secildi)
 	_ana_menu.goster(not _bekleyen_kayit.is_empty(),
 			_bekleyen_kayit.is_empty() and KayitYoneticisi.eski_kayit_mi())
+	# Menünün arkasında harita yavaşça kayar (animasyonlar azaltılmışsa durur).
+	if not Ayarlar.animasyonlar_azaltilmis:
+		_kamera.menu_gezintisi()
+	# Oyun arayüzü menünün arkasından görünmesin.
+	_arayuz.visible = false
 
 	print("Dünya yüklendi: %d ülke, %d bölge, %d çokgen, üçgenlenemeyen %d." % [
 		dunya.ulke_listesi.size(), dunya.bolge_listesi.size(), dunya.cokgenler.size(),
@@ -224,10 +230,13 @@ func _otomatik_kaydet() -> void:
 ## normal "Ülkeni seç" akışıyla karşılaşır.
 func _yeni_oyun_secildi(savas_sisi: bool) -> void:
 	_oyun.savas_sisi = savas_sisi
+	_arayuz.visible = true
+	_kamera.dunyayi_goster()
 
 
 ## Ana menüde "Devam et" seçildi: açılışta okunan kaydı şimdi uygular.
 func _devam_secildi() -> void:
+	_arayuz.visible = true
 	_oyun.kayittan_yukle(_bekleyen_kayit["oyun_verisi"])
 	Zaman.durumu_uygula(_bekleyen_kayit["zaman_durumu"])
 	_oyuncu_secildi(_oyun.oyuncu_ulkesi)
@@ -291,22 +300,46 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	var savasta: bool = yabanci_bolge and _oyun.savasta_mi(_oyun.oyuncu_ulkesi, bolge.sahip)
 	var savas_dugmesi_gorunur: bool = yabanci_bolge and not savasta \
 			and _oyun.dunya.ulkeler_komsu_mu(_oyun.oyuncu_ulkesi, bolge.sahip)
-	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen)
+	var ozet: Dictionary = {}
+	if bolge != null and not _oyun.oyuncu_secildi_mi():
+		ozet = _ulke_ozeti(bolge.sahip)
+	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen, ozet)
 	if bolge != null:
 		_arayuz.bolge_birliklerini_yaz(_birlik_bilgisi(bolge), _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id))
+
+
+## Ülke seçim kartı için ülkenin nüfusu, günlük sanayisi ve tümen sayısı ile bunların dünyadaki
+## en büyüğe oranları (karekök ölçekli: küçük ülkelerin çubuğu da görünsün).
+func _ulke_ozeti(ulke_id: String) -> Dictionary:
+	var saat: int = Zaman.toplam_saat
+	var tumenler: Dictionary[String, int] = {}
+	for birlik: Birlik in _oyun.birlikler:
+		tumenler[birlik.sahip] = tumenler.get(birlik.sahip, 0) + 1
+	var en_nufus: float = 1.0
+	var en_sanayi: float = 0.001
+	var en_tumen: int = 1
+	for ulke: Ulke in _oyun.dunya.ulke_listesi:
+		en_nufus = maxf(en_nufus, float(ulke.nufus))
+		en_sanayi = maxf(en_sanayi, _oyun.ulkenin_geliri(ulke.id, saat))
+		en_tumen = maxi(en_tumen, tumenler.get(ulke.id, 0))
+	var ulke: Ulke = _oyun.dunya.ulkeler[ulke_id]
+	var sanayi: float = _oyun.ulkenin_geliri(ulke_id, saat)
+	var tumen: int = tumenler.get(ulke_id, 0)
+	return {"sanayi": sanayi, "tumen": tumen, "nufus_orani": sqrt(float(ulke.nufus) / en_nufus),
+		"sanayi_orani": sqrt(sanayi / en_sanayi), "ordu_orani": sqrt(float(tumen) / en_tumen)}
 
 
 ## Bölge panelindeki birlik satırı. Savaş sisi altında görünmeyen bölge için "bilinmiyor".
 func _birlik_bilgisi(bolge: Bolge) -> String:
 	if not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id):
-		return "Birlikler: bilinmiyor"
+		return "bilinmiyor"
 	var birlikler: Array[Birlik] = _oyun.bolgedeki_birlikler(bolge.id)
 	if birlikler.is_empty():
-		return "Birlikler: yok"
+		return "yok"
 	var guc: float = 0.0
 	for birlik: Birlik in birlikler:
 		guc += birlik.guc
-	return "Birlikler: %d (güç %d)" % [birlikler.size(), roundi(guc)]
+	return "%d · güç %d" % [birlikler.size(), roundi(guc)]
 
 
 ## Oyuncunun gördüğü bölgeler değişti: harita karartmasını ve açık bölge panelini yeniler.
@@ -409,16 +442,31 @@ func _arastirma_istendi(dal: String) -> void:
 		_arayuz.bildirim_goster("Hazine yetmiyor (Araştırma: %d)." % roundi(Teknoloji.maliyet(seviye)), "")
 
 
-## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) günceller.
+## Bir tümen yürümeye başlayınca ya da vardığında haritayı (kutular ve yol çizgileri) ve
+## üst çubuktaki tümen sayısını günceller.
 func _birlikler_degisti() -> void:
 	_harita.birlikleri_yenile()
+	_kaynaklari_guncelle()
 
 
-## Her oyun günü başında (bir ülkenin hazinesi değiştiğinde) oyuncunun hazinesini üst
-## çubuğa yazar. Oyuncu henüz seçilmediyse bir şey yapmaz.
+## Her oyun günü başında (bir ülkenin hazinesi değiştiğinde) oyuncunun kaynaklarını üst
+## çubuğa yazar.
 func _hazine_degisti() -> void:
-	if _oyun.oyuncu_secildi_mi():
-		_arayuz.hazineyi_goster(_oyun.hazineler.get(_oyun.oyuncu_ulkesi, 0.0))
+	_kaynaklari_guncelle()
+
+
+## Üst çubuktaki kaynaklar: hazine, günlük gelir, tümen ve bölge sayısı. Oyuncu henüz
+## seçilmediyse bir şey yapmaz.
+func _kaynaklari_guncelle() -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	var tumen: int = 0
+	for birlik: Birlik in _oyun.birlikler:
+		if birlik.sahip == ulke_id:
+			tumen += 1
+	_arayuz.kaynaklari_goster(_oyun.hazineler.get(ulke_id, 0.0), _oyun.ulkenin_geliri(ulke_id, Zaman.toplam_saat),
+			tumen, _oyun.dunya.ulkenin_bolge_sayisi(ulke_id))
 
 
 ## Oyuncu zafer kazanınca (kıtasının %60'ı kendisinin olunca) çağrılır. Önemli bir olay
@@ -478,7 +526,7 @@ func _oyuncu_secildi(ulke_id: String) -> void:
 	_bolgeyi_sec("")
 	_harita.oyuncuyu_ayarla(ulke_id)
 	_arayuz.oyuncuyu_goster(ulke)
-	_arayuz.hazineyi_goster(_oyun.hazineler.get(ulke_id, 0.0))
+	_kaynaklari_guncelle()
 	_uretimi_guncelle()
 	_harita.isgalleri_yenile(Zaman.toplam_saat)
 	_kamera.odaklan(ulke.anakara_kutusu)

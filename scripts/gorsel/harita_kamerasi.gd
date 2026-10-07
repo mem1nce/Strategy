@@ -19,6 +19,11 @@ const TEKERLEK_CARPANI: float = 1.2
 const ODAK_SURESI: float = 0.6
 ## Odaklanılan alan ekranın en çok bu kadarını kaplar.
 const ODAK_DOLULUGU: float = 0.55
+## Menü gezintisi: en uzak görünümün bu katı yakınlıkta, haritanın bu yükseklik oranında
+## (kuzey yarıküre, kalabalık kıtalar) bir uçtan öbürüne bu kadar saniyede kayar.
+const MENU_YAKINLIK_KATI: float = 1.8
+const MENU_ENLEMI: float = 0.4
+const MENU_GEZINTI_SURESI: float = 90.0
 
 ## Haritanın alanı (harita birimi).
 var _alan: Rect2 = Rect2()
@@ -51,6 +56,29 @@ func kur(alan: Rect2, ust_bosluk: float, alt_bosluk: float) -> void:
 
 func ekrandan_dunyaya(ekran_konumu: Vector2) -> Vector2:
 	return position + (ekran_konumu - get_viewport_rect().size * 0.5) / zoom.x
+
+
+## Ana menünün arkasındaki yavaş gezinti: dünyayı biraz yakından gösterir ve doğudan batıya,
+## batıdan doğuya bitmeden kayar. Dokunuş ya da odaklan() gezintiyi durdurur.
+func menu_gezintisi() -> void:
+	_odagi_durdur()
+	var yakinlik: float = minf(_asgari_yakinlik * MENU_YAKINLIK_KATI, AZAMI_YAKINLIK)
+	zoom = Vector2(yakinlik, yakinlik)
+	var yari: float = get_viewport_rect().size.x * 0.5 / yakinlik
+	var bati: float = _alan.position.x + yari
+	var dogu: float = _alan.end.x - yari
+	position = Vector2(bati, _alan.position.y + _alan.size.y * MENU_ENLEMI)
+	_sinirla()
+	_odak = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for hedef: float in [dogu, bati]:
+		_odak.tween_method(func(x: float) -> void:
+			position.x = x
+			_sinirla(), bati if hedef == dogu else dogu, hedef, MENU_GEZINTI_SURESI)
+
+
+## Bütün dünyayı gösterir (menüden oyuna geçerken).
+func dunyayi_goster() -> void:
+	odaklan(_alan)
 
 
 ## Kamerayı yumuşak bir geçişle verilen alana götürür ve alan ekrana sığacak kadar yaklaşır.

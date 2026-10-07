@@ -110,3 +110,15 @@ Sayılar kısaltılır (`Bicim`): 1 250 → "1,2 B", 3 400 000 → "3,4 Mn", 2,7
 - Harita modları sol kenarda dikey sekmelerdir: Siyasi, Diplomasi (sen / savaştığın /
   tarafsız; ittifak olmadığı için müttefik rengi yok), Ekonomi (bölge sanayisi, logaritmik
   merdiven). Siyasi dışındaki modlarda renklerin anlamı küçük bir kartta yazar.
+
+## Ekranlar
+
+- Üst çubuk: solda ülke kartı (bayrak, Cinzel ad, simgeli kaynaklar), ortada seçimden önce
+  "Ülkeni seç" hapı, sağda tarih ve hız denetimi tek hapta, yanında simgeli araç düğmeleri.
+- Alt panel: bayraklı başlık + rozetler, iki sütun simgeli istatistik satırı, bonus satırı ve
+  sağda düğmeler. Her panelde en çok bir birincil düğme; geri dönüşü zor eylem (savaş ilanı)
+  tehlike düğmesidir.
+- Ortadaki paneller (`BaslikliPanel`): simge + Cinzel başlık, ince ayraç, gövde.
+- Bildirim kartı: koyu yüzey, konunun renginde 6 px sol kenar, konu simgesi, ilgili ülkenin
+  bayrağı, en çok iki satır metin.
+- Ana menü: arkada yavaşça kayan harita, soldan koyulaşan örtü, solda başlık ve simgeli düğmeler.

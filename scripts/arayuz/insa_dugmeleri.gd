@@ -16,12 +16,17 @@ static var _tahkimat_maliyeti: float = -1.0
 static var tahkimat_azami: int = 0
 
 
+## Düğmelerin simgeleri (art/icons).
+const SIMGELER: Dictionary[String, String] = {"tumen": "ordu", "fabrika": "fabrika", "tahkimat": "tahkimat"}
+
+
 ## `tur` "tumen", "fabrika" ya da "tahkimat"tır. Düğmeye basılınca `sinyal` bu türle yayılır.
-static func dugme_olustur(tur: String, boyut: Vector2, sinyal: Signal) -> Button:
-	var dugme: Button = Button.new()
-	dugme.custom_minimum_size = boyut
-	dugme.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dugme.focus_mode = Control.FOCUS_NONE
+## `birincil` ise düğme panelin tek ana eylemi olarak vurgu renginde çizilir.
+static func dugme_olustur(tur: String, boyut: Vector2, sinyal: Signal, birincil: bool = false) -> Button:
+	var dugme: Button = Bilesenler.birincil_dugme("", SIMGELER[tur], boyut) if birincil \
+			else Bilesenler.ikincil_dugme("", SIMGELER[tur], boyut)
+	dugme.add_theme_constant_override("icon_max_width", 34)
+	dugme.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
 	dugme.set_meta("tur", tur)
 	dugme.pressed.connect(func() -> void: sinyal.emit(tur))
 	_dugmeler.append(dugme)

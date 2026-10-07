@@ -15,27 +15,23 @@ var _metin: Label = null
 
 func _ready() -> void:
 	var dikey: VBoxContainer = VBoxContainer.new()
-	dikey.add_theme_constant_override("separation", 16)
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_3)
 	dikey.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(dikey)
 
-	_baslik = Label.new()
-	_baslik.add_theme_font_size_override("font_size", 60)
+	_baslik = Bilesenler.baslik("", ArayuzTemasi.YAZI_DEV)
 	_baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dikey.add_child(_baslik)
 
-	_metin = Label.new()
+	_metin = Bilesenler.ikincil_yazi()
+	_metin.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_GOVDE)
 	_metin.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_metin.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_metin.custom_minimum_size = Vector2(METIN_GENISLIGI, 0.0)
 	dikey.add_child(_metin)
 
-	var kapat: Button = Button.new()
-	kapat.text = "Kapat"
-	kapat.custom_minimum_size = DUGME_BOYUTU
+	var kapat: Button = Bilesenler.birincil_dugme("Kapat", "", DUGME_BOYUTU)
 	kapat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	kapat.focus_mode = Control.FOCUS_NONE
-	kapat.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
 	kapat.pressed.connect(func() -> void:
 		Gecis.kapat(self)
 		kapat_basildi.emit())

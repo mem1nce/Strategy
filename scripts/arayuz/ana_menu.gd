@@ -13,6 +13,16 @@ signal yeni_oyun_istendi(savas_sisi: bool)
 signal devam_istendi
 
 const BASLIK: String = "Yerküre"
+const ALT_BASLIK: String = "Gerçek dünya haritasında strateji"
+const BASLIK_BOYUTU: int = 104
+## Başlık ve düğme sütununun ekranın solundan uzaklığı.
+const SOL_BOSLUK: float = 140.0
+const LISANS_KLASORU: String = "res://lisanslar"
+const LISANS_DOSYALARI: Array[String] = ["NaturalEarth.txt", "flag-icons_MIT.txt", "Cinzel_OFL.txt", "Inter_OFL.txt"]
+const LISANS_GIRISI: String = ("Harita ve kabartma: Natural Earth (kamu malı).\n" +
+		"Bayraklar: lipis/flag-icons (MIT).\n" +
+		"Yazı tipleri: Cinzel ve Inter (SIL Open Font License 1.1).\n" +
+		"Simgeler bu oyun için çizilmiştir.")
 const DUGME_BOYUTU: Vector2 = Vector2(420.0, 112.0)
 const METIN_GENISLIGI: float = 1400.0
 ## "Nasıl oynanır" metninin görünen yüksekliği; daha uzun metin kaydırılır.
@@ -54,6 +64,7 @@ var _kaydi_sil_onayi: ConfirmationDialog = null
 var _nasil_oynanir_paneli: CenterContainer = null
 var _ayarlar_paneli: CenterContainer = null
 var _yeni_oyun_paneli: CenterContainer = null
+var _lisanslar_paneli: CenterContainer = null
 ## Ana düğmelerin paneli; bir alt panel (yeni oyun, ayarlar) açıkken gizlenir ki arkadan sızmasın.
 var _ana_ortalayici: CenterContainer = null
 var _savas_sisi: Button = null
@@ -70,38 +81,54 @@ func kur() -> void:
 	_kok.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_kok)
 
+	# Arkada harita yavaşça kayar (bkz. HaritaKamerasi.menu_gezintisi); üstünde soldan sağa
+	# açılan koyu bir örtü, sol taraftaki başlık ve düğmeler okunaklı kalsın diye. Örtü
+	# dokunuşu yutar: menü açıkken harita kımıldamaz.
+	var ortu: TextureRect = TextureRect.new()
+	ortu.texture = _ortu_dokusu()
+	ortu.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ortu.stretch_mode = TextureRect.STRETCH_SCALE
+	ortu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_kok.add_child(ortu)
+
 	var ana_ortalayici: CenterContainer = CenterContainer.new()
-	ana_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ana_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+	ana_ortalayici.offset_left = SOL_BOSLUK
+	ana_ortalayici.offset_right = SOL_BOSLUK + DUGME_BOYUTU.x + 80.0
+	ana_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_kok.add_child(ana_ortalayici)
 	_ana_ortalayici = ana_ortalayici
 
-	var ana_panel: PanelContainer = PanelContainer.new()
-	ana_ortalayici.add_child(ana_panel)
-	var dikey: VBoxContainer = VBoxContainer.new()
-	dikey.custom_minimum_size = Vector2(DUGME_BOYUTU.x + 80.0, 0.0)
-	dikey.alignment = BoxContainer.ALIGNMENT_CENTER
-	dikey.add_theme_constant_override("separation", 20)
-	ana_panel.add_child(dikey)
+	var dikey: VBoxContainer = Bilesenler.yigin(ArayuzTemasi.BOSLUK_2)
+	dikey.custom_minimum_size = Vector2(DUGME_BOYUTU.x, 0.0)
+	ana_ortalayici.add_child(dikey)
 
-	var baslik: Label = Label.new()
-	baslik.text = BASLIK
-	baslik.add_theme_font_size_override("font_size", 72)
-	baslik.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
-	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var baslik: Label = Bilesenler.baslik(Bicim.buyuk_harf(BASLIK), BASLIK_BOYUTU)
+	baslik.add_theme_color_override("font_color", ArayuzTemasi.VURGU)
 	dikey.add_child(baslik)
+	var alt_baslik: Label = Bilesenler.ikincil_yazi(ALT_BASLIK)
+	alt_baslik.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_GOVDE)
+	dikey.add_child(alt_baslik)
+	var cizgi: ColorRect = ColorRect.new()
+	cizgi.color = ArayuzTemasi.VURGU
+	cizgi.custom_minimum_size = Vector2(120.0, 3.0)
+	cizgi.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	dikey.add_child(cizgi)
+	var ara: Control = Control.new()
+	ara.custom_minimum_size = Vector2(0.0, ArayuzTemasi.BOSLUK_3)
+	dikey.add_child(ara)
 
 	_eski_kayit_yazisi = Label.new()
 	_eski_kayit_yazisi.text = "Bu kayıt eski bir sürüme ait.\nYeni oyun başlat."
-	_eski_kayit_yazisi.add_theme_color_override("font_color", ArayuzTemasi.ETKIN_RENK)
-	_eski_kayit_yazisi.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_eski_kayit_yazisi.add_theme_color_override("font_color", ArayuzTemasi.VURGU)
 	_eski_kayit_yazisi.hide()
 	dikey.add_child(_eski_kayit_yazisi)
 
-	var yeni_oyun: Button = _dugme_ekle(dikey, "Yeni oyun")
-	yeni_oyun.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
+	var yeni_oyun: Button = _dugme_ekle(dikey, "Yeni oyun", "oynat")
+	yeni_oyun.theme_type_variation = ArayuzTemasi.BIRINCIL_DUGME
 	yeni_oyun.pressed.connect(_yeni_oyun_basildi)
 
-	_devam = _dugme_ekle(dikey, "Devam et")
+	_devam = _dugme_ekle(dikey, "Devam et", "tarih")
 	_devam.pressed.connect(func() -> void:
 		_kok.hide()
 		devam_istendi.emit())
@@ -111,17 +138,44 @@ func kur() -> void:
 	_yeni_oyun_onayi.confirmed.connect(_yeni_oyun_onaylandi)
 	_kok.add_child(_yeni_oyun_onayi)
 
-	_nasil_oynanir_paneli = _bilgi_paneli_olustur("Nasıl oynanır",
+	_nasil_oynanir_paneli = _bilgi_paneli_olustur("Nasıl oynanır", "bilgi",
 			NASIL_OYNANIR_METNI_BICIMI % roundi(Oyun.ZAFER_ORANI * 100))
-	var nasil_oynanir: Button = _dugme_ekle(dikey, "Nasıl oynanır")
+	var nasil_oynanir: Button = _dugme_ekle(dikey, "Nasıl oynanır", "bilgi")
 	nasil_oynanir.pressed.connect(func() -> void: _alt_paneli_ac(_nasil_oynanir_paneli))
 
+	_lisanslar_paneli = _bilgi_paneli_olustur("Lisanslar", "lisans", _lisans_metni())
 	_ayarlar_paneli = _ayarlar_paneli_olustur()
 	_yeni_oyun_paneli = _yeni_oyun_paneli_olustur()
-	var ayarlar: Button = _dugme_ekle(dikey, "Ayarlar")
+	var ayarlar: Button = _dugme_ekle(dikey, "Ayarlar", "ayarlar")
 	ayarlar.pressed.connect(func() -> void: _alt_paneli_ac(_ayarlar_paneli))
 
 	_kok.hide()
+
+
+## Soldan sağa koyudan yarı saydama giden örtü dokusu.
+static func _ortu_dokusu() -> GradientTexture2D:
+	var gecis: Gradient = Gradient.new()
+	gecis.colors = PackedColorArray([Color(ArayuzTemasi.ZEMIN, 0.92), Color(ArayuzTemasi.ZEMIN, 0.72),
+			Color(ArayuzTemasi.ZEMIN, 0.35)])
+	gecis.offsets = PackedFloat32Array([0.0, 0.4, 1.0])
+	var doku: GradientTexture2D = GradientTexture2D.new()
+	doku.gradient = gecis
+	doku.fill_from = Vector2(0.0, 0.5)
+	doku.fill_to = Vector2(1.0, 0.5)
+	doku.width = 256
+	doku.height = 4
+	return doku
+
+
+## lisanslar/ klasöründeki her metni başlığıyla birlikte tek metinde toplar.
+static func _lisans_metni() -> String:
+	var parcalar: PackedStringArray = PackedStringArray([LISANS_GIRISI])
+	for dosya: String in LISANS_DOSYALARI:
+		var metin: String = FileAccess.get_file_as_string(LISANS_KLASORU.path_join(dosya))
+		if metin == "":
+			metin = "(lisans dosyası bulunamadı: %s)" % dosya
+		parcalar.append("— %s —\n%s" % [dosya.get_basename().replace("_", " "), metin.strip_edges()])
+	return "\n\n".join(parcalar)
 
 
 ## Menüyü gösterir. `kayit_var`, "Devam et" ve "Kaydı sil" düğmelerinin başlangıç durumunu
@@ -141,6 +195,10 @@ func geri_basildi() -> bool:
 		if pencere.visible:
 			pencere.hide()
 			return true
+	if _lisanslar_paneli.visible:
+		_lisanslar_paneli.hide()
+		Gecis.ac(_ayarlar_paneli)
+		return true
 	for panel: CenterContainer in [_yeni_oyun_paneli, _ayarlar_paneli, _nasil_oynanir_paneli]:
 		if panel.visible:
 			_alt_paneli_kapat(panel)
@@ -162,12 +220,10 @@ func _kayit_var_ayarla(kayit_var: bool) -> void:
 	_kaydi_sil.disabled = not kayit_var
 
 
-func _dugme_ekle(ebeveyn: Control, metin: String) -> Button:
-	var dugme: Button = Button.new()
-	dugme.text = metin
-	dugme.custom_minimum_size = DUGME_BOYUTU
+func _dugme_ekle(ebeveyn: Control, metin: String, simge: String = "") -> Button:
+	var dugme: Button = Bilesenler.ikincil_dugme(metin, simge, DUGME_BOYUTU)
 	dugme.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	dugme.focus_mode = Control.FOCUS_NONE
+	dugme.alignment = HORIZONTAL_ALIGNMENT_LEFT if simge != "" else HORIZONTAL_ALIGNMENT_CENTER
 	ebeveyn.add_child(dugme)
 	return dugme
 
@@ -176,23 +232,17 @@ func _dugme_ekle(ebeveyn: Control, metin: String) -> Button:
 ## gizli bir bilgi paneli kurar (Nasıl oynanır için kullanılır). Döndürülen CenterContainer
 ## göster/gizle için kullanılır (içindeki PanelContainer değil — gizli bir ebeveynin
 ## görünür bir çocuğu yine görünmez).
-func _bilgi_paneli_olustur(baslik_metni: String, govde_metni: String) -> CenterContainer:
+func _bilgi_paneli_olustur(baslik_metni: String, simge: String, govde_metni: String) -> CenterContainer:
 	var ortalayici: CenterContainer = CenterContainer.new()
 	ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_kok.add_child(ortalayici)
 
-	var panel: PanelContainer = PanelContainer.new()
+	var panel: BaslikliPanel = BaslikliPanel.new(baslik_metni)
+	panel.isaret_ayarla(Simgeler.dugum(simge, 44.0, ArayuzTemasi.VURGU))
 	ortalayici.add_child(panel)
-	var dikey: VBoxContainer = VBoxContainer.new()
+	var dikey: VBoxContainer = panel.govde
 	dikey.custom_minimum_size = Vector2(METIN_GENISLIGI, 0.0)
-	dikey.add_theme_constant_override("separation", 20)
-	panel.add_child(dikey)
-
-	var baslik: Label = Label.new()
-	baslik.text = baslik_metni
-	baslik.add_theme_font_size_override("font_size", 56)
-	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dikey.add_child(baslik)
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_2)
 
 	# Metin uzarsa ekrandan taşmasın: belli bir yükseklikten sonra parmakla kaydırılır.
 	var kaydirici: ScrollContainer = ScrollContainer.new()
@@ -219,19 +269,12 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_kok.add_child(ortalayici)
 
-	var panel: PanelContainer = PanelContainer.new()
+	var panel: BaslikliPanel = BaslikliPanel.new("Ayarlar")
+	panel.isaret_ayarla(Simgeler.dugum("ayarlar", 44.0, ArayuzTemasi.VURGU))
 	ortalayici.add_child(panel)
-	var dikey: VBoxContainer = VBoxContainer.new()
+	var dikey: VBoxContainer = panel.govde
 	dikey.custom_minimum_size = Vector2(DUGME_BOYUTU.x + 80.0, 0.0)
-	dikey.alignment = BoxContainer.ALIGNMENT_CENTER
-	dikey.add_theme_constant_override("separation", 20)
-	panel.add_child(dikey)
-
-	var baslik: Label = Label.new()
-	baslik.text = "Ayarlar"
-	baslik.add_theme_font_size_override("font_size", 56)
-	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dikey.add_child(baslik)
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_2)
 
 	_animasyonlar = _dugme_ekle(dikey, "")
 	_animasyonlar.toggle_mode = true
@@ -273,6 +316,11 @@ func _ayarlar_paneli_olustur() -> CenterContainer:
 	_kaydi_sil_onayi.confirmed.connect(_kaydi_silindi)
 	panel.add_child(_kaydi_sil_onayi)
 
+	var lisanslar: Button = _dugme_ekle(dikey, "Lisanslar", "lisans")
+	lisanslar.pressed.connect(func() -> void:
+		ortalayici.hide()
+		Gecis.ac(_lisanslar_paneli))
+
 	var kapat: Button = _dugme_ekle(dikey, "Kapat")
 	kapat.pressed.connect(func() -> void: _alt_paneli_kapat(ortalayici))
 
@@ -308,19 +356,12 @@ func _yeni_oyun_paneli_olustur() -> CenterContainer:
 	ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_kok.add_child(ortalayici)
 
-	var panel: PanelContainer = PanelContainer.new()
+	var panel: BaslikliPanel = BaslikliPanel.new("Yeni oyun")
+	panel.isaret_ayarla(Simgeler.dugum("oynat", 44.0, ArayuzTemasi.VURGU))
 	ortalayici.add_child(panel)
-	var dikey: VBoxContainer = VBoxContainer.new()
+	var dikey: VBoxContainer = panel.govde
 	dikey.custom_minimum_size = Vector2(DUGME_BOYUTU.x + 80.0, 0.0)
-	dikey.alignment = BoxContainer.ALIGNMENT_CENTER
-	dikey.add_theme_constant_override("separation", 20)
-	panel.add_child(dikey)
-
-	var baslik: Label = Label.new()
-	baslik.text = "Yeni oyun"
-	baslik.add_theme_font_size_override("font_size", 56)
-	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dikey.add_child(baslik)
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_2)
 
 	_savas_sisi = _dugme_ekle(dikey, "")
 	_savas_sisi.toggle_mode = true
@@ -329,7 +370,7 @@ func _yeni_oyun_paneli_olustur() -> CenterContainer:
 	_savas_sisi_yazisini_yenile()
 
 	var basla: Button = _dugme_ekle(dikey, "Başla")
-	basla.theme_type_variation = ArayuzTemasi.VURGULU_DUGME
+	basla.theme_type_variation = ArayuzTemasi.BIRINCIL_DUGME
 	basla.pressed.connect(_basla_basildi)
 
 	var vazgec: Button = _dugme_ekle(dikey, "Vazgeç")

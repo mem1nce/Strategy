@@ -7,42 +7,36 @@ extends PanelContainer
 ## Oyuncu bir türe dokunduğunda yayılır; panel kendini kapatır.
 signal tur_secildi(tur: String)
 
-const SECENEK_BOYUTU: Vector2 = Vector2(540.0, 260.0)
-const SECENEK_YAZI_BOYUTU: int = 30
+const SECENEK_BOYUTU: Vector2 = Vector2(500.0, 300.0)
+const SECENEK_YAZI_BOYUTU: int = ArayuzTemasi.YAZI_KUCUK
 const VAZGEC_BOYUTU: Vector2 = Vector2(300.0, 104.0)
 
 var _dugmeler: Dictionary[String, Button] = {}
 
 
 func _ready() -> void:
-	var dikey: VBoxContainer = VBoxContainer.new()
-	dikey.add_theme_constant_override("separation", 20)
-	add_child(dikey)
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var panel: BaslikliPanel = BaslikliPanel.new("Hangi tümeni kuralım?")
+	panel.isaret_ayarla(Simgeler.dugum("ordu", 40.0, ArayuzTemasi.VURGU))
+	add_child(panel)
+	var dikey: VBoxContainer = panel.govde
+	dikey.add_theme_constant_override("separation", ArayuzTemasi.BOSLUK_3)
 
-	var baslik: Label = Label.new()
-	baslik.text = "Hangi tümeni kuralım?"
-	baslik.add_theme_font_size_override("font_size", ArayuzTemasi.BASLIK_BOYUTU)
-	baslik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dikey.add_child(baslik)
-
-	var sira: HBoxContainer = HBoxContainer.new()
-	sira.add_theme_constant_override("separation", 24)
+	var sira: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_3)
 	dikey.add_child(sira)
 	for tur: String in BirlikTurleri.SIRA:
-		var dugme: Button = Button.new()
-		dugme.custom_minimum_size = SECENEK_BOYUTU
-		dugme.focus_mode = Control.FOCUS_NONE
+		var dugme: Button = Bilesenler.ikincil_dugme("", tur, SECENEK_BOYUTU)
+		dugme.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		dugme.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		dugme.add_theme_constant_override("icon_max_width", 64)
 		dugme.add_theme_font_size_override("font_size", SECENEK_YAZI_BOYUTU)
 		dugme.pressed.connect(_secildi.bind(tur))
 		sira.add_child(dugme)
 		_dugmeler[tur] = dugme
 	fiyatlari_ayarla({})
 
-	var vazgec: Button = Button.new()
-	vazgec.text = "Vazgeç"
-	vazgec.custom_minimum_size = VAZGEC_BOYUTU
+	var vazgec: Button = Bilesenler.ikincil_dugme("Vazgeç", "kapat", VAZGEC_BOYUTU)
 	vazgec.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vazgec.focus_mode = Control.FOCUS_NONE
 	vazgec.pressed.connect(func() -> void: Gecis.kapat(self))
 	dikey.add_child(vazgec)
 	hide()

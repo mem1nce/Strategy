@@ -5,3 +5,5 @@ shapely>=2.0
 numpy>=1.20
 # tools/kabartma_uret.py (TIFF okuma)
 pillow>=10.0
+fonttools
+skia-pathops

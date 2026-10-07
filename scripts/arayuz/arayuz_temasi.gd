@@ -43,6 +43,8 @@ const DUGME_BOYUTU: Vector2 = Vector2(132.0, 104.0)
 
 # --- Tür adları (theme_type_variation) -----------------------------------------
 const BIRINCIL_DUGME: StringName = &"BirincilDugme"
+## Geri dönüşü zor eylemler (ör. savaş ilanı): tehlike renginde düğme.
+const TEHLIKE_DUGME: StringName = &"TehlikeDugme"
 const SEKME: StringName = &"Sekme"
 const KART: StringName = &"Kart"
 const ROZET: StringName = &"Rozet"
@@ -176,6 +178,20 @@ static func olustur() -> Theme:
 			"font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color",
 			"icon_pressed_color", "icon_hover_pressed_color"]:
 		tema.set_color(renk_adi, BIRINCIL_DUGME, VURGU_USTU)
+
+	# Tehlike düğmesi: tehlike renginde, açık yazı.
+	tema.set_type_variation(TEHLIKE_DUGME, "Button")
+	var tehlike: StyleBoxFlat = _dugme_kutusu(TEHLIKE, TEHLIKE)
+	var basili_tehlike: StyleBoxFlat = _dugme_kutusu(TEHLIKE.darkened(0.2), TEHLIKE.darkened(0.2))
+	tema.set_stylebox("normal", TEHLIKE_DUGME, tehlike)
+	tema.set_stylebox("hover", TEHLIKE_DUGME, tehlike)
+	tema.set_stylebox("pressed", TEHLIKE_DUGME, basili_tehlike)
+	tema.set_stylebox("hover_pressed", TEHLIKE_DUGME, basili_tehlike)
+	tema.set_font("font", TEHLIKE_DUGME, arayuz_fontu(600))
+	for renk_adi: String in ["font_color", "font_hover_color", "font_focus_color",
+			"font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color",
+			"icon_pressed_color", "icon_hover_pressed_color"]:
+		tema.set_color(renk_adi, TEHLIKE_DUGME, YAZI)
 
 	# Sekme: hap içinde yan yana; seçili olan vurgu renginde, diğerleri saydam.
 	tema.set_type_variation(SEKME, "Button")
