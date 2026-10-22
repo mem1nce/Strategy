@@ -825,6 +825,16 @@ Adımlar:
    - Bütçe ve Ticaret panelleri bildirim sütununun ve ülke kartının altına binmesin diye
      arada (sol 140, üst 200) ortalanıyor; bütçe grafiği 120 px'e indi.
    - `SekmeGrubu.sec` öbür sekmeleri de bırakıyor (önce iki sekme birden seçili görünebiliyordu).
+4. ✅ Ticaret yolları ve geçitler: simülasyonu 3. adımla birlikte yapıldı (rota, 8 geçit,
+   geçiş ücreti, savaş/ambargoda geçit kapanır, askerî deniz hareketi de uyar).
+5. ✅ Haritada ticaret (`gorsel/ticaret_katmani.gd`, TASARIM 9d): Ticaret harita modu
+   (rotalar değere göre kalın, oyuncunun altın; limanlar seviye rakamıyla; geçitler bayrakla;
+   petrol/maden simgeleri), geçide dokununca `arayuz/gecit_paneli.gd`, en çok 120 gemi/kamyon
+   (MultiMesh, oyun zamanıyla, Düşük grafikte kapalı), siyasi modda oyuncunun rotaları soluk.
+   - Mod seçicinin açıklama kartı uzayınca alt paneli ekrandan itiyordu: seçici artık en
+     küçük boyutu olmayan bir kabın içinde.
+   - Görsel sınama: `tests/gorsel_cek.gd` 20-26 (ticaret paneli, ülke ticaret düğmeleri, liman,
+     Ticaret modu dünya/Akdeniz, geçit paneli), 16:9 ve 20:9'da bakıldı.
 
 ## Kararlar
 

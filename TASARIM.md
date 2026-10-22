@@ -575,6 +575,24 @@ data/trade.json (← `tools/ticaret_uret.py`, Natural Earth `ne_10m_ports`).
 - **Yeniden hesap:** rotalar yalnızca savaş, barış, anlaşma, ambargo ya da geçit/liman
   sahipliği değişince yeniden hesaplanır.
 
+## 9d. Haritada ticaret
+
+`gorsel/ticaret_katmani.gd` (harita görünümünün alt düğümü; oyun durumunu yalnızca okur).
+
+- **Ticaret modu** (sol kenardaki dördüncü düğme): ülke renkleri soluklaşır; bütün rotalar
+  çizilir (kalınlık değerin kareköküyle 2-9 piksel; oyuncunun rotaları altın ve koyu alt
+  çizgili, ötekiler soluk beyaz). Limanlar çapa simgesi ve seviye rakamıyla (3. seviye hep, 2.
+  orta, 1. yakın görünümde), geçitler halkalı simge ve kontrol edenin bayrağıyla (oyuncuya
+  kapalıysa halka kırmızı), petrol ve maden üreten bölgeler simgeleriyle (büyük üreticiler hep,
+  ötekiler yakınlaşınca).
+- **Geçit paneli:** Ticaret modunda geçide dokununca alt panelde kontrol eden(ler), bağladığı
+  denizler, geçen rota sayısı ve günlük geçiş ücreti (olayla kapalıysa kalan gün).
+- **Araçlar:** rotalarda küçük gemi (deniz parçası) ve kamyon (kara parçası) simgeleri gidip
+  gelir; oyun zamanıyla ilerler, oyun durunca durur. Önce oyuncunun rotaları, sonra değerliler;
+  rota başına 1-3, en çok 120 araç; üç toplu çizim (MultiMesh: zemin, gemi, kamyon).
+  "Grafik: Düşük" ayarında kapalı.
+- **Siyasi mod:** yalnızca oyuncunun rotaları, ince ve soluk altın.
+
 ## 10. Yapay zekâ
 
 Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.

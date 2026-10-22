@@ -16,8 +16,9 @@ const PALET: Array[Color] = [
 
 
 ## Harita modları (haritanın sol kenarındaki düğmeler): siyasi (ülke renkleri), diplomasi
-## (oyuncuya göre: kendisi / savaştığı / tarafsız) ve ekonomi (bölgelerin sanayisi).
-enum Mod { SIYASI, DIPLOMASI, EKONOMI }
+## (oyuncuya göre: kendisi / savaştığı / tarafsız), ekonomi (bölgelerin sanayisi) ve ticaret
+## (soluk ülke renkleri üstünde rotalar, limanlar, geçitler, kaynaklar; bkz. TicaretKatmani).
+enum Mod { SIYASI, DIPLOMASI, EKONOMI, TICARET }
 
 ## Diplomasi modu renkleri. İttifak olmadığı için müttefik rengi yoktur.
 const BEN_RENGI: Color = Color("#4FB985")
@@ -27,6 +28,11 @@ const TARAFSIZ_RENGI: Color = Color("#8A93A6")
 const EKONOMI_MERDIVENI: Array[Color] = [
 	Color("#2A3546"), Color("#2F6F7C"), Color("#8DBA5A"), Color("#E6AE48"), Color("#FFE6A6"),
 ]
+
+
+## Ticaret modunda ülke renkleri bu oranda griye çekilip koyulaşır (rotalar öne çıksın).
+const TICARET_SOLUKLUGU: float = 0.6
+const TICARET_KOYULUGU: float = 0.35
 
 
 ## Ülkenin haritadaki rengi.

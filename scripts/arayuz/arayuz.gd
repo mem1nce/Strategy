@@ -72,6 +72,7 @@ var _kenar: MarginContainer = null
 var _ust_cubuk: UstCubuk = null
 var _bolge_paneli: BolgePaneli = null
 var _birlik_paneli: BirlikPaneli = null
+var _gecit_paneli: GecitPaneli = null
 var _sonuc_paneli: SonucPaneli = null
 var _siralama_paneli: SiralamaPaneli = null
 var _bildirim_kutusu: BildirimKutusu = null
@@ -131,7 +132,12 @@ func kur(dunya: Dunya) -> void:
 	_mod_secici.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_mod_secici.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_mod_secici.hide()
-	orta.add_child(_mod_secici)
+	# Mod düğmeleri ve açıklama kartı düzeni aşağı itmesin (alt panel ekrandan taşmasın) diye
+	# en küçük boyutu olmayan bir kabın içinde durur; alt panel açıklamanın üstüne binebilir.
+	var mod_yeri: Control = Control.new()
+	mod_yeri.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	orta.add_child(mod_yeri)
+	mod_yeri.add_child(_mod_secici)
 	_mod_secici.mod_secildi.connect(func(mod: HaritaPaleti.Mod) -> void: harita_modu_degisti.emit(mod))
 
 	_bolge_paneli = BolgePaneli.new()
@@ -150,6 +156,9 @@ func kur(dunya: Dunya) -> void:
 	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
 	_birlik_paneli.terhis_onaylandi.connect(func() -> void: terhis_istendi.emit())
 	_birlik_paneli.insa_istendi.connect(_insa_basildi)
+
+	_gecit_paneli = GecitPaneli.new()
+	dikey.add_child(_gecit_paneli)
 
 	var sonuc_ortalayici: CenterContainer = CenterContainer.new()
 	sonuc_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -316,6 +325,7 @@ func bolgeyi_goster(bolge: Bolge, oyna_dugmesi_gorunur: bool,
 	if bolge != null:
 		_teknoloji_panelini_kapat()
 	_birlik_paneli.hide()
+	_gecit_paneli.hide()
 	_bolge_paneli.goster(bolge, _dunya, oyna_dugmesi_gorunur, savas_dugmesi_gorunur, baris_dugmesi_gorunur,
 			insa_dugmeleri_gorunur, ulke_ozeti)
 
@@ -329,7 +339,16 @@ func bolge_birliklerini_yaz(metin: String, gorunur: bool) -> void:
 func birligi_goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 	_teknoloji_panelini_kapat()
 	_bolge_paneli.hide()
+	_gecit_paneli.hide()
 	_birlik_paneli.goster(bolge, birlikler, ulke)
+
+
+## Alt panelde bir geçidi gösterir (bölge ve birlik paneli yerine; bkz. GecitPaneli.goster).
+func gecidi_goster(ozet: Dictionary) -> void:
+	_teknoloji_panelini_kapat()
+	_bolge_paneli.hide()
+	_birlik_paneli.hide()
+	_gecit_paneli.goster(ozet)
 
 
 ## Oyuncunun ülkesini üst çubuğa yazar.

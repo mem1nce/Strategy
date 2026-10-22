@@ -109,7 +109,9 @@ Sayılar kısaltılır (`Bicim`): 1 250 → "1,2 B", 3 400 000 → "3,4 Mn", 2,7
   (altın), başkent (altın halkalı yıldız).
 - Harita modları sol kenarda dikey sekmelerdir: Siyasi, Diplomasi (sen / savaştığın /
   tarafsız; ittifak olmadığı için müttefik rengi yok), Ekonomi (bölge sanayisi, logaritmik
-  merdiven). Siyasi dışındaki modlarda renklerin anlamı küçük bir kartta yazar.
+  merdiven), Ticaret (soluk ülke renkleri üstünde rotalar, limanlar, geçitler, kaynaklar ve
+  gemi/kamyon simgeleri; oyuncunun rotaları altın). Siyasi dışındaki modlarda renklerin ve
+  simgelerin anlamı küçük bir kartta yazar.
 
 ## Ekranlar
 

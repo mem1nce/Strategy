@@ -224,6 +224,7 @@ var _animasyon_suruyor: bool = false
 var _ag: ArrayMesh = null
 var _vurgu_agi: ArrayMesh = null
 var _ust_katman: Node2D = null
+var _ticaret_katmani: TicaretKatmani = null
 var _deniz: Node2D = null
 var _ulke_bandi: MeshInstance2D = null
 var _secim_parlamasi: MeshInstance2D = null
@@ -315,6 +316,11 @@ func kur(dunya: Dunya, oyun: Oyun) -> void:
 	_cizgi_katmani_ekle(SinirTuru.ULKE, ULKE_SINIRI_RENGI, ULKE_SINIRI_KALINLIGI)
 	_secim_parlamasi = _bant_katmani_ekle("SecimParlamasi", SECIM_PARILTISI_GENISLIGI, SECIM_PARILTISI_OPAKLIGI)
 
+	_ticaret_katmani = TicaretKatmani.new()
+	_ticaret_katmani.name = "TicaretKatmani"
+	add_child(_ticaret_katmani)
+	_ticaret_katmani.kur(_dunya, _oyun)
+
 	_ust_katman = Node2D.new()
 	_ust_katman.name = "UstKatman"
 	# Simgeler ve bayraklar asıl boyutlarından küçük çizilir; mipmap'le pürüzsüz küçülürler.
@@ -335,6 +341,10 @@ func gorunumu_ayarla(merkez: Vector2, yakinlik: float, ekran: Vector2) -> void:
 		_cizgi_katmanlarini_guncelle()
 		(material as ShaderMaterial).set_shader_parameter("yakinlik", _yakinlik)
 		(_deniz.material as ShaderMaterial).set_shader_parameter("yakinlik", _yakinlik)
+	if _ticaret_katmani != null:
+		var olcek: float = 1.0 / _yakinlik
+		_ticaret_katmani.gorunumu_ayarla(Rect2(_merkez - _ekran * 0.5 * olcek, _ekran * olcek).grow(GORUNUM_PAYI * olcek),
+				_yakinlik)
 	_ust_katmani_yenile()
 
 
@@ -357,6 +367,7 @@ func birlik_secimini_ayarla(bolge_id: String) -> void:
 ## Oyuncunun ülkesini belirgin bir çerçeveyle işaretler.
 func oyuncuyu_ayarla(ulke_id: String) -> void:
 	_oyuncu = ulke_id
+	_ticaret_katmani.oyuncuyu_ayarla(ulke_id)
 	_cerceveleri_guncelle()
 	if _mod != HaritaPaleti.Mod.SIYASI:
 		_modu_yenile()
@@ -394,6 +405,8 @@ func grafigi_uygula() -> void:
 	var ayrinti: float = 0.0 if Ayarlar.grafik_dusuk else 1.0
 	(material as ShaderMaterial).set_shader_parameter("ayrinti", ayrinti)
 	(_deniz.material as ShaderMaterial).set_shader_parameter("ayrinti", ayrinti)
+	if _ticaret_katmani != null:
+		_ticaret_katmani.grafigi_uygula()
 
 
 ## Kara ve deniz gölgelendiricileri için ortak malzeme: kabartma dokusu ve harita boyutu.
@@ -558,6 +571,9 @@ func _bolge_dolgu_rengi(bolge_id: String) -> Color:
 				renk = HaritaPaleti.TARAFSIZ_RENGI
 		HaritaPaleti.Mod.EKONOMI:
 			renk = HaritaPaleti.ekonomi_rengi(_sanayi_oranlari.get(bolge_id, 0.0))
+		HaritaPaleti.Mod.TICARET:
+			renk = renk.lerp(HaritaPaleti.TARAFSIZ_RENGI, HaritaPaleti.TICARET_SOLUKLUGU) \
+					.darkened(HaritaPaleti.TICARET_KOYULUGU)
 	if _oyun != null and not _oyun.oyuncu_bolgeyi_goruyor_mu(bolge_id):
 		renk = renk.darkened(SIS_KARARTMASI)
 	return renk
@@ -566,7 +582,22 @@ func _bolge_dolgu_rengi(bolge_id: String) -> Color:
 ## Harita modunu değiştirir (bkz. HaritaPaleti.Mod).
 func modu_ayarla(mod: HaritaPaleti.Mod) -> void:
 	_mod = mod
+	_ticaret_katmani.modu_ayarla(mod)
 	_modu_yenile()
+
+
+func mod() -> HaritaPaleti.Mod:
+	return _mod
+
+
+## Ticaret anlaşmaları, rotaları, limanlar ya da geçit sahipleri değişince çağrılır.
+func ticareti_yenile() -> void:
+	_ticaret_katmani.yenile()
+
+
+## Ticaret modunda dokunulan noktadaki geçidin id'si (bkz. TicaretKatmani.gecit_bul); yoksa boş.
+func gecit_bul(nokta: Vector2) -> String:
+	return _ticaret_katmani.gecit_bul(nokta) if _mod == HaritaPaleti.Mod.TICARET else ""
 
 
 ## Diplomasi ve ekonomi modlarında renkler oyun durumuna bağlıdır; durum değişince çağrılır.

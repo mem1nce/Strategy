@@ -158,4 +158,18 @@ func _calistir() -> void:
 	await _cek("22_ulke_ticaret")
 	_ana.call("_bolgeyi_sec", "TUR_2")
 	await _cek("23_liman")
+	_ana.call("_bolgeyi_sec", "")
+
+	# Ticaret modu: dünya görünümü, Akdeniz yakını ve İstanbul Boğazı'na dokununca geçit paneli.
+	var modlar: SekmeGrubu = arayuz.get("_mod_secici").get("_sekmeler")
+	(modlar.get_child(0).get_child(3) as Button).button_pressed = true
+	_ana.get("_kamera").dunyayi_goster()
+	await _cek("24_ticaret_dunya", 60)
+	await _odaklan("EGY_1", Vector2(700, 350))
+	await _cek("25_ticaret_akdeniz")
+	var bogaz: Vector2 = oyun.ticaret.gecit_sozlugu["istanbul"]["merkez"]
+	_ana.call("_haritaya_dokunuldu", bogaz)
+	await _cek("26_gecit")
+	_ana.call("_bolgeyi_sec", "")
+	(modlar.get_child(0).get_child(0) as Button).button_pressed = true
 	quit(0)

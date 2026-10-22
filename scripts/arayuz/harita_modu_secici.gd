@@ -1,6 +1,6 @@
 class_name HaritaModuSecici
 extends VBoxContainer
-## Haritanın sol kenarındaki mod düğmeleri (Siyasi / Diplomasi / Ekonomi) ve seçili modun
+## Haritanın sol kenarındaki mod düğmeleri (Siyasi / Diplomasi / Ekonomi / Ticaret) ve seçili modun
 ## küçük açıklama kartı. Modu yalnızca bildirir; haritayı main.gd boyar
 ## (HaritaGorunumu.modu_ayarla).
 
@@ -21,7 +21,7 @@ func _init() -> void:
 	_sekmeler = SekmeGrubu.new(true)
 	_sekmeler.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	add_child(_sekmeler)
-	for simge: String in ["siyasi", "diplomasi", "ekonomi"]:
+	for simge: String in ["siyasi", "diplomasi", "ekonomi", "ticaret"]:
 		_sekmeler.ekle("", simge, DUGME_BOYUTU)
 	_sekmeler.secildi.connect(_secildi)
 
@@ -65,6 +65,14 @@ func _aciklamayi_kur(mod: HaritaPaleti.Mod) -> void:
 			uclar.add_child(az)
 			uclar.add_child(Bilesenler.ikincil_yazi("Çok"))
 			_aciklama_icerigi.add_child(uclar)
+		HaritaPaleti.Mod.TICARET:
+			_aciklama_icerigi.add_child(Bilesenler.baslik("Ticaret", ArayuzTemasi.YAZI_KUCUK))
+			_renk_satiri_ekle(TicaretKatmani.OYUNCU_ROTA_RENGI, "Senin rotaların")
+			_renk_satiri_ekle(Color(TicaretKatmani.DIGER_ROTA_RENGI, 0.6), "Diğer rotalar")
+			_simge_satiri_ekle("liman", TicaretKatmani.LIMAN_RENGI, "Liman (seviye)")
+			_simge_satiri_ekle("gecit", TicaretKatmani.GECIT_RENGI, "Geçit (dokun)")
+			_simge_satiri_ekle("petrol", TicaretKatmani.PETROL_RENGI, "Petrol")
+			_simge_satiri_ekle("maden", TicaretKatmani.MADEN_RENGI, "Maden")
 
 
 func _renk_satiri_ekle(renk: Color, metin: String) -> void:
@@ -74,6 +82,13 @@ func _renk_satiri_ekle(renk: Color, metin: String) -> void:
 	kutu.add_theme_stylebox_override("panel", ArayuzTemasi.kutu(renk, 6, 0))
 	kutu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	satir.add_child(kutu)
+	satir.add_child(Bilesenler.ikincil_yazi(metin))
+	_aciklama_icerigi.add_child(satir)
+
+
+func _simge_satiri_ekle(simge: String, renk: Color, metin: String) -> void:
+	var satir: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_1)
+	satir.add_child(Simgeler.dugum(simge, RENK_KUTUSU_BOYUTU.x + 4.0, renk))
 	satir.add_child(Bilesenler.ikincil_yazi(metin))
 	_aciklama_icerigi.add_child(satir)
 

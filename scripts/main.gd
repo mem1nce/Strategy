@@ -39,6 +39,8 @@ var _secili_birlikler: Array[Birlik] = []
 var _secili_bolge_id: String = ""
 ## Oyuncunun ticaret ortakları; değişince (ör. yapay zekâ anlaşmayı bitirince) bildirim çıkar.
 var _oyuncu_ortaklari: Array[String] = []
+## Alt panelde gösterilen geçidin id'si (Ticaret modunda geçide dokununca); yoksa boş.
+var _secili_gecit: String = ""
 
 
 func _ready() -> void:
@@ -69,6 +71,11 @@ func _ready() -> void:
 	Zaman.saat_gecti.connect(func(_saat: int) -> void: _teknoloji_ilerlemesini_guncelle())
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _oyun.gun_basladi(gun * 24))
 	Zaman.gun_basladi.connect(func(gun: int) -> void: _harita.isgalleri_yenile(gun * 24))
+	# Rotalar gün başında yeniden hesaplanır (bkz. Ticaret.gunu_isle).
+	Zaman.gun_basladi.connect(func(_gun: int) -> void:
+		_harita.ticareti_yenile()
+		if _secili_gecit != "":
+			_arayuz.gecidi_goster(_gecit_ozeti(_secili_gecit)))
 	Zaman.gun_basladi.connect(func(_gun: int) -> void: _otomatik_kaydet())
 	_oyun.insa_kuyrugu_degisti.connect(func(ulke_id: String) -> void:
 		if ulke_id == _oyun.oyuncu_ulkesi:
@@ -94,6 +101,7 @@ func _ready() -> void:
 			_ses.cal("savas_ilani"))
 	_oyun.ulke_teslim_oldu.connect(_ulke_teslim_oldu)
 	_oyun.ticaret_degisti.connect(_ticaret_degisti)
+	_oyun.ticaret_degisti.connect(_harita.ticareti_yenile)
 	_oyun.ticaret_teklifi_geldi.connect(_ticaret_teklifi_geldi)
 
 	_kamera = HaritaKamerasi.new()
@@ -222,7 +230,7 @@ func _geri_istendi() -> void:
 		return
 	if _arayuz.acik_paneli_kapat():
 		return
-	if _secili_bolge_id != "" or not _secili_birlikler.is_empty():
+	if _secili_bolge_id != "" or not _secili_birlikler.is_empty() or _secili_gecit != "":
 		_bolgeyi_sec("")
 		return
 	_arayuz.menuye_donus_sor()
@@ -283,6 +291,14 @@ func _gorunum_degisti() -> void:
 ## Dokunulan bölgeyi seçer. Tam o noktada bölge yoksa yakındaki en yakın bölgeye bakılır
 ## (küçük bölgeler ve adalar için). O da yoksa seçim kalkar.
 func _haritaya_dokunuldu(dunya_konumu: Vector2) -> void:
+	# Ticaret modunda geçide dokunmak geçit panelini açar (birlik kartı açıkken değil: o zaman
+	# dokunuş yürüyüş emridir).
+	var gecit: String = _harita.gecit_bul(dunya_konumu)
+	if gecit != "" and _secili_birlikler.is_empty():
+		_bolgeyi_sec("")
+		_secili_gecit = gecit
+		_arayuz.gecidi_goster(_gecit_ozeti(gecit))
+		return
 	var cokgen: Cokgen = _oyun.dunya.noktadaki_cokgen(dunya_konumu)
 	if cokgen == null:
 		cokgen = _oyun.dunya.en_yakin_cokgen(dunya_konumu, YAKIN_DOKUNMA_YARICAPI / _kamera.zoom.x)
@@ -308,6 +324,7 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 
 	var bolge: Bolge = _oyun.dunya.bolgeler.get(bolge_id)
 	_secili_bolge_id = bolge_id if bolge != null else ""
+	_secili_gecit = ""
 	_harita.secimi_ayarla(bolge_id)
 	_tahkimat_dugmesini_guncelle()
 	var kendi_bolgen: bool = bolge != null and _oyun.oyuncu_secildi_mi() and bolge.sahip == _oyun.oyuncu_ulkesi
@@ -592,6 +609,25 @@ func _ticaret_ozeti() -> Dictionary:
 	return {"kapasite": ticaret.kapasite(_oyun, ulke_id), "sayi": ticaret.anlasma_sayisi(ulke_id),
 		"anlasmalar": anlasmalar, "adaylar": adaylar.slice(0, ADAY_SAYISI), "teklifler": teklifler,
 		"ambargolar": ambargolar}
+
+
+## Geçit panelinin verisi (bkz. GecitPaneli.goster): kontrol edenler, bağladığı denizler, son
+## gün geçen rota sayısı ve toplam geçiş ücreti, olayla kapalıysa kalan gün.
+func _gecit_ozeti(gecit_id: String) -> Dictionary:
+	var ticaret: Ticaret = _oyun.ticaret
+	var gecit: Dictionary = ticaret.gecit_sozlugu.get(gecit_id, {})
+	if gecit.is_empty():
+		return {}
+	var sahipler: Array[Ulke] = []
+	for sahip: String in ticaret.gecit_sahipleri(_oyun, gecit_id):
+		if _oyun.dunya.ulkeler.has(sahip):
+			sahipler.append(_oyun.dunya.ulkeler[sahip])
+	var kapali_gun: int = 0
+	if ticaret.kapali_gecitler.has(gecit_id):
+		kapali_gun = maxi(1, ceili((int(ticaret.kapali_gecitler[gecit_id]) - Zaman.toplam_saat) / 24.0))
+	return {"ad": gecit["ad"], "sahipler": sahipler, "havzalar": gecit.get("havzalar", []),
+		"rota": int(ticaret.gecit_rota_sayisi.get(gecit_id, 0)), "gelir": float(ticaret.gecit_geliri.get(gecit_id, 0.0)),
+		"kapali_gun": kapali_gun}
 
 
 ## Ticaret durumu değişti: açık paneli ve seçili bölgenin düğmelerini yeniler; oyuncunun
