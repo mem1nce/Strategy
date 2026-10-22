@@ -171,9 +171,7 @@ func sina_bakim_indirimi() -> String:
 	for tur: String in ["", "bakim_indirimi"]:
 		var eski: Dictionary = _bonus_ver(tur)
 		var oyun: Oyun = _kurulu_oyun()
-		oyun.hazineler[ULKE] = 1000.0
-		oyun._bakimi_uygula()
-		harcananlar.append(1000.0 - oyun.hazineler[ULKE])
+		harcananlar.append(oyun.ekonomi.ulke_bakimi(oyun, ULKE))
 		_geri_koy(eski)
 	if not is_equal_approx(harcananlar[1], harcananlar[0] * (1.0 - DEGER)):
 		return "Bakım bonusu bakımı %%15 düşürmeli (%.2f -> %.2f)." % harcananlar

@@ -113,6 +113,12 @@ var _yz_tur_agirliklari: Dictionary = {"piyade": 0.45, "zirhli": 0.3, "topcu": 0
 var _yz_karsi_tur_bonusu: float = 0.6
 var _yz_arastirma_olasiligi: float = 0.3
 var _yz_tahkimat_olasiligi: float = 0.08
+## Yapay zekâ tümen kurarken, yeni tümenin bakımı düşüldükten sonra günlük netinin en az
+## gelirinin bu kadarı kalmasını ister (bütçesini açığa düşürmesin).
+var _yz_uretim_net_payi: float = 0.1
+## Borç, limitin bu oranını geçince yapay zekâ tümen terhis eder (günde en çok bu kadar).
+var _yz_terhis_borc_orani: float = 0.5
+var _yz_gunluk_azami_terhis: int = 2
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## Ülke id'si -> günde bir kez düşündüğü saat (bkz. _ulkenin_dusunme_saati).
 var _dusunme_saatleri: Dictionary[String, int] = {}
@@ -150,6 +156,8 @@ var arastirmalar: Dictionary[String, Dictionary] = {}
 
 ## Ülke id'si -> birikmiş üretim. Her oyun günü başında gelir eklenir (bkz. gun_basladi).
 var hazineler: Dictionary[String, float] = {}
+## Günlük bütçe, borç ve iflas (bkz. Ekonomi).
+var ekonomi: Ekonomi = Ekonomi.new()
 ## Ülke id'si -> o ülkenin inşa kuyruğu (Array[InsaIsi], en fazla AZAMI_KUYRUK_UZUNLUGU).
 ## Yalnızca kuyruğun önündeki iş ilerler (tek kuyruk).
 var insa_kuyruklari: Dictionary[String, Array] = {}
@@ -215,7 +223,11 @@ func _init(yeni_dunya: Dunya) -> void:
 	_yz_karsi_tur_bonusu = float(yz_ayarlari.get("karsi_tur_bonusu", _yz_karsi_tur_bonusu))
 	_yz_arastirma_olasiligi = float(yz_ayarlari.get("arastirma_olasiligi", _yz_arastirma_olasiligi))
 	_yz_tahkimat_olasiligi = float(yz_ayarlari.get("tahkimat_olasiligi", _yz_tahkimat_olasiligi))
+	_yz_uretim_net_payi = float(yz_ayarlari.get("uretim_net_payi", _yz_uretim_net_payi))
+	_yz_terhis_borc_orani = float(yz_ayarlari.get("terhis_borc_orani", _yz_terhis_borc_orani))
+	_yz_gunluk_azami_terhis = int(yz_ayarlari.get("gunluk_azami_terhis", _yz_gunluk_azami_terhis))
 	_ulke_birlik_bolgelerini_hesapla()
+	ekonomi.baslangic_hazinelerini_kur(self)
 
 
 ## Verilen bölgedeki tümenler.
@@ -704,48 +716,38 @@ func _savas_anahtari(ulke_a: String, ulke_b: String) -> String:
 	return "%s|%s" % [ulke_a, ulke_b] if ulke_a < ulke_b else "%s|%s" % [ulke_b, ulke_a]
 
 
-## Her oyun günü başında (Zaman.gun_basladi) çağrılır: her ülkenin o günkü geliri
-## hazinesine eklenir, ardından tümen bakımı düşülür. `su_anki_saat`, gün başındaki
+## Her oyun günü başında (Zaman.gun_basladi) çağrılır: her ülkenin günlük bütçesi (gelir ve
+## gider kalemleri, faiz, iflas; bkz. Ekonomi) işlenir. `su_anki_saat`, gün başındaki
 ## Zaman.toplam_saat değeridir.
 func gun_basladi(su_anki_saat: int) -> void:
-	# Gelir, ulkenin_geliri() ile aynı hesaptır ama bütün ülkeler için bölgeler üzerinden tek
-	# geçişte yapılır (ülke ülke ayrı ayrı toplamak her gün ~1100 bölgeyi defalarca geziyordu).
-	var gelirler: Dictionary[String, float] = {}
-	for bolge: Bolge in dunya.bolge_listesi:
-		gelirler[bolge.sahip] = gelirler.get(bolge.sahip, 0.0) + bolge_sanayisi(bolge, su_anki_saat)
-	for ulke_id: String in gelirler:
-		var gelir: float = gelirler[ulke_id] * _gelir_carpani(ulke_id)
-		hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) + gelir
-	_bakimi_uygula()
+	ekonomi.gunu_isle(self, su_anki_saat)
 	_ulke_birlik_bolgelerini_hesapla()
 	hazine_degisti.emit()
 	birlikler_degisti.emit()
 
 
-## Her ülkenin tümenlerinin günlük bakım masrafını (türe göre; zırhlının bakımı yüksektir)
-## hazinesinden düşer. Hazine yetmezse
-## (eksiye düşerse) açık, o ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak
-## yansıtılır (bkz. _guc_azalt) ve hazine 0'da kalır.
-func _bakimi_uygula() -> void:
-	var ulke_birlikleri: Dictionary[String, Array] = {}
-	for birlik: Birlik in birlikler:
-		if not ulke_birlikleri.has(birlik.sahip):
-			ulke_birlikleri[birlik.sahip] = [] as Array[Birlik]
-		(ulke_birlikleri[birlik.sahip] as Array[Birlik]).append(birlik)
+## Tümen listesi dışarıdan (ör. iflas kayıpları, terhis) değişince bölge dizinini geçersiz kılar.
+func _dizini_gecersiz_kil() -> void:
+	_saat_dizini_saati = -1
+	_tarama_gerekli = true
+	birlikler_degisti.emit()
 
-	for ulke_id: String in ulke_birlikleri:
-		var liste: Array[Birlik] = ulke_birlikleri[ulke_id]
-		var bakim: float = 0.0
-		for birlik: Birlik in liste:
-			bakim += BirlikTurleri.bakim(birlik.tur)
-		bakim *= 1.0 - UlkeBonuslari.deger(ulke_id, "bakim_indirimi")
-		var mevcut: float = hazineler.get(ulke_id, 0.0)
-		if mevcut >= bakim:
-			hazineler[ulke_id] = mevcut - bakim
-			continue
-		hazineler[ulke_id] = 0.0
-		_guc_azalt(liste, bakim - mevcut)
-		_olenleri_temizle(liste)
+
+## Verilen tümenleri terhis eder (orduyu dağıtır): tümenler silinir, bakımları biter, para
+## geri gelmez. Silinen tümen sayısını döndürür.
+func terhis_et(liste: Array[Birlik]) -> int:
+	var silinecek: Dictionary = {}
+	for birlik: Birlik in liste:
+		silinecek[birlik] = true
+	var kalanlar: Array[Birlik] = []
+	for birlik: Birlik in birlikler:
+		if not silinecek.has(birlik):
+			kalanlar.append(birlik)
+	var sayi: int = birlikler.size() - kalanlar.size()
+	if sayi > 0:
+		birlikler = kalanlar
+		_dizini_gecersiz_kil()
+	return sayi
 
 
 ## Verilen ülkenin, verilen (kendi) bölgesinde verilen türde yeni bir tümen sıralar. Kuyruk
@@ -835,6 +837,8 @@ func _ise_sirala(ulke_id: String, bolge_id: String, tur: InsaIsi.Tur, maliyet: f
 	var kuyruk: Array = insa_kuyruklari.get(ulke_id, [])
 	if kuyruk.size() >= AZAMI_KUYRUK_UZUNLUGU or hazineler.get(ulke_id, 0.0) < maliyet:
 		return false
+	if ekonomi.iflasta_mi(ulke_id):
+		return false  # İflasta inşaat durur.
 
 	hazineler[ulke_id] = hazineler.get(ulke_id, 0.0) - maliyet
 	var yeni_is: InsaIsi = InsaIsi.new()
@@ -856,7 +860,7 @@ func _ise_sirala(ulke_id: String, bolge_id: String, tur: InsaIsi.Tur, maliyet: f
 func _insa_islerini_isle() -> void:
 	for ulke_id: String in insa_kuyruklari.keys():
 		var kuyruk: Array = insa_kuyruklari[ulke_id]
-		if kuyruk.is_empty():
+		if kuyruk.is_empty() or ekonomi.iflasta_mi(ulke_id):
 			continue
 		var on: InsaIsi = kuyruk[0]
 		on.kalan_saat -= 1
@@ -1040,6 +1044,7 @@ func _bolgelere_gore_birlikler() -> Dictionary[String, Array]:
 ## (bkz. _bolgelere_gore_birlikler) yalnızca savaştaki bir ülke düşünürken, saatte bir kez
 ## kurulup burada saklanır.
 func _ulke_dusun(ulke_id: String, su_anki_saat: int, onbellek: Dictionary = {}) -> void:
+	_yz_terhis_dusun(ulke_id)
 	_savas_ilanini_degerlendir(ulke_id, su_anki_saat)
 	_yz_arastirma_dusun(ulke_id)
 	_yz_tahkimat_dusun(ulke_id)
@@ -1106,10 +1111,40 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 	var tur: String = _yz_bekleyen_tur.get(ulke_id, "")
 	if tur == "":
 		tur = _yz_tur_sec(ulke_id)
+	# Bütçe: yeni tümenin bakımı düşüldükten sonra net, gelirin en az %10'u kalmalı.
+	var gelir: float = ekonomi.gunluk_gelir(self, ulke_id)
+	if ekonomi.net(self, ulke_id) - ekonomi.yeni_tumen_bakimi(self, ulke_id, tur) < _yz_uretim_net_payi * gelir:
+		return
 	if hazine >= tumen_maliyeti(tur, ulke_id) and tumen_sirala(ulke_id, hedef_bolge_id, tur):
 		_yz_bekleyen_tur.erase(ulke_id)
 	else:
 		_yz_bekleyen_tur[ulke_id] = tur
+
+
+## Borcu limitin `_yz_terhis_borc_orani`'nı (%50) geçmişse, iflastaysa ya da hazinesi eksi
+## ve neti açıktaysa günde en çok `_yz_gunluk_azami_terhis` tümen terhis eder: önce bakımı
+## yüksek olanlar, muharebedeki ya da düşmana komşu bölgedekiler değil.
+func _yz_terhis_dusun(ulke_id: String) -> void:
+	var borc: float = ekonomi.borc(self, ulke_id)
+	if borc <= 0.0:
+		return
+	var tehlike: bool = ekonomi.iflasta_mi(ulke_id) or borc >= _yz_terhis_borc_orani * ekonomi.borc_limiti(self, ulke_id) 			or ekonomi.net(self, ulke_id) < 0.0
+	if not tehlike:
+		return
+	var adaylar: Array[Birlik] = []
+	for birlik: Birlik in birlikler:
+		if birlik.sahip != ulke_id or birlik.hedef_bolge_id != "":
+			continue
+		var on_cephe: bool = false
+		for komsu: Bolge in dunya.bolgenin_komsulari(birlik.bolge_id):
+			if savasta_mi(ulke_id, komsu.sahip):
+				on_cephe = true
+				break
+		var bolge: Bolge = dunya.bolgeler.get(birlik.bolge_id)
+		if not on_cephe and bolge != null and bolge.sahip == ulke_id:
+			adaylar.append(birlik)
+	adaylar.sort_custom(func(a: Birlik, b: Birlik) -> bool: return BirlikTurleri.bakim(a.tur) > BirlikTurleri.bakim(b.tur))
+	terhis_et(adaylar.slice(0, _yz_gunluk_azami_terhis))
 
 
 ## Yapay zekânın kuracağı tümen türü: taban ağırlıklara (karışık ordu) göre rastgele seçilir;
@@ -1371,6 +1406,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"savas_sisi": savas_sisi,
 		"teknolojiler": teknolojiler,
 		"arastirmalar": arastirmalar,
+		"ekonomi": ekonomi.kayit_verisi(oyuncu_ulkesi),
 	}
 
 
@@ -1451,6 +1487,8 @@ func kayittan_yukle(veri: Dictionary) -> void:
 		if Teknoloji.DALLAR.has(str(a.get("dal", ""))):
 			arastirmalar[ulke_id] = {"dal": str(a["dal"]), "kalan_saat": int(a.get("kalan_saat", 1)),
 					"toplam_saat": int(a.get("toplam_saat", 1))}
+	# 5. sürümden eski kayıtlarda bütçe yok: kalemler ilk gün başında hesaplanır.
+	ekonomi.kayittan_yukle(veri.get("ekonomi", {}), oyuncu_ulkesi)
 	_ulke_birlik_bolgelerini_hesapla()
 
 

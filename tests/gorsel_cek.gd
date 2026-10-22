@@ -136,4 +136,10 @@ func _calistir() -> void:
 	await _cek("18_grafik_dusuk")
 	Ayarlar.grafik_dusuk = false
 	_ana.get("_harita").grafigi_uygula()
+
+	# Ekonomi ve ticaret paketi: bütçe paneli (birkaç günlük geçmişle).
+	for i: int in 24 * 20:
+		zaman.bir_saat_ilerle()
+	arayuz.butceyi_goster(_ana.call("_butce_ozeti"))
+	await _cek("19_butce")
 	quit(0)

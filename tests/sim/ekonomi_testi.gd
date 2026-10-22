@@ -76,11 +76,10 @@ func sina_gun_basladi_hazineyi_artirir() -> String:
 	var sinyal_sayisi: Array = [0]
 	oyun.hazine_degisti.connect(func() -> void: sinyal_sayisi[0] += 1)
 
-	if oyun.hazineler.get("TUR", 0.0) != 0.0:
-		return "Oyun başında hazine 0 olmalı, sınama kurulamadı."
+	var bas: float = oyun.hazineler.get("TUR", 0.0)
 	oyun.gun_basladi(0)
 	var bir_gun_sonra: float = oyun.hazineler.get("TUR", 0.0)
-	if bir_gun_sonra <= 0.0:
+	if bir_gun_sonra <= bas:
 		return "Bir gün sonra TUR'un hazinesi artmalı (pozitif gelir), geldi: %.3f" % bir_gun_sonra
 	oyun.gun_basladi(24)
 	var iki_gun_sonra: float = oyun.hazineler.get("TUR", 0.0)

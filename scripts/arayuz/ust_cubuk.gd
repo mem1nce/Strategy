@@ -11,6 +11,8 @@ signal yz_yonetimi_degisti(acik: bool)
 signal siralama_degisti(acik: bool)
 ## "Teknoloji" düğmesi açılıp kapandığında yayılır.
 signal teknoloji_degisti(acik: bool)
+## Ülke kartına (hazine ve kaynaklar) dokunulunca yayılır: Bütçe paneli açılır.
+signal butce_istendi
 
 const ULKE_KARTI_GENISLIGI: float = 470.0
 const BAYRAK_YUKSEKLIGI: float = 40.0
@@ -62,10 +64,15 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_araclar.show()
 
 
-## Oyuncunun kaynaklarını yazar: hazine, günlük gelir, tümen ve bölge sayısı.
-func kaynaklari_goster(hazine: float, gelir: float, tumen: int, bolge: int) -> void:
-	(_hazine.get_child(1) as Label).text = Bicim.kisa(hazine)
-	(_gelir.get_child(1) as Label).text = "+%s/gün" % Bicim.kisa(gelir)
+## Oyuncunun kaynaklarını yazar: hazine (eksiyse borç, kırmızı), günlük net, tümen ve bölge
+## sayısı.
+func kaynaklari_goster(hazine: float, net: float, tumen: int, bolge: int) -> void:
+	var hazine_yazisi: Label = _hazine.get_child(1)
+	hazine_yazisi.text = Bicim.tutar(hazine)
+	hazine_yazisi.add_theme_color_override("font_color", ArayuzTemasi.VURGU if hazine >= 0.0 else ArayuzTemasi.TEHLIKE)
+	var net_yazisi: Label = _gelir.get_child(1)
+	net_yazisi.text = "%s%s/gün" % ["+" if net >= 0.0 else "", Bicim.tutar(net)]
+	net_yazisi.add_theme_color_override("font_color", ArayuzTemasi.BASARI if net >= 0.0 else ArayuzTemasi.TEHLIKE)
 	(_tumen.get_child(1) as Label).text = str(tumen)
 	(_bolge.get_child(1) as Label).text = str(bolge)
 
@@ -119,6 +126,12 @@ func _ulke_kartini_kur() -> void:
 	_uretim = Bilesenler.simgeli_deger("uretim", ArayuzTemasi.IKINCIL_YAZI)
 	dikey.add_child(_uretim)
 	_uretim.hide()
+	# Kartın tamamı görünmez bir düğmedir: dokununca Bütçe paneli açılır.
+	var dokunma: Button = Button.new()
+	dokunma.flat = true
+	dokunma.focus_mode = Control.FOCUS_NONE
+	dokunma.pressed.connect(func() -> void: butce_istendi.emit())
+	_ulke_karti.add_child(dokunma)
 	_ulke_karti.hide()
 
 

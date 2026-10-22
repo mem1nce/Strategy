@@ -1,5 +1,5 @@
 extends RefCounted
-## Oyun.tumen_sirala()/fabrika_sirala() (inşa kuyruğu) ve _bakimi_uygula()'yı sınar.
+## Oyun.tumen_sirala()/fabrika_sirala() (inşa kuyruğu) sınar; bütçe ve bakım butce_testi.gd'de.
 
 
 ## TUR oyuncu olarak seçilir ki saat_ilerledi() döngülerinde yapay zekâ TUR için de karar
@@ -98,40 +98,4 @@ func sina_fabrika_tamamlaninca_sanayi_artar() -> String:
 	if not is_equal_approx(bolge.fabrika_sanayisi, once + oyun._fabrika_sanayi_artisi):
 		return "Fabrika tamamlanınca bölgenin fabrika_sanayisi artmalı: %.2f -> %.2f" % [
 			once, bolge.fabrika_sanayisi]
-	return ""
-
-
-## _bakimi_uygula() doğrudan çağrılır (gun_basladi() yerine): gun_basladi önce geliri
-## ekler, bu da "hazine yetersiz" ön koşulunu bozabilir (TUR'un gerçek geliri bakımdan
-## fazla olabilir). Bakım mekaniğini, gelirden bağımsız olarak izole sınar.
-func sina_hazine_yetersiz_bakim_tumen_gucunu_azaltir() -> String:
-	var oyun: Oyun = _kurulu_oyun()
-	oyun.hazineler["TUR"] = 0.0
-	var birlik: Birlik = Birlik.new()
-	birlik.sahip = "TUR"
-	birlik.bolge_id = "TUR_1"
-	birlik.guc = 10.0
-	oyun.birlikler.append(birlik)
-	var once: float = birlik.guc
-
-	oyun._bakimi_uygula()
-	if oyun.hazineler.get("TUR", -1.0) != 0.0:
-		return "Hazine yetersizken 0'ın altına düşmemeli (eksi değer tutulmamalı)."
-	if birlik.guc >= once:
-		return "Bakım karşılanamazsa tümen güç kaybetmeli: önce=%.2f, sonra=%.2f" % [once, birlik.guc]
-	return ""
-
-
-func sina_hazine_yeterliyse_bakim_tumeni_etkilemez() -> String:
-	var oyun: Oyun = _kurulu_oyun()
-	oyun.hazineler["TUR"] = 100000.0
-	var birlik: Birlik = Birlik.new()
-	birlik.sahip = "TUR"
-	birlik.bolge_id = "TUR_1"
-	birlik.guc = 10.0
-	oyun.birlikler.append(birlik)
-
-	oyun._bakimi_uygula()
-	if birlik.guc != 10.0:
-		return "Hazine yeterliyken bakım tümenin gücünü değiştirmemeli."
 	return ""

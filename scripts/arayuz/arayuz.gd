@@ -35,6 +35,10 @@ signal menuye_donus_istendi
 signal bildirime_dokunuldu(bolge_id: String)
 ## Haritanın sol kenarındaki mod düğmelerinden biri seçildi.
 signal harita_modu_degisti(mod: HaritaPaleti.Mod)
+## Üst çubuktaki ülke kartına dokunuldu: main.gd bütçe özetini hazırlayıp butceyi_goster() çağırır.
+signal butce_istendi
+## Birlik kartındaki "Terhis et" onaylandı.
+signal terhis_istendi
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
@@ -60,6 +64,7 @@ var _siralama_paneli: SiralamaPaneli = null
 var _bildirim_kutusu: BildirimKutusu = null
 var _tumen_secim_paneli: TumenSecimPaneli = null
 var _teknoloji_paneli: TeknolojiPaneli = null
+var _butce_paneli: ButcePaneli = null
 var _serit: SeritPaneli = null
 var _mod_secici: HaritaModuSecici = null
 ## Android geri tuşuyla oyundan ana menüye dönmeden önce sorulan onay.
@@ -89,6 +94,11 @@ func kur(dunya: Dunya) -> void:
 	dikey.add_child(_ust_cubuk)
 	_ust_cubuk.yz_yonetimi_degisti.connect(func(acik: bool) -> void: yz_yonetimi_degisti.emit(acik))
 	_ust_cubuk.siralama_degisti.connect(_siralama_degisti)
+	_ust_cubuk.butce_istendi.connect(func() -> void:
+		if _butce_paneli.visible:
+			Gecis.kapat(_butce_paneli)
+		else:
+			butce_istendi.emit())
 	_ust_cubuk.teknoloji_degisti.connect(_teknoloji_degisti)
 
 	# Üst çubukla alt panel arasındaki boşluk; sol kenarında harita modu düğmeleri durur
@@ -116,6 +126,7 @@ func kur(dunya: Dunya) -> void:
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
 	_birlik_paneli.yarisini_ayir_basildi.connect(func() -> void: yarisini_ayir_istendi.emit())
+	_birlik_paneli.terhis_onaylandi.connect(func() -> void: terhis_istendi.emit())
 	_birlik_paneli.insa_istendi.connect(_insa_basildi)
 
 	var sonuc_ortalayici: CenterContainer = CenterContainer.new()
@@ -145,6 +156,16 @@ func kur(dunya: Dunya) -> void:
 	kok.add_child(teknoloji_ortalayici)
 	_teknoloji_paneli = TeknolojiPaneli.new()
 	teknoloji_ortalayici.add_child(_teknoloji_paneli)
+
+	var butce_ortalayici: CenterContainer = CenterContainer.new()
+	butce_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	butce_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	butce_ortalayici.offset_top = SIRALAMA_UST_BOSLUGU
+	butce_ortalayici.offset_bottom = -KENAR_BOSLUGU
+	kok.add_child(butce_ortalayici)
+	_butce_paneli = ButcePaneli.new()
+	butce_ortalayici.add_child(_butce_paneli)
+	_butce_paneli.kapat_basildi.connect(func() -> void: Gecis.kapat(_butce_paneli))
 	_teknoloji_paneli.arastirma_istendi.connect(func(dal: String) -> void: arastirma_istendi.emit(dal))
 
 	var tumen_ortalayici: CenterContainer = CenterContainer.new()
@@ -191,6 +212,9 @@ func acik_paneli_kapat() -> bool:
 		return true
 	if _tumen_secim_paneli.visible:
 		Gecis.kapat(_tumen_secim_paneli)
+		return true
+	if _butce_paneli.visible:
+		Gecis.kapat(_butce_paneli)
 		return true
 	if _teknoloji_paneli.visible:
 		_teknoloji_panelini_kapat()
@@ -268,9 +292,22 @@ func oyuncuyu_goster(ulke: Ulke) -> void:
 	_mod_secici.show()
 
 
-## Oyuncunun kaynaklarını (hazine, günlük gelir, tümen ve bölge sayısı) üst çubuğa yazar.
-func kaynaklari_goster(hazine: float, gelir: float, tumen: int, bolge: int) -> void:
-	_ust_cubuk.kaynaklari_goster(hazine, gelir, tumen, bolge)
+## Oyuncunun kaynaklarını (hazine, günlük net, tümen ve bölge sayısı) üst çubuğa yazar.
+func kaynaklari_goster(hazine: float, net: float, tumen: int, bolge: int) -> void:
+	_ust_cubuk.kaynaklari_goster(hazine, net, tumen, bolge)
+
+
+## Bütçe panelini açar ya da (açıksa) yeniler; diğer orta panelleri kapatır (bkz. ButcePaneli.goster).
+func butceyi_goster(ozet: Dictionary) -> void:
+	if not _butce_paneli.visible:
+		_teknoloji_panelini_kapat()
+		Gecis.kapat(_siralama_paneli)
+		_ust_cubuk.siralama_dugmesini_kapat()
+	_butce_paneli.goster(ozet)
+
+
+func butce_acik_mi() -> bool:
+	return _butce_paneli.visible
 
 
 ## Oyuncunun inşa kuyruğunun önündeki işi üst çubukta gösterir (bkz. UstCubuk.uretimi_goster).

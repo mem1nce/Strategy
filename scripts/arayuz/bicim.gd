@@ -20,6 +20,16 @@ static func kisa(sayi: float) -> String:
 	return "%s%d" % [isaret, roundi(mutlak)]
 
 
+## Bütçe tutarı: 100'ün altında bir ondalıkla (12,3; 0,2), üstünde kisa() gibi.
+static func tutar(sayi: float) -> String:
+	if absf(sayi) >= 100.0:
+		return kisa(sayi)
+	var metin: String = "%.1f" % sayi
+	if metin == "-0.0":
+		metin = "0.0"
+	return metin.replace(".", ",")
+
+
 ## Örnek: 83429615 -> "83,4 Mn"
 static func nufus(sayi: int) -> String:
 	return kisa(float(sayi))

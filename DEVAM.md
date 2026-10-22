@@ -766,6 +766,24 @@ Adımlar:
    - Atlanan madde yok. Not: flag-icons'ta Tayvan (CN-TW) yok; Tayvan, Kuzey Kıbrıs ve
      Somaliland ülke renginde yedek bayrak alır.
 
+## Paket: ekonomi ve ticaret (2026-10-22)
+
+İstek: hazine/bütçe/bakım/borç, petrol ve maden piyasası, limanlar ve ticaret anlaşmaları,
+ticaret yolları ve geçitler, haritada ticaret, olaylar ve tazminat, denge ve sınama, belgeler.
+Her sistemle birlikte yapay zekâ da onu kullanır; yeni sayılar data/balance.json'da.
+
+Adımlar:
+1. ✅ Hazine, bütçe ve ordu bakımı (`sim/ekonomi.gd`): 60 günlük gelirle başlangıç, günlük
+   kalemler, bakımın yere göre çarpanı (barışta kendi toprağı %60, yabancı toprak %130),
+   borç + aylık %2 faiz, 90 günlük gelir borç limiti, iflas (inşaat durur, tümenler günde %4
+   güç kaybeder, limitin %80'ine inince biter), "Terhis et" (onaylı), Bütçe paneli (ülke
+   kartına dokununca; kalemler, net, borç/limit, 90 günlük grafik). YZ: neti açığa
+   düşürecek tümeni kurmaz, borçta günde en çok 2 tümen terhis eder. Kayıt sürümü 5 (eski
+   kayıt açılır, bütçe ilk gün hesaplanır). `tests/sim/butce_testi.gd` (9 sınama).
+   - Uzun koşu (tohum 1) bu adımdan sonra: teslim 28 (önce 10), süre 123 sn — barışta bakım
+     ucuzladığı için ordular büyüdü. Denge, ticaret geliri de eklenince 7. adımda ayarlanacak.
+   - Görev sistemi projede yok: "görev şablonları" maddesi uygulanmayacak.
+
 ## Kararlar
 
 - 2026-10-07: Yapay zekânın "yalnızca kendi komşuluğunu bilmesi" savaş sisi seçeneğinden

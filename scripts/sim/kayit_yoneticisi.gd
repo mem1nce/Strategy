@@ -9,9 +9,11 @@ extends RefCounted
 ## 3: bölgeler daha ayrıntılı şehir verisiyle yeniden üretildi; bölge kimlikleri değişti, bu
 ## yüzden 1. ve 2. sürüm kayıtlar artık açılamaz (bkz. eski_kayit_mi).
 ## 4: savaş sisi tercihi eklendi. 3. sürüm kayıt açılınca sis açık sayılır.
-const SURUM: int = 4
+## 5: ekonomi ve ticaret (bütçe, kaynaklar, limanlar, anlaşmalar, ambargolar, olaylar,
+## tazminat). Eski kayıtta bu alanlar varsayılanla dolar.
+const SURUM: int = 5
 ## Açılabilen sürümler.
-const ACILABILEN_SURUMLER: Array[int] = [3, 4]
+const ACILABILEN_SURUMLER: Array[int] = [3, 4, 5]
 
 ## Kayıt dosyasının yolu. Sınamalar bunu ayrı bir dosyaya çevirir ki oyuncunun gerçek
 ## kaydına dokunmasınlar (bkz. tests/calistirici.gd).

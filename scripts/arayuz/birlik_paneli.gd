@@ -6,13 +6,15 @@ extends PanelContainer
 ## Bayraklı başlık, tür başına simgeli satırlar, ortalama güç çubuğu ve "başka bölgeye dokun"
 ## ipucu. "Yarısını ayır" gösterilen tümenlerin yarısını ayırır; sonraki hedef seçimi yalnızca
 ## ayrılan yarıyı yürütür. "Tümen kur" (ana düğme), "Fabrika kur" ve "Tahkimat kur" bu bölgede
-## üretim sıralar.
+## üretim sıralar. "Terhis et" (onaylı) gösterilen tümenleri dağıtır: bakımları biter.
 
 ## "Yarısını ayır" düğmesine basıldığında yayılır.
 signal yarisini_ayir_basildi
 ## "Tümen kur" ("tumen"), "Fabrika kur" ("fabrika") ya da "Tahkimat kur" ("tahkimat")
 ## düğmesine basıldığında yayılır.
 signal insa_istendi(tur: String)
+## "Terhis et" onaylandığında yayılır.
+signal terhis_onaylandi
 
 const DUGME_BOYUTU: Vector2 = Vector2(210.0, 112.0)
 const BAYRAK_YUKSEKLIGI: float = 40.0
@@ -23,6 +25,8 @@ var _sayi_rozeti: HBoxContainer = null
 var _turler: HBoxContainer = null
 var _guc: ProgressBar = null
 var _guc_yazisi: Label = null
+var _terhis_onayi: ConfirmationDialog = null
+var _gosterilen_sayi: int = 0
 
 
 func _ready() -> void:
@@ -68,6 +72,18 @@ ayır", "", Vector2(170.0, DUGME_BOYUTU.y))
 	ayir.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
 	ayir.pressed.connect(func() -> void: yarisini_ayir_basildi.emit())
 	yatay.add_child(ayir)
+	var terhis: Button = Bilesenler.ikincil_dugme("Terhis
+et", "", Vector2(150.0, DUGME_BOYUTU.y))
+	terhis.theme_type_variation = ArayuzTemasi.TEHLIKE_DUGME
+	terhis.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
+	terhis.pressed.connect(func() -> void:
+		_terhis_onayi.dialog_text = "%d tümen terhis edilsin mi?
+Bakımları biter, harcanan para geri gelmez." % _gosterilen_sayi
+		_terhis_onayi.popup_centered())
+	yatay.add_child(terhis)
+	_terhis_onayi = ArayuzTemasi.onay_penceresi_olustur()
+	_terhis_onayi.confirmed.connect(func() -> void: terhis_onaylandi.emit())
+	add_child(_terhis_onayi)
 	yatay.add_child(InsaDugmeleri.dugme_olustur("fabrika", DUGME_BOYUTU, insa_istendi))
 	yatay.add_child(InsaDugmeleri.dugme_olustur("tahkimat", DUGME_BOYUTU, insa_istendi))
 	yatay.add_child(InsaDugmeleri.dugme_olustur("tumen", DUGME_BOYUTU, insa_istendi, true))
@@ -83,6 +99,7 @@ func goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 	for cocuk: Node in _sayi_rozeti.get_children():
 		cocuk.queue_free()
 	_sayi_rozeti.add_child(Bilesenler.rozet("%d tümen" % birlikler.size(), ArayuzTemasi.VURGU, ArayuzTemasi.VURGU_USTU))
+	_gosterilen_sayi = birlikler.size()
 
 	var toplam: float = 0.0
 	var sayilar: Dictionary[String, int] = {}

@@ -435,7 +435,8 @@ savaş varsa her iki yönde de `savasta_mi()` doğru döner.
 
 ## 9. Ekonomi
 
-Tek kaynak: **üretim** (gelir, hazineye işlenir).
+Tek para birimi **hazine**dir (`Oyun.hazineler`). Günlük bütçe `sim/ekonomi.gd`'dedir; sayılar
+data/balance.json → "butce".
 
 - **Sanayi:** her bölgenin bir sanayi değeri vardır; bölgenin "ev sahibi" ülkesinin (bölge
   id'sinin öneki, ör. "TUR_1" → "TUR") GSYH'sinden türer ve o ülke içindeki nüfus payıyla
@@ -452,9 +453,20 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
   Ev sahibi kendi bölgesini geri alınca ceza hemen kalkar.
   Bu alan, tümen hareketindeki `son_adim_deniz_mi` gibi, Bölge'nin coğrafyası dışındaki
   tek dinamik ekonomi alanıdır.
-- **Hazine:** `Oyun.hazineler` (ülke id'si → birikmiş üretim), her oyun günü başında
-  (`Oyun.gun_basladi()`, `Zaman.gun_basladi`'den main.gd aracılığıyla çağrılır) o günün
-  geliri eklenerek güncellenir. Üst çubukta oyuncunun hazinesi yazılı.
+- **Hazine:** oyun her ülke için yaklaşık **60 günlük gelirle** başlar. Her oyun günü başında
+  (`Oyun.gun_basladi()` → `Ekonomi.gunu_isle()`) günlük bütçenin neti işlenir.
+- **Günlük bütçe kalemleri:** gelir — sanayi (bu paketin sonraki adımlarında ticaret, kaynak
+  ihracatı, geçiş ücretleri, tazminat eklenir); gider — ordu bakımı, borç faizi (sonra kaynak
+  ithalatı). Son günün kalemleri `Ekonomi.kalemler`'de, oyuncunun son 90 günlük hazinesi
+  `Ekonomi.gecmis`'te durur.
+- **Borç:** hazine eksiye inebilir (yalnızca bakım, faiz gibi günlük giderlerle; inşaat ve
+  araştırma peşin ödenir, eksi hazineyle başlatılamaz). Eksi bakiye borçtur ve aylık
+  `aylik_faiz` (%2) faiz işler (günde 1/30'u). **Borç limiti** 90 günlük gelirdir.
+- **İflas:** borç limiti aşınca ülke iflas eder: inşaat kuyruğu durur, yeni iş sıralanamaz ve
+  bütün tümenleri her gün `iflas_gunluk_guc_kaybi` (%4) güç kaybeder. Borç limitin %80'inin
+  altına inince iflas biter. Oyuncuya iki durumda da bildirim gelir.
+- **Bütçe paneli:** üst çubuktaki ülke kartına dokununca açılır: gelir ve gider kalemleri,
+  günlük net, borç / limit çubuğu, iflas rozeti ve son 90 günün hazine grafiği.
 - **Harcama:** `Oyun.tumen_sirala(ulke, bolge, tur)`, `fabrika_sirala()` ve `tahkimat_sirala()`,
   bir ülkenin (kendi) bir bölgesinde iş sıralar; maliyet hemen hazineden düşülür (yetmezse sıralanamaz). Her
   ülkenin **tek** bir inşa kuyruğu vardır (`Oyun.insa_kuyruklari`), en fazla
@@ -464,10 +476,14 @@ Tek kaynak: **üretim** (gelir, hazineye işlenir).
   kalıcı olarak `fabrika_sanayi_artisi` kadar artırır (bkz. yukarıdaki "Sanayi"). Tümenin
   fiyatı ve süresi türüne göredir (bkz. 7. Birlikler); fabrika sabitleri data/balance.json →
   "ekonomi".
-- **Bakım:** her oyun günü başında (gelir eklendikten sonra), her ülkenin tümenlerinin
-  türlerine göre bakımları toplamı (bkz. 7. Birlikler) hazinesinden düşülür. Hazine yetmezse 0'da kalır ve açık, o
-  ülkenin bütün tümenlerine güçleriyle orantılı kayıp olarak yansıtılır (muharebedeki
-  `_guc_azalt` ile aynı mekanizma); güç `ASGARI_GUC` altına düşen tümen silinir.
+- **Ordu bakımı:** türe göre (piyade 0,4, topçu 0,6, zırhlı 1,0 / gün; bkz. 7. Birlikler).
+  Barıştaki ülkenin kendi toprağındaki tümeni bunun %60'ını, yabancı topraktaki tümeni
+  %130'unu öder; savaştaki ülkenin kendi toprağındaki tümeni tamını öder.
+- **Terhis:** birlik kartındaki "Terhis et" (onaylı) gösterilen tümenleri dağıtır; bakımları
+  biter, para geri gelmez (`Oyun.terhis_et`).
+- **Yapay zekâ ve bütçe:** yeni tümenin bakımı düşüldükten sonra neti gelirinin %10'undan
+  azsa tümen kurmaz. Borcu limitin %50'sini geçince, iflastayken ya da eksi hazinede neti
+  açıktayken günde en çok 2 tümen terhis eder (önce bakımı yüksek olanlar; cephedekiler değil).
 - **Gelir çarpanı:** Sanayi teknolojisi geliri seviye başına %10 artırır.
 - Arayüz: oyuncunun kendi bölgesine dokununca açılan bölge ya da birlik panelinde
   **"Tümen kur"**, **"Fabrika kur (500)"** ve **"Tahkimat 1/3 · Kur (160)"** düğmeleri vardır

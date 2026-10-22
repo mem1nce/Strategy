@@ -11,6 +11,8 @@ func sina_buyuk_sayilar_kisaltilir() -> String:
 	for sayi: float in beklenen:
 		if Bicim.kisa(sayi) != beklenen[sayi]:
 			return "Bicim.kisa(%s) = %s, beklenen %s" % [sayi, Bicim.kisa(sayi), beklenen[sayi]]
+	if Bicim.tutar(12.34) != "12,3" or Bicim.tutar(-0.04) != "0,0" or Bicim.tutar(2500.0) != "2,5 B":
+		return "Bicim.tutar: 12,34 -> 12,3; 2500 -> 2,5 B olmalı (%s, %s)." % [Bicim.tutar(12.34), Bicim.tutar(2500.0)]
 	if Bicim.para(761425) != "761 Mr $":
 		return "Bicim.para(761425) = %s" % Bicim.para(761425)
 	return ""

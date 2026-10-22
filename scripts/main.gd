@@ -8,6 +8,10 @@ const UST_BOSLUK: float = 180.0
 const ALT_BOSLUK: float = 340.0
 ## Dokunulan noktada bölge yoksa bu yarıçap içindeki en yakın bölge seçilir (ekran pikseli).
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
+## Bütçe kalemlerinin simgeleri (art/icons).
+const BUTCE_SIMGELERI: Dictionary[String, String] = {
+	"sanayi": "sanayi", "bakim": "ordu", "faiz": "para",
+}
 
 ## "--ekran-goruntusu <dosya>" komut satırı argümanı; harita yerleşsin diye biraz beklenir,
 ## sonra ekran PNG olarak kaydedilip oyun kapanır. Çağırmak için (proje klasöründen):
@@ -97,6 +101,10 @@ func _ready() -> void:
 	_arayuz.oyna_istendi.connect(_oyun.oyuncuyu_sec)
 	_arayuz.komsular_degisti.connect(_harita.komsulari_goster)
 	_arayuz.yarisini_ayir_istendi.connect(_yarisini_ayir_istendi)
+	_arayuz.terhis_istendi.connect(_terhis_istendi)
+	_arayuz.butce_istendi.connect(func() -> void:
+		if _oyun.oyuncu_secildi_mi():
+			_arayuz.butceyi_goster(_butce_ozeti()))
 	_arayuz.insa_istendi.connect(_insa_istendi)
 	_arayuz.tumen_istendi.connect(_tumen_istendi)
 	InsaDugmeleri.maliyetleri_ayarla(_oyun.fabrika_maliyeti(), _oyun.tahkimat_azami_seviye())
@@ -466,8 +474,41 @@ func _kaynaklari_guncelle() -> void:
 	for birlik: Birlik in _oyun.birlikler:
 		if birlik.sahip == ulke_id:
 			tumen += 1
-	_arayuz.kaynaklari_goster(_oyun.hazineler.get(ulke_id, 0.0), _oyun.ulkenin_geliri(ulke_id, Zaman.toplam_saat),
+	_arayuz.kaynaklari_goster(_oyun.hazineler.get(ulke_id, 0.0), _oyun.ekonomi.net(_oyun, ulke_id),
 			tumen, _oyun.dunya.ulkenin_bolge_sayisi(ulke_id))
+	if _arayuz.butce_acik_mi():
+		_arayuz.butceyi_goster(_butce_ozeti())
+
+
+## Bütçe panelinin verisi: kalemler (simge, ad, değer), net, borç, limit, iflas ve oyuncunun
+## son 90 günlük hazinesi (bkz. ButcePaneli.goster).
+func _butce_ozeti() -> Dictionary:
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	var ekonomi: Ekonomi = _oyun.ekonomi
+	var kalemler: Dictionary = ekonomi.kalem_tahmini(_oyun, ulke_id)
+	var gelirler: Array = []
+	for kalem: String in Ekonomi.GELIR_KALEMLERI:
+		gelirler.append([BUTCE_SIMGELERI.get(kalem, "para"), Ekonomi.KALEM_ADLARI.get(kalem, kalem), kalemler.get(kalem, 0.0)])
+	var giderler: Array = []
+	for kalem: String in Ekonomi.GIDER_KALEMLERI:
+		giderler.append([BUTCE_SIMGELERI.get(kalem, "para"), Ekonomi.KALEM_ADLARI.get(kalem, kalem), kalemler.get(kalem, 0.0)])
+	return {
+		"gelirler": gelirler, "giderler": giderler, "net": ekonomi.net(_oyun, ulke_id),
+		"hazine": _oyun.hazineler.get(ulke_id, 0.0), "borc": ekonomi.borc(_oyun, ulke_id),
+		"limit": ekonomi.borc_limiti(_oyun, ulke_id), "iflas": ekonomi.iflasta_mi(ulke_id),
+		"gecmis": ekonomi.gecmis.get(ulke_id, PackedFloat32Array()),
+	}
+
+
+## Birlik kartında "Terhis et" onaylandı: kartta gösterilen tümenler dağıtılır.
+func _terhis_istendi() -> void:
+	if _secili_birlikler.is_empty():
+		return
+	var sayi: int = _oyun.terhis_et(_secili_birlikler)
+	_ses.cal("onay")
+	_arayuz.bildirim_goster("%d tümen terhis edildi." % sayi, "")
+	_bolgeyi_sec("")
+	_kaynaklari_guncelle()
 
 
 ## Oyuncu zafer kazanınca (kıtasının %60'ı kendisinin olunca) çağrılır. Önemli bir olay
