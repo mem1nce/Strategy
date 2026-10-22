@@ -9,10 +9,11 @@ extends RefCounted
 const DENGE_DOSYASI: String = "res://data/balance.json"
 
 ## Bütçe kalemleri, panelde bu sırayla yazılır.
-const GELIR_KALEMLERI: Array[String] = ["sanayi"]
-const GIDER_KALEMLERI: Array[String] = ["bakim", "faiz"]
+const GELIR_KALEMLERI: Array[String] = ["sanayi", "ihracat"]
+const GIDER_KALEMLERI: Array[String] = ["bakim", "ithalat", "faiz"]
 const KALEM_ADLARI: Dictionary[String, String] = {
-	"sanayi": "Sanayi", "bakim": "Ordu bakımı", "faiz": "Borç faizi",
+	"sanayi": "Sanayi", "ihracat": "Kaynak ihracatı", "bakim": "Ordu bakımı",
+	"ithalat": "Kaynak ithalatı", "faiz": "Borç faizi",
 }
 
 var baslangic_gun_geliri: float = 60.0
@@ -34,6 +35,8 @@ var kalemler: Dictionary[String, Dictionary] = {}
 var gecmis: Dictionary[String, PackedFloat32Array] = {}
 ## İflas etmiş ülkeler.
 var iflaslar: Dictionary[String, bool] = {}
+## Petrol ve maden piyasası (bkz. Piyasa).
+var piyasa: Piyasa = Piyasa.new()
 
 
 func _init() -> void:
@@ -105,7 +108,12 @@ func gunluk_gider(ulke_id: String) -> float:
 func net(oyun: Oyun, ulke_id: String) -> float:
 	if not kalemler.has(ulke_id):
 		var tahmin: Dictionary = kalem_tahmini(oyun, ulke_id)
-		return float(tahmin["sanayi"]) - float(tahmin["bakim"]) - float(tahmin["faiz"])
+		var toplam: float = 0.0
+		for kalem: String in GELIR_KALEMLERI:
+			toplam += float(tahmin.get(kalem, 0.0))
+		for kalem: String in GIDER_KALEMLERI:
+			toplam -= float(tahmin.get(kalem, 0.0))
+		return toplam
 	return gunluk_gelir(oyun, ulke_id) - gunluk_gider(ulke_id)
 
 
@@ -114,7 +122,7 @@ func kalem_tahmini(oyun: Oyun, ulke_id: String) -> Dictionary:
 	if kalemler.has(ulke_id):
 		return kalemler[ulke_id]
 	return {
-		"sanayi": oyun.ulkenin_geliri(ulke_id, 0),
+		"sanayi": oyun.ulkenin_geliri(ulke_id, 0), "ihracat": 0.0, "ithalat": 0.0,
 		"bakim": ulke_bakimi(oyun, ulke_id),
 		"faiz": borc(oyun, ulke_id) * aylik_faiz / 30.0,
 	}
@@ -133,13 +141,13 @@ func iflasta_mi(ulke_id: String) -> bool:
 	return iflaslar.has(ulke_id)
 
 
-## Her oyun günü başında: her ülkenin kalemleri hesaplanır, net hazineye işlenir, borcun faizi
-## düşülür, iflas durumu güncellenir ve iflastaki ülkelerin tümenleri güç kaybeder.
+## Her oyun günü başında: önce petrol ve maden piyasası işlenir (bkz. Piyasa), sonra her ülkenin
+## kalemleri hesaplanır, net hazineye işlenir, borcun faizi düşülür, iflas durumu güncellenir ve
+## iflastaki ülkelerin tümenleri güç kaybeder.
 func gunu_isle(oyun: Oyun, su_anki_saat: int) -> void:
 	var dunya: Dunya = oyun.dunya
-	var sanayiler: Dictionary[String, float] = {}
-	for bolge: Bolge in dunya.bolge_listesi:
-		sanayiler[bolge.sahip] = sanayiler.get(bolge.sahip, 0.0) + oyun.bolge_sanayisi(bolge, su_anki_saat)
+	var sanayiler: Dictionary[String, float] = Piyasa._ham_sanayiler(oyun, su_anki_saat)
+	var kaynak_ticareti: Dictionary[String, Dictionary] = piyasa.gunu_isle(oyun, su_anki_saat, sanayiler)
 	var bakimlar: Dictionary[String, float] = {}
 	var barista: Dictionary[String, bool] = {}
 	for birlik: Birlik in oyun.birlikler:
@@ -153,8 +161,11 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int) -> void:
 		if not sanayiler.has(ulke_id) and not bakimlar.has(ulke_id):
 			continue  # Teslim olmuş.
 		var hazine: float = oyun.hazineler.get(ulke_id, 0.0)
+		var ticaret: Dictionary = kaynak_ticareti.get(ulke_id, {})
 		var kalem: Dictionary = {
-			"sanayi": sanayiler.get(ulke_id, 0.0) * oyun._gelir_carpani(ulke_id),
+			"sanayi": sanayiler.get(ulke_id, 0.0) * oyun._gelir_carpani(ulke_id) * piyasa.sanayi_carpani(ulke_id),
+			"ihracat": float(ticaret.get("ihracat", 0.0)),
+			"ithalat": float(ticaret.get("ithalat", 0.0)),
 			"bakim": bakimlar.get(ulke_id, 0.0) * (1.0 - UlkeBonuslari.deger(ulke_id, "bakim_indirimi")),
 			"faiz": maxf(0.0, -hazine) * aylik_faiz / 30.0,
 		}
@@ -210,6 +221,7 @@ func kayit_verisi(oyuncu_ulkesi: String) -> Dictionary:
 		"kalemler": kalem_verisi,
 		"iflaslar": iflaslar.keys(),
 		"oyuncu_gecmisi": Array(gecmis.get(oyuncu_ulkesi, PackedFloat32Array())),
+		"piyasa": piyasa.kayit_verisi(),
 	}
 
 
@@ -224,6 +236,7 @@ func kayittan_yukle(veri: Dictionary, oyuncu_ulkesi: String) -> void:
 	iflaslar = {}
 	for ulke_id: Variant in (veri.get("iflaslar", []) as Array):
 		iflaslar[str(ulke_id)] = true
+	piyasa.kayittan_yukle(veri.get("piyasa", {}))
 	gecmis = {}
 	var oyuncu_gecmisi: Array = veri.get("oyuncu_gecmisi", [])
 	if oyuncu_ulkesi != "" and not oyuncu_gecmisi.is_empty():

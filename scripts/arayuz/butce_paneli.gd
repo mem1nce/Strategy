@@ -16,6 +16,7 @@ var _borc: IstatistikSatiri = null
 var _borc_cubugu: ProgressBar = null
 var _durum_yeri: HBoxContainer = null
 var _grafik: HazineGrafigi = null
+var _kaynaklar: GridContainer = null
 
 
 func _ready() -> void:
@@ -48,6 +49,12 @@ func _ready() -> void:
 	ozet_ic.add_child(_borc)
 	_borc_cubugu = Bilesenler.ilerleme_cubugu(ArayuzTemasi.TEHLIKE, 12.0)
 	ozet_ic.add_child(_borc_cubugu)
+
+	_kaynaklar = GridContainer.new()
+	_kaynaklar.columns = 5
+	_kaynaklar.add_theme_constant_override("h_separation", ArayuzTemasi.BOSLUK_4)
+	_kaynaklar.add_theme_constant_override("v_separation", 4)
+	govde.add_child(_kaynaklar)
 
 	govde.add_child(Bilesenler.ikincil_yazi("Hazine, son 90 gün"))
 	_grafik = HazineGrafigi.new()
@@ -88,7 +95,59 @@ func goster(ozet: Dictionary) -> void:
 	elif borc > 0.0:
 		_durum_yeri.add_child(Bilesenler.rozet("Borçta: faiz işliyor", ArayuzTemasi.VURGU, ArayuzTemasi.VURGU_USTU))
 	_grafik.degerleri_ayarla(ozet.get("gecmis", PackedFloat32Array()))
+	_kaynaklari_doldur(ozet.get("kaynaklar", []))
 	show()
+
+
+## Petrol ve maden: üretim, tüketim, dünya fiyatı (eğilim okuyla) ve durum (ihraç / ithal / açık).
+## Her satır: [simge, ad, üretim, tüketim, fiyat, önceki fiyat, açık].
+func _kaynaklari_doldur(satirlar: Array) -> void:
+	for cocuk: Node in _kaynaklar.get_children():
+		cocuk.queue_free()
+	for baslik: String in ["Kaynak", "Üretim", "Tüketim", "Dünya fiyatı", "Durum"]:
+		_kaynaklar.add_child(Bilesenler.ikincil_yazi(baslik))
+	for satir: Array in satirlar:
+		var ad: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_1)
+		ad.add_child(Simgeler.dugum(satir[0], 30.0))
+		ad.add_child(_deger_yazisi(satir[1], ArayuzTemasi.YAZI))
+		_kaynaklar.add_child(ad)
+		var uretim: float = satir[2]
+		var talep: float = satir[3]
+		_kaynaklar.add_child(_deger_yazisi(Bicim.tutar(uretim), ArayuzTemasi.YAZI))
+		_kaynaklar.add_child(_deger_yazisi(Bicim.tutar(talep), ArayuzTemasi.YAZI))
+		var fiyat: float = satir[4]
+		var onceki: float = satir[5]
+		var ok: String = "→"
+		var ok_rengi: Color = ArayuzTemasi.IKINCIL_YAZI
+		if fiyat > onceki + 0.0005:
+			ok = "↑"
+			ok_rengi = ArayuzTemasi.TEHLIKE
+		elif fiyat < onceki - 0.0005:
+			ok = "↓"
+			ok_rengi = ArayuzTemasi.BASARI
+		_kaynaklar.add_child(_deger_yazisi("%s %s" % [("%.2f" % fiyat).replace(".", ","), ok], ok_rengi))
+		var acik: float = satir[6]
+		var durum: String = "Dengede"
+		var renk: Color = ArayuzTemasi.IKINCIL_YAZI
+		if acik > 0.005:
+			durum = "Açık: %s (alınamıyor)" % Bicim.tutar(acik)
+			renk = ArayuzTemasi.TEHLIKE
+		elif uretim - talep > 0.005:
+			durum = "İhraç: %s" % Bicim.tutar(uretim - talep)
+			renk = ArayuzTemasi.BASARI
+		elif talep - uretim > 0.005:
+			durum = "İthal: %s" % Bicim.tutar(talep - uretim)
+			renk = ArayuzTemasi.VURGU
+		_kaynaklar.add_child(_deger_yazisi(durum, renk))
+
+
+static func _deger_yazisi(metin: String, renk: Color) -> Label:
+	var yazi: Label = Label.new()
+	yazi.text = metin
+	yazi.add_theme_font_override("font", ArayuzTemasi.arayuz_fontu(600))
+	yazi.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
+	yazi.add_theme_color_override("font_color", renk)
+	return yazi
 
 
 func _listeyi_doldur(liste: VBoxContainer, satirlar: Array, renk: Color) -> void:

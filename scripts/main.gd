@@ -10,7 +10,7 @@ const ALT_BOSLUK: float = 340.0
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
 ## Bütçe kalemlerinin simgeleri (art/icons).
 const BUTCE_SIMGELERI: Dictionary[String, String] = {
-	"sanayi": "sanayi", "bakim": "ordu", "faiz": "para",
+	"sanayi": "sanayi", "ihracat": "gelir", "bakim": "ordu", "ithalat": "maden", "faiz": "para",
 }
 
 ## "--ekran-goruntusu <dosya>" komut satırı argümanı; harita yerleşsin diye biraz beklenir,
@@ -476,6 +476,8 @@ func _kaynaklari_guncelle() -> void:
 			tumen += 1
 	_arayuz.kaynaklari_goster(_oyun.hazineler.get(ulke_id, 0.0), _oyun.ekonomi.net(_oyun, ulke_id),
 			tumen, _oyun.dunya.ulkenin_bolge_sayisi(ulke_id))
+	var piyasa: Piyasa = _oyun.ekonomi.piyasa
+	_arayuz.kaynak_dengesini_goster(piyasa.denge(ulke_id, "petrol"), piyasa.denge(ulke_id, "maden"))
 	if _arayuz.butce_acik_mi():
 		_arayuz.butceyi_goster(_butce_ozeti())
 
@@ -497,7 +499,19 @@ func _butce_ozeti() -> Dictionary:
 		"hazine": _oyun.hazineler.get(ulke_id, 0.0), "borc": ekonomi.borc(_oyun, ulke_id),
 		"limit": ekonomi.borc_limiti(_oyun, ulke_id), "iflas": ekonomi.iflasta_mi(ulke_id),
 		"gecmis": ekonomi.gecmis.get(ulke_id, PackedFloat32Array()),
+		"kaynaklar": _kaynak_ozeti(ulke_id),
 	}
+
+
+## Bütçe panelindeki kaynak satırları: [simge, ad, üretim, tüketim, fiyat, önceki fiyat, açık].
+func _kaynak_ozeti(ulke_id: String) -> Array:
+	var piyasa: Piyasa = _oyun.ekonomi.piyasa
+	var satirlar: Array = []
+	for kaynak: String in Piyasa.KAYNAKLAR:
+		var k: Dictionary = (piyasa.durum.get(ulke_id, {}) as Dictionary).get(kaynak, {})
+		satirlar.append([kaynak, Piyasa.KAYNAK_ADLARI[kaynak], float(k.get("uretim", 0.0)), float(k.get("talep", 0.0)),
+				piyasa.fiyatlar.get(kaynak, 1.0), piyasa.onceki_fiyatlar.get(kaynak, 1.0), float(k.get("acik", 0.0))])
+	return satirlar
 
 
 ## Birlik kartında "Terhis et" onaylandı: kartta gösterilen tümenler dağıtılır.

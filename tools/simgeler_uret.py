@@ -60,6 +60,9 @@ SIMGELER = {
     "bilgi": ['<circle cx="12" cy="12" r="9"/>', '<path d="M12 11v6"/>', 'd:<circle cx="12" cy="7.5" r="1.2"/>'],
     "ses": ['<path d="M4 9h4l5-4v14l-5-4H4z"/>', '<path d="M17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/>'],
     "lisans": ['<path d="M6 3h9l4 4v14H6z"/>', '<path d="M15 3v4h4M9 12h7M9 16h7"/>'],
+    # --- Stratejik kaynaklar ---
+    "petrol": ['<path d="M12 3c3 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.8 6-11z"/>', '<path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>'],
+    "maden": ['<path d="M5 9c3-4 11-4 14 0"/>', '<path d="M12 6v15"/>', '<path d="M3 19l4-4 3 2 4-3 3 2 4-2"/>'],
 }
 
 

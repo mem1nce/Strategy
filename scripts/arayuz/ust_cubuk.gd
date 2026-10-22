@@ -29,6 +29,8 @@ var _hazine: HBoxContainer = null
 var _gelir: HBoxContainer = null
 var _tumen: HBoxContainer = null
 var _bolge: HBoxContainer = null
+var _petrol: HBoxContainer = null
+var _maden: HBoxContainer = null
 var _uretim: HBoxContainer = null
 var _secim_yazisi: PanelContainer = null
 var _tarih: Label = null
@@ -77,6 +79,20 @@ func kaynaklari_goster(hazine: float, net: float, tumen: int, bolge: int) -> voi
 	(_bolge.get_child(1) as Label).text = str(bolge)
 
 
+## Petrol ve maden dengesi (üretim − tüketim): artı yeşil, eksi kırmızı.
+func kaynak_dengesini_goster(petrol: float, maden: float) -> void:
+	for oge: Array in [[_petrol, petrol], [_maden, maden]]:
+		var yazi: Label = (oge[0] as HBoxContainer).get_child(1)
+		var deger: float = oge[1]
+		yazi.text = "%s%s" % ["+" if deger > 0.05 else "", Bicim.tutar(deger)]
+		var renk: Color = ArayuzTemasi.IKINCIL_YAZI
+		if deger > 0.05:
+			renk = ArayuzTemasi.BASARI
+		elif deger < -0.05:
+			renk = ArayuzTemasi.TEHLIKE
+		yazi.add_theme_color_override("font_color", renk)
+
+
 ## Oyuncunun inşa kuyruğunun önündeki işi gösterir. `is_` null ise (kuyruk boş) gösterge
 ## kalkar. `kuyrukta_baska`, öndeki dahil kuyruktaki toplam iş sayısıdır.
 func uretimi_goster(is_: InsaIsi, kuyrukta_baska: int) -> void:
@@ -122,6 +138,12 @@ func _ulke_kartini_kur() -> void:
 	_bolge = Bilesenler.simgeli_deger("alan")
 	for deger: HBoxContainer in [_hazine, _gelir, _tumen, _bolge]:
 		kaynaklar.add_child(deger)
+	var stratejik: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_3)
+	dikey.add_child(stratejik)
+	_petrol = Bilesenler.simgeli_deger("petrol")
+	_maden = Bilesenler.simgeli_deger("maden")
+	stratejik.add_child(_petrol)
+	stratejik.add_child(_maden)
 
 	_uretim = Bilesenler.simgeli_deger("uretim", ArayuzTemasi.IKINCIL_YAZI)
 	dikey.add_child(_uretim)

@@ -46,6 +46,27 @@
 		"iflas_cikis_orani": 0.8,
 		"gecmis_gun": 90
 	},
+	"piyasa": {
+		"taban_fiyat": {"petrol": 1.0, "maden": 1.0},
+		"sanayi_basina_petrol": 0.09,
+		"zirhli_basina_petrol": 0.05,
+		"insaat_basina_maden": {"tumen": 1.0, "fabrika": 3.0, "tahkimat": 2.0, "liman": 2.0},
+		"baslangic_arz_orani": 1.05,
+		"maden_beklenen_insaat_orani": 0.8,
+		"fiyat_esnekligi": 4.0,
+		"fiyat_yumusatma": 0.06,
+		"arz_uyum_hizi": 0.005,
+		"fiyat_alt_kati": 0.5,
+		"fiyat_ust_kati": 3.0,
+		"muharebe_uretim_carpani": 0.2,
+		"isgal_uretim_carpani": 0.4,
+		"petrol_acigi_sanayi_etkisi": 0.5,
+		"petrol_acigi_zirhli_etkisi": 0.5,
+		"maden_acigi_insaat_etkisi": 1.0,
+		"asgari_insaat_hizi": 0.25,
+		"yz_petrol_acigi_zirhli_esigi": 0.2,
+		"yz_petrol_acigi_zirhli_carpani": 0.3
+	},
 	"yapay_zeka": {
 		"fabrika_olasiligi": 0.2,
 		"saldiri_esigi": 1.3,
@@ -58,9 +79,10 @@
 		"karsi_tur_bonusu": 0.6,
 		"arastirma_olasiligi": 0.3,
 		"tahkimat_olasiligi": 0.08,
-		"uretim_net_payi": 0.1,
+		"uretim_net_payi": 0.3,
 		"terhis_borc_orani": 0.5,
-		"gunluk_azami_terhis": 2
+		"terhis_ongoru_gun": 60,
+		"gunluk_azami_terhis": 3
 	},
 	"birlik_turleri": {
 		"ustunluk_bonusu": 0.5,

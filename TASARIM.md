@@ -491,6 +491,33 @@ data/balance.json → "butce".
   büyük seçenek açar (her birinde fiyat, süre ve neye karşı güçlü olduğu) ve "Vazgeç". Sıralanamazsa (hazine yetmiyor ya
   da kuyruk dolu) nedeni bildirim kartında yazar; sıralanınca da kısa bir bildirim çıkar.
 
+## 9a. Kaynaklar ve dünya piyasası
+
+İki stratejik kaynak: **Petrol** ve **Maden** (`sim/piyasa.gd`; sayılar data/balance.json →
+"piyasa"; bölge üretimleri data/resources.json, `tools/kaynak_uret.py`).
+
+- **Üretim:** yaklaşık gerçek dünya paylarıyla en büyük 30 üretici (oyun için yuvarlanmış
+  tahmin; dosyada not edilir), diğerleri sıfır. Ülke içinde bilinen havzalara en yakın
+  bölgelere (Basra, Kerkük, Ahvaz, Tümen, Teksas, Alberta, Pilbara, Minas Gerais…), havzası
+  bilinmeyen kısım alanla orantılı dağıtılır. Bölge el değiştirince üretimi yeni sahibinin.
+  Muharebe süren bölge ×0,2, yeni işgal edilmiş bölge (60 gün) ×0,4 üretir.
+- **Tüketim:** petrol = ham sanayi × 0,09 + zırhlı sayısı × 0,05; maden = süren inşaat başına
+  günde 1 (tümen), 3 (fabrika), 2 (tahkimat, liman).
+- **Başlangıç:** dünya petrol üretimi başlangıç talebinin %105'ine ölçeklenir; maden talebi
+  oyun başında olmadığı için her ülkenin %80 olasılıkla bir tümen kurduğu varsayılır.
+- **Fiyat:** her gün, talep/arz oranının referans orana göre sapmasının 4. kuvveti kadar hedefe
+  %6 yaklaşır; taban fiyatın 0,5-3 katında kalır. Referans oran gerçek orana günde %0,5
+  yaklaşır (uzun vadede arz talebe uyar; savaş gibi şoklar fiyatı yine oynatır).
+- **Alım-satım:** fazla dünya fiyatından kendiliğinden satılır ("Kaynak ihracatı" geliri), açık
+  kendiliğinden alınır ("Kaynak ithalatı" gideri). Piyasaya erişimi olmayan ya da iflastaki
+  ülkenin açığı kalır: petrol açığı sanayi gelirini (açık oranı × 0,5) ve zırhlıların muharebe
+  gücünü (× 0,5), maden açığı inşaat hızını (açık oranı kadar, en az %25) düşürür.
+- **Piyasaya erişim:** kıyısı olan ya da barışta olduğu bir kara komşusunun kıyısı olan ülke.
+- **Arayüz:** üst karttaki ülke kartında petrol ve maden dengesi (artı yeşil, eksi kırmızı);
+  Bütçe panelinde üretim, tüketim, dünya fiyatı (eğilim okuyla) ve durum (ihraç / ithal / açık).
+- **Yapay zekâ:** alım-satım bütçesine işler (bütçe kuralları geçerli); petrol açığını
+  kapatamıyorsa zırhlıyı daha az kurar.
+
 ## 10. Yapay zekâ
 
 Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.

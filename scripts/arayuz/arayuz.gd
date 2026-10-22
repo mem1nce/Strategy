@@ -297,6 +297,11 @@ func kaynaklari_goster(hazine: float, net: float, tumen: int, bolge: int) -> voi
 	_ust_cubuk.kaynaklari_goster(hazine, net, tumen, bolge)
 
 
+## Üst çubuktaki petrol ve maden dengesi (bkz. UstCubuk.kaynak_dengesini_goster).
+func kaynak_dengesini_goster(petrol: float, maden: float) -> void:
+	_ust_cubuk.kaynak_dengesini_goster(petrol, maden)
+
+
 ## Bütçe panelini açar ya da (açıksa) yeniler; diğer orta panelleri kapatır (bkz. ButcePaneli.goster).
 func butceyi_goster(ozet: Dictionary) -> void:
 	if not _butce_paneli.visible:

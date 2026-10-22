@@ -11,3 +11,6 @@ var bolge_id: String = ""
 var birlik_turu: String = BirlikTurleri.VARSAYILAN
 ## Yalnızca kuyruğun önündeki iş ilerler (tek kuyruk); kalan saat 0 olunca iş tamamlanır.
 var kalan_saat: int = 0
+## Maden açığında iş saatte 1'den az ilerler (bkz. Piyasa.insaat_hizi); ilerlemenin küsuratı
+## burada birikir, 1'i geçince kalan saat bir azalır.
+var kesir: float = 0.0

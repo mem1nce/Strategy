@@ -47,7 +47,11 @@ func sina_kalemler_neti_verir_ve_hazineye_islenir() -> String:
 	var once: float = oyun.hazineler["TUR"]
 	oyun.gun_basladi(24)
 	var k: Dictionary = oyun.ekonomi.kalemler["TUR"]
-	var net: float = float(k["sanayi"]) - float(k["bakim"]) - float(k["faiz"])
+	var net: float = 0.0
+	for kalem: String in Ekonomi.GELIR_KALEMLERI:
+		net += float(k[kalem])
+	for kalem: String in Ekonomi.GIDER_KALEMLERI:
+		net -= float(k[kalem])
 	if not is_equal_approx(oyun.hazineler["TUR"] - once, net):
 		return "Hazine, kalemlerin netiyle değişmeli (%.2f != %.2f)." % [oyun.hazineler["TUR"] - once, net]
 	if oyun.ekonomi.gecmis["TUR"].size() != 1:

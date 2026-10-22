@@ -783,6 +783,16 @@ Adımlar:
    - Uzun koşu (tohum 1) bu adımdan sonra: teslim 28 (önce 10), süre 123 sn — barışta bakım
      ucuzladığı için ordular büyüdü. Denge, ticaret geliri de eklenince 7. adımda ayarlanacak.
    - Görev sistemi projede yok: "görev şablonları" maddesi uygulanmayacak.
+2. ✅ Kaynaklar ve dünya piyasası (`sim/piyasa.gd`, data/resources.json ←
+   `tools/kaynak_uret.py`, havza listeleri betikte). Petrol (sanayi × 0,09 + zırhlı × 0,05) ve
+   maden (süren inşaat) tüketimi, fazla satış / açık alım, erişim (kıyı ya da barıştaki kıyılı
+   komşu), fiyat (talep/arz oranına 4. kuvvetten tepki, %6/gün yumuşak, 0,5-3 kat; referans
+   oran %0,5/gün uyar). Açık etkileri: sanayi, zırhlı gücü, inşaat hızı (InsaIsi.kesir). Üst
+   kartta petrol/maden dengesi, Bütçe panelinde kaynak tablosu. Simgeler: petrol, maden.
+   `tests/sim/piyasa_testi.gd` (8 sınama; İran-Suudi savaşında 30 günde fiyat ≥ ×1,25).
+   - YZ: bütçe payı 0,3; 60 gün içinde limite gidecekse ya da iflastaysa terhis (en çok 3/gün).
+   - Uzun koşu tohum 1: teslim 18, iflas 10, petrol 0,97-1,67, maden 0,50-3,00, 75 sn.
+     Maden fiyatı oynak (inşaat talebi dalgalı); 7. adımda bakılacak.
 
 ## Kararlar
 

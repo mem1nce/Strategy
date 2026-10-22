@@ -16,6 +16,11 @@ const AZAMI_TESLIM: int = 30
 const AZAMI_PAY: float = 0.40
 const ASGARI_TUR_PAYI: float = 0.15
 const AZAMI_SURE_SN: float = 120.0
+## Ekonomi ve ticaret paketi hedefleri: 5 yılda iflas eden ülke sayısı ve fiyatların taban
+## fiyata göre sınırı (Piyasa zaten 0,5-3 kata sınırlar; burada doğrulanır).
+const AZAMI_IFLAS: int = 10
+const FIYAT_ALT_KATI: float = 0.5
+const FIYAT_UST_KATI: float = 3.0
 
 
 func _init() -> void:
@@ -48,12 +53,21 @@ func _init() -> void:
 	var en_buyuk_ulke: String = ""
 	var toplam_bolge: float = float(dunya.bolge_listesi.size())
 
+	var iflas_edenler: Dictionary[String, bool] = {}
+	var fiyat_alt: Dictionary[String, float] = {}
+	var fiyat_ust: Dictionary[String, float] = {}
 	var son_saat: int = YIL * 365 * 24
 	var olculen_surum: int = -1
 	for saat: int in range(1, son_saat + 1):
 		oyun.saat_ilerledi(saat)
 		if saat % 24 == 0:
 			oyun.gun_basladi(saat)
+			for ulke_id: String in oyun.ekonomi.iflaslar:
+				iflas_edenler[ulke_id] = true
+			for kaynak: String in Piyasa.KAYNAKLAR:
+				var fiyat: float = oyun.ekonomi.piyasa.fiyatlar[kaynak] / oyun.ekonomi.piyasa.taban_fiyat[kaynak]
+				fiyat_alt[kaynak] = minf(fiyat_alt.get(kaynak, fiyat), fiyat)
+				fiyat_ust[kaynak] = maxf(fiyat_ust.get(kaynak, fiyat), fiyat)
 			# Bölge payları yalnızca sahiplik değiştiyse yeniden sayılır.
 			if Bolge.sahiplik_surumu == olculen_surum:
 				continue
@@ -97,6 +111,16 @@ func _init() -> void:
 		if bolge.tahkimat > 0:
 			tahkimatli += 1
 	print("  Bilgi: araştırılan toplam seviye %d, tahkimatlı bölge %d" % [arastirilan, tahkimatli])
+	var iflas_tamam: bool = iflas_edenler.size() <= AZAMI_IFLAS
+	basarili = basarili and iflas_tamam
+	print("  %s İflas eden ülke: %d (hedef 0-%d) %s" % [_isaret(iflas_tamam), iflas_edenler.size(), AZAMI_IFLAS,
+			", ".join(iflas_edenler.keys())])
+	for kaynak: String in Piyasa.KAYNAKLAR:
+		var fiyat_tamam: bool = fiyat_alt[kaynak] >= FIYAT_ALT_KATI - 0.001 and fiyat_ust[kaynak] <= FIYAT_UST_KATI + 0.001
+		basarili = basarili and fiyat_tamam
+		print("  %s %s fiyatı: taban fiyatın %.2f-%.2f katı (son %.2f; hedef %.1f-%.1f)" % [_isaret(fiyat_tamam),
+				Piyasa.KAYNAK_ADLARI[kaynak], fiyat_alt[kaynak], fiyat_ust[kaynak],
+				oyun.ekonomi.piyasa.fiyatlar[kaynak] / oyun.ekonomi.piyasa.taban_fiyat[kaynak], FIYAT_ALT_KATI, FIYAT_UST_KATI])
 	var sure_tamam: bool = sure < AZAMI_SURE_SN
 	basarili = basarili and sure_tamam
 	print("  %s Süre: %.1f sn (hedef %d sn altı)" % [_isaret(sure_tamam), sure, roundi(AZAMI_SURE_SN)])

@@ -118,7 +118,9 @@ var _yz_tahkimat_olasiligi: float = 0.08
 var _yz_uretim_net_payi: float = 0.1
 ## Borç, limitin bu oranını geçince yapay zekâ tümen terhis eder (günde en çok bu kadar).
 var _yz_terhis_borc_orani: float = 0.5
-var _yz_gunluk_azami_terhis: int = 2
+var _yz_gunluk_azami_terhis: int = 3
+## Net açıksa ve bu kadar gün içinde borç limitine ulaşacaksa da terhis eder.
+var _yz_terhis_ongoru_gun: int = 60
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## Ülke id'si -> günde bir kez düşündüğü saat (bkz. _ulkenin_dusunme_saati).
 var _dusunme_saatleri: Dictionary[String, int] = {}
@@ -226,8 +228,10 @@ func _init(yeni_dunya: Dunya) -> void:
 	_yz_uretim_net_payi = float(yz_ayarlari.get("uretim_net_payi", _yz_uretim_net_payi))
 	_yz_terhis_borc_orani = float(yz_ayarlari.get("terhis_borc_orani", _yz_terhis_borc_orani))
 	_yz_gunluk_azami_terhis = int(yz_ayarlari.get("gunluk_azami_terhis", _yz_gunluk_azami_terhis))
+	_yz_terhis_ongoru_gun = int(yz_ayarlari.get("terhis_ongoru_gun", _yz_terhis_ongoru_gun))
 	_ulke_birlik_bolgelerini_hesapla()
 	ekonomi.baslangic_hazinelerini_kur(self)
+	ekonomi.piyasa.kur(self)
 
 
 ## Verilen bölgedeki tümenler.
@@ -497,6 +501,8 @@ func _verilen_hasar(verenler: Array[Birlik], alanlar: Array[Birlik], saldiriyor:
 		var carpan: float = BirlikTurleri.saldiri(birlik.tur) if saldiriyor else BirlikTurleri.savunma(birlik.tur)
 		carpan *= 1.0 + bonus * paylar.get(BirlikTurleri.yener(birlik.tur), 0.0)
 		carpan *= Teknoloji.saldiri_carpani(teknoloji_seviyesi(birlik.sahip, "silah"))
+		if birlik.tur == "zirhli":
+			carpan *= ekonomi.piyasa.zirhli_carpani(birlik.sahip)  # Petrol açığı zırhlıyı yavaşlatır.
 		if saldiriyor and birlik.son_adim_deniz_mi:
 			carpan *= minf(1.0, _deniz_cezasi + Teknoloji.deniz_cezasi_azalisi(teknoloji_seviyesi(birlik.sahip, "lojistik"))
 					+ UlkeBonuslari.deger(birlik.sahip, "deniz_saldirisi"))
@@ -863,6 +869,11 @@ func _insa_islerini_isle() -> void:
 		if kuyruk.is_empty() or ekonomi.iflasta_mi(ulke_id):
 			continue
 		var on: InsaIsi = kuyruk[0]
+		# Maden açığı inşaatı yavaşlatır: saatlik ilerleme 1'den az olabilir.
+		on.kesir += ekonomi.piyasa.insaat_hizi(ulke_id)
+		if on.kesir < 1.0:
+			continue
+		on.kesir -= 1.0
 		on.kalan_saat -= 1
 		if on.kalan_saat > 0:
 			continue
@@ -1121,30 +1132,51 @@ func _baristaki_ulke_dusun(ulke_id: String, _su_anki_saat: int) -> void:
 		_yz_bekleyen_tur[ulke_id] = tur
 
 
-## Borcu limitin `_yz_terhis_borc_orani`'nı (%50) geçmişse, iflastaysa ya da hazinesi eksi
-## ve neti açıktaysa günde en çok `_yz_gunluk_azami_terhis` tümen terhis eder: önce bakımı
-## yüksek olanlar, muharebedeki ya da düşmana komşu bölgedekiler değil.
+## Bütçesi tehlikedeyse tümen terhis eder: iflastaysa, borcu limitin `_yz_terhis_borc_orani`'nı
+## (%50) geçtiyse ya da neti açıkken bu gidişle `_yz_terhis_ongoru_gun` (60) gün içinde borç
+## limitine ulaşacaksa. Netini artıya çevirecek kadar, günde en çok `_yz_gunluk_azami_terhis`
+## tümen dağıtır: önce bakımı yüksek olanlar; cephedekiler ancak iflastayken. Başkentteki son
+## tümen kalır.
 func _yz_terhis_dusun(ulke_id: String) -> void:
+	var net: float = ekonomi.net(self, ulke_id)
 	var borc: float = ekonomi.borc(self, ulke_id)
-	if borc <= 0.0:
-		return
-	var tehlike: bool = ekonomi.iflasta_mi(ulke_id) or borc >= _yz_terhis_borc_orani * ekonomi.borc_limiti(self, ulke_id) 			or ekonomi.net(self, ulke_id) < 0.0
+	var limit: float = ekonomi.borc_limiti(self, ulke_id)
+	var iflasta: bool = ekonomi.iflasta_mi(ulke_id)
+	var gidisat: float = -float(hazineler.get(ulke_id, 0.0)) - net * _yz_terhis_ongoru_gun
+	var tehlike: bool = iflasta or (borc > 0.0 and borc >= _yz_terhis_borc_orani * limit) 			or (net < 0.0 and gidisat > limit)
 	if not tehlike:
 		return
+	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
 	var adaylar: Array[Birlik] = []
+	var baskenttekiler: Array[Birlik] = []
 	for birlik: Birlik in birlikler:
 		if birlik.sahip != ulke_id or birlik.hedef_bolge_id != "":
 			continue
-		var on_cephe: bool = false
+		var bolge: Bolge = dunya.bolgeler.get(birlik.bolge_id)
+		if bolge == null:
+			continue
+		if ulke != null and bolge.id == ulke.baskent_bolgesi:
+			baskenttekiler.append(birlik)
+			continue
+		var on_cephe: bool = bolge.sahip != ulke_id
 		for komsu: Bolge in dunya.bolgenin_komsulari(birlik.bolge_id):
 			if savasta_mi(ulke_id, komsu.sahip):
 				on_cephe = true
 				break
-		var bolge: Bolge = dunya.bolgeler.get(birlik.bolge_id)
-		if not on_cephe and bolge != null and bolge.sahip == ulke_id:
+		if not on_cephe or iflasta:
 			adaylar.append(birlik)
+	# Başkentte en az bir tümen kalır; fazlası da aday olur.
+	if baskenttekiler.size() > 1:
+		adaylar.append_array(baskenttekiler.slice(1))
 	adaylar.sort_custom(func(a: Birlik, b: Birlik) -> bool: return BirlikTurleri.bakim(a.tur) > BirlikTurleri.bakim(b.tur))
-	terhis_et(adaylar.slice(0, _yz_gunluk_azami_terhis))
+	var secilen: Array[Birlik] = []
+	var kazanc: float = 0.0
+	for birlik: Birlik in adaylar:
+		if secilen.size() >= _yz_gunluk_azami_terhis or (kazanc > -net and not iflasta and borc < _yz_terhis_borc_orani * limit):
+			break
+		secilen.append(birlik)
+		kazanc += ekonomi.bakim_carpani(self, birlik, not _ulkenin_savasta_mi(ulke_id)) * BirlikTurleri.bakim(birlik.tur)
+	terhis_et(secilen)
 
 
 ## Yapay zekânın kuracağı tümen türü: taban ağırlıklara (karışık ordu) göre rastgele seçilir;
@@ -1170,6 +1202,10 @@ func _yz_tur_sec(ulke_id: String) -> String:
 	var karsi: String = BirlikTurleri.yenildigi(en_cok) if en_cok != "" else ""
 	if agirliklar.has(karsi):
 		agirliklar[karsi] *= 1.0 + _yz_karsi_tur_bonusu
+	# Petrolü yetmeyen ülke (açığını alamıyor) zırhlıyı daha az kurar.
+	var piyasa: Piyasa = ekonomi.piyasa
+	if piyasa.acik_orani(ulke_id, "petrol") > piyasa.yz_petrol_acigi_zirhli_esigi:
+		agirliklar["zirhli"] = agirliklar.get("zirhli", 0.0) * piyasa.yz_petrol_acigi_zirhli_carpani
 
 	var toplam: float = 0.0
 	for tur: String in agirliklar:
