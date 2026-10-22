@@ -8,9 +8,12 @@ extends VBoxContainer
 
 ## Bir bildirim kartına dokunulduğunda, ilgili bölge id'siyle (yoksa boş) yayılır.
 signal bildirime_dokunuldu(bolge_id: String)
+## Ticaret teklifi kartında "Kabul" ya da "Reddet" basıldı.
+signal teklif_yanitlandi(ulke_id: String, kabul: bool)
 
 const KART_BOYUTU: Vector2 = Vector2(620.0, 104.0)
 const YAZI_BOYUTU: int = ArayuzTemasi.YAZI_KUCUK
+const TEKLIF_DUGMESI: Vector2 = Vector2(124.0, 96.0)
 ## Aynı anda en fazla bu kadar kart gösterilir; yenisi gelince en eskisi atılır
 ## (okunmamış bildirimler sonsuza kadar birikmesin diye).
 const AZAMI_KART: int = 4
@@ -75,6 +78,65 @@ func ekle(metin: String, bolge_id: String, ulke: Ulke = null, simge: String = "b
 	move_child(yuva, 0)
 	if not Ayarlar.animasyonlar_azaltilmis:
 		kart.position.x = KART_BOYUTU.x + KAYMA_PAYI
-		kart.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT) 				.tween_property(kart, "position:x", 0.0, KAYMA_SURESI)
-	if get_child_count() > AZAMI_KART:
-		get_child(get_child_count() - 1).queue_free()
+		kart.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT) \
+				.tween_property(kart, "position:x", 0.0, KAYMA_SURESI)
+	_sigdir()
+
+
+## Ticaret teklifi kartı: bayrak, metin ve sağda "Kabul" / "Reddet". Karta dokunmak bir şey
+## yapmaz; yanıt verilince kart kapanır ve `teklif_yanitlandi` yayılır.
+func teklif_ekle(metin: String, ulke: Ulke) -> void:
+	teklifi_kaldir(ulke.id)
+	var kart: PanelContainer = PanelContainer.new()
+	kart.custom_minimum_size = KART_BOYUTU
+	kart.set_meta("teklif", ulke.id)
+	var zemin: StyleBoxFlat = ArayuzTemasi.kutu(ArayuzTemasi.YUZEY, ArayuzTemasi.KOSE, 4)
+	zemin.content_margin_left = ArayuzTemasi.BOSLUK_2 + 6
+	zemin.border_color = ArayuzTemasi.BASARI
+	zemin.border_width_left = 6
+	zemin.shadow_color = ArayuzTemasi.GOLGE_RENGI
+	zemin.shadow_size = 8
+	zemin.shadow_offset = Vector2(0.0, 3.0)
+	kart.add_theme_stylebox_override("panel", zemin)
+	var icerik: HBoxContainer = Bilesenler.sira(ArayuzTemasi.BOSLUK_1)
+	kart.add_child(icerik)
+	var bayrak: Control = Bayraklar.dugum(ulke, 30.0)
+	bayrak.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icerik.add_child(bayrak)
+	var yazi: Label = Label.new()
+	yazi.text = metin
+	yazi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	yazi.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	yazi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	yazi.max_lines_visible = 2
+	yazi.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	yazi.add_theme_font_size_override("font_size", YAZI_BOYUTU)
+	icerik.add_child(yazi)
+	var ulke_id: String = ulke.id
+	for secenek: Array in [["Kabul", true], ["Reddet", false]]:
+		var dugme: Button = Bilesenler.ikincil_dugme(secenek[0], "", TEKLIF_DUGMESI)
+		dugme.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
+		var kabul: bool = secenek[1]
+		dugme.pressed.connect(func() -> void:
+			kart.queue_free()
+			teklif_yanitlandi.emit(ulke_id, kabul))
+		icerik.add_child(dugme)
+	add_child(kart)
+	move_child(kart, 0)
+	_sigdir()
+
+
+## Verilen ülkenin teklif kartını (varsa) kaldırır: teklif panelden yanıtlandı ya da düştü.
+func teklifi_kaldir(ulke_id: String) -> void:
+	for cocuk: Node in get_children():
+		if cocuk.get_meta("teklif", "") == ulke_id:
+			cocuk.queue_free()
+
+
+func _sigdir() -> void:
+	var kartlar: Array[Node] = []
+	for cocuk: Node in get_children():
+		if not cocuk.is_queued_for_deletion():
+			kartlar.append(cocuk)
+	if kartlar.size() > AZAMI_KART:
+		kartlar[kartlar.size() - 1].queue_free()

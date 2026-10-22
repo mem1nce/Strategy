@@ -814,8 +814,17 @@ Adımlar:
      ortak indirimi, ambargo, geçiş ücreti, kabul kuralları…). Toplam 183/183.
    - Uzun koşu (P-çekirdekte; tohum 1/2/3): süre 105/102/119 sn, iflas 6/9/3, ticaret payı
      %18,7/%19,3/%19,6, anlaşma 2,17/2,17/2,27, fiyatlar sınırda. Tohum 3 süresi sınıra yakın.
-   - Arayüz (Ticaret paneli, ülke paneli düğmeleri, liman düğmesi, teklif bildirimi) sonraki
-     işte.
+   - Arayüz: üst çubukta "Ticaret" düğmesi ve `arayuz/ticaret_paneli.gd` (Anlaşmalar /
+     Adaylar / Teklifler / Ambargolar sekmeleri, kapasite rozeti); ülke panelinde ticaret ve
+     ambargo düğmeleri; kıyı bölgesinde "Liman" düğmesi (bölge ve birlik panelinde); gelen
+     teklif Kabul / Reddet düğmeli bildirim kartı; oyuncunun anlaşması başlayınca/bitince
+     bildirim. Bütçe panelinde ticaret ve geçiş ücreti kalemleri. Yeni simgeler: ticaret, liman,
+     gecit, gemi, kamyon, ambargo. Üst çubuk 1920 genişliğe sığıyor ("Daha fazla" gerekmedi).
+   - YZ oyuncuya teklif yağdırıyordu (20 günde 33): artık aynı anda en çok 2 teklif bekler,
+     reddedilen ülke 90 gün beklemeli (`sina_oyuncuya_teklif_sinirli`). Toplam 184/184.
+   - Bütçe ve Ticaret panelleri bildirim sütununun ve ülke kartının altına binmesin diye
+     arada (sol 140, üst 200) ortalanıyor; bütçe grafiği 120 px'e indi.
+   - `SekmeGrubu.sec` öbür sekmeleri de bırakıyor (önce iki sekme birden seçili görünebiliyordu).
 
 ## Kararlar
 

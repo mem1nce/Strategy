@@ -27,6 +27,7 @@ var _guc: ProgressBar = null
 var _guc_yazisi: Label = null
 var _terhis_onayi: ConfirmationDialog = null
 var _gosterilen_sayi: int = 0
+var _liman_kur: Button = null
 
 
 func _ready() -> void:
@@ -67,23 +68,22 @@ func _ready() -> void:
 	_guc_yazisi.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
 	guc_sirasi.add_child(_guc_yazisi)
 
-	var ayir: Button = Bilesenler.ikincil_dugme("Yarısını
-ayır", "", Vector2(170.0, DUGME_BOYUTU.y))
+	var ayir: Button = Bilesenler.ikincil_dugme("Yarısını\nayır", "", Vector2(170.0, DUGME_BOYUTU.y))
 	ayir.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
 	ayir.pressed.connect(func() -> void: yarisini_ayir_basildi.emit())
 	yatay.add_child(ayir)
-	var terhis: Button = Bilesenler.ikincil_dugme("Terhis
-et", "", Vector2(150.0, DUGME_BOYUTU.y))
+	var terhis: Button = Bilesenler.ikincil_dugme("Terhis\net", "", Vector2(150.0, DUGME_BOYUTU.y))
 	terhis.theme_type_variation = ArayuzTemasi.TEHLIKE_DUGME
 	terhis.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
 	terhis.pressed.connect(func() -> void:
-		_terhis_onayi.dialog_text = "%d tümen terhis edilsin mi?
-Bakımları biter, harcanan para geri gelmez." % _gosterilen_sayi
+		_terhis_onayi.dialog_text = "%d tümen terhis edilsin mi?\nBakımları biter, harcanan para geri gelmez." % _gosterilen_sayi
 		_terhis_onayi.popup_centered())
 	yatay.add_child(terhis)
 	_terhis_onayi = ArayuzTemasi.onay_penceresi_olustur()
 	_terhis_onayi.confirmed.connect(func() -> void: terhis_onaylandi.emit())
 	add_child(_terhis_onayi)
+	_liman_kur = InsaDugmeleri.dugme_olustur("liman", DUGME_BOYUTU, insa_istendi)
+	yatay.add_child(_liman_kur)
 	yatay.add_child(InsaDugmeleri.dugme_olustur("fabrika", DUGME_BOYUTU, insa_istendi))
 	yatay.add_child(InsaDugmeleri.dugme_olustur("tahkimat", DUGME_BOYUTU, insa_istendi))
 	yatay.add_child(InsaDugmeleri.dugme_olustur("tumen", DUGME_BOYUTU, insa_istendi, true))
@@ -116,4 +116,5 @@ func goster(bolge: Bolge, birlikler: Array[Birlik], ulke: Ulke) -> void:
 	var oran: float = toplam / maxf(birlikler.size() * 100.0, 1.0)
 	_guc.value = clampf(oran, 0.0, 1.0)
 	_guc_yazisi.text = "%d" % roundi(toplam)
+	_liman_kur.visible = InsaDugmeleri.liman_kurulabilir
 	show()

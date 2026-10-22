@@ -347,7 +347,9 @@ func yariya_ayir(stok: Array[Birlik]) -> Array[Birlik]:
 ## Bu işlev her oyun saatinde bütün tümenleri gezer; varışlar, bölge dizini ve çekişmeli
 ## bölgeler tek geçişte bulunur (bkz. _dizini_kur).
 func saat_ilerledi(su_anki_saat: int) -> void:
-	var tara: bool = _tarama_gerekli or birlikler.size() != _son_tarama_tumen_sayisi 			or (_en_yakin_varis >= 0 and su_anki_saat >= _en_yakin_varis) 			or su_anki_saat - _son_tarama_saati >= 24 or su_anki_saat < _son_tarama_saati
+	var tara: bool = _tarama_gerekli or birlikler.size() != _son_tarama_tumen_sayisi \
+			or (_en_yakin_varis >= 0 and su_anki_saat >= _en_yakin_varis) \
+			or su_anki_saat - _son_tarama_saati >= 24 or su_anki_saat < _son_tarama_saati
 	if tara:
 		var varanlar: Array[Birlik] = []
 		var dolu_bolgeler: Array[Bolge] = _dizini_kur(su_anki_saat, varanlar)
@@ -405,7 +407,8 @@ func _dizini_kur(su_anki_saat: int, varanlar: Variant = null) -> Array[Bolge]:
 	var dolu_bolgeler: Array[Bolge] = []
 	for birlik: Birlik in birlikler:
 		# Önce tamsayı karşılaştırılır (yürümeyen tümende varis_saati -1'dir).
-		if varislari_uygula and birlik.varis_saati >= 0 and su_anki_saat >= birlik.varis_saati 				and birlik.hedef_bolge_id != "":
+		if varislari_uygula and birlik.varis_saati >= 0 and su_anki_saat >= birlik.varis_saati \
+				and birlik.hedef_bolge_id != "":
 			birlik.bolge_id = birlik.hedef_bolge_id
 			birlik.hedef_bolge_id = ""
 			birlik.varis_saati = -1

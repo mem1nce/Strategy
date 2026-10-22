@@ -2,7 +2,7 @@ class_name UstCubuk
 extends HBoxContainer
 ## Üst çubuk (STIL.md): solda oyuncunun ülke kartı (bayrak, ad, simgeli kaynaklar, süren
 ## inşa), ortada "Ülkeni seç" (seçim yapılana kadar), sağda tarih ve hız denetimi tek bir hapta,
-## onun yanında "Ordu YZ", "Sıralama" ve "Teknoloji" araç düğmeleri.
+## onun yanında "Ordu YZ", "Sıralama", "Teknoloji" ve "Ticaret" araç düğmeleri.
 ## Zaman yöneticisini (Zaman) okur ve düğmelerle ona emir verir.
 
 ## "Ordu YZ" açılıp kapandığında yayılır.
@@ -11,6 +11,8 @@ signal yz_yonetimi_degisti(acik: bool)
 signal siralama_degisti(acik: bool)
 ## "Teknoloji" düğmesi açılıp kapandığında yayılır.
 signal teknoloji_degisti(acik: bool)
+## "Ticaret" düğmesi açılıp kapandığında yayılır.
+signal ticaret_degisti(acik: bool)
 ## Ülke kartına (hazine ve kaynaklar) dokunulunca yayılır: Bütçe paneli açılır.
 signal butce_istendi
 
@@ -40,6 +42,7 @@ var _araclar: HBoxContainer = null
 var _yz_yonetimi: Button = null
 var _siralama: Button = null
 var _teknoloji: Button = null
+var _ticaret: Button = null
 
 
 func _ready() -> void:
@@ -105,6 +108,8 @@ func uretimi_goster(is_: InsaIsi, kuyrukta_baska: int) -> void:
 			tur_adi = BirlikTurleri.ad(is_.birlik_turu)
 		InsaIsi.Tur.TAHKIMAT:
 			tur_adi = "Tahkimat"
+		InsaIsi.Tur.LIMAN:
+			tur_adi = "Liman"
 	var metin: String = "%s · %d sa" % [tur_adi, is_.kalan_saat]
 	if kuyrukta_baska > 1:
 		metin += "  +%d sırada" % (kuyrukta_baska - 1)
@@ -224,6 +229,9 @@ func _araclari_kur() -> void:
 	_teknoloji = Bilesenler.arac_dugmesi("Teknoloji", "teknoloji", ARAC_DUGMESI_BOYUTU)
 	_teknoloji.pressed.connect(func() -> void: teknoloji_degisti.emit(_teknoloji.button_pressed))
 	_araclar.add_child(_teknoloji)
+	_ticaret = Bilesenler.arac_dugmesi("Ticaret", "ticaret", ARAC_DUGMESI_BOYUTU)
+	_ticaret.pressed.connect(func() -> void: ticaret_degisti.emit(_ticaret.button_pressed))
+	_araclar.add_child(_ticaret)
 	# Ülke seçilene kadar bu düğmelerin işlevi yok; gizli kalırlar.
 	_araclar.hide()
 
@@ -260,6 +268,11 @@ func teknoloji_dugmesini_kapat() -> void:
 	_teknoloji.set_pressed_no_signal(false)
 
 
+## "Ticaret" düğmesini, sinyal yaymadan kapatır.
+func ticaret_dugmesini_kapat() -> void:
+	_ticaret.set_pressed_no_signal(false)
+
+
 ## "Sıralama" düğmesini, sinyal yaymadan kapatır.
 func siralama_dugmesini_kapat() -> void:
 	_siralama.set_pressed_no_signal(false)
@@ -283,3 +296,4 @@ func _yenile() -> void:
 	_yz_yonetimi.disabled = Zaman.kilitli
 	_siralama.disabled = Zaman.kilitli
 	_teknoloji.disabled = Zaman.kilitli
+	_ticaret.disabled = Zaman.kilitli

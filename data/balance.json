@@ -82,6 +82,8 @@
 		"liman_taban_maliyeti": 150,
 		"liman_suresi_saat": 480,
 		"teklif_suresi_gun": 30,
+		"yz_oyuncuya_azami_teklif": 2,
+		"yz_ret_bekleme_gun": 90,
 		"yz_anlasma_olasiligi": 0.05,
 		"yz_aday_sayisi": 40,
 		"yz_degisim_esigi": 1.2,

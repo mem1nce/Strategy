@@ -1,6 +1,7 @@
 class_name InsaDugmeleri
 extends RefCounted
-## Bölge ve birlik panellerindeki "Tümen kur" / "Fabrika kur" / "Tahkimat kur" düğmelerini kurar.
+## Bölge ve birlik panellerindeki "Tümen kur" / "Fabrika kur" / "Tahkimat kur" / "Liman kur"
+## düğmelerini kurar.
 ##
 ## Düğmeler panel açılırken (maliyetler henüz bilinmeden) kurulur; main.gd oyun kurulunca
 ## fabrika maliyetini, bölge seçildikçe de o bölgenin tahkimat durumunu bildirir. Tümen
@@ -14,13 +15,19 @@ static var _tahkimat_seviyesi: int = 0
 static var _tahkimat_maliyeti: float = -1.0
 ## Tahkimatın en yüksek seviyesi (panellerde "Tahkimat: 1/3" yazmak için).
 static var tahkimat_azami: int = 0
+## Seçili bölge kıyıdaysa true: "Liman" düğmesi yalnızca o zaman görünür.
+static var liman_kurulabilir: bool = false
+## Seçili bölgenin liman seviyesi ve bir sonraki seviyenin maliyeti (en yüksekteyse 0).
+static var _liman_seviyesi: int = 0
+static var _liman_maliyeti: float = -1.0
 
 
 ## Düğmelerin simgeleri (art/icons).
-const SIMGELER: Dictionary[String, String] = {"tumen": "ordu", "fabrika": "fabrika", "tahkimat": "tahkimat"}
+const SIMGELER: Dictionary[String, String] = {"tumen": "ordu", "fabrika": "fabrika", "tahkimat": "tahkimat",
+	"liman": "liman"}
 
 
-## `tur` "tumen", "fabrika" ya da "tahkimat"tır. Düğmeye basılınca `sinyal` bu türle yayılır.
+## `tur` "tumen", "fabrika", "tahkimat" ya da "liman"dır. Düğmeye basılınca `sinyal` bu türle yayılır.
 ## `birincil` ise düğme panelin tek ana eylemi olarak vurgu renginde çizilir.
 static func dugme_olustur(tur: String, boyut: Vector2, sinyal: Signal, birincil: bool = false) -> Button:
 	var dugme: Button = Bilesenler.birincil_dugme("", SIMGELER[tur], boyut) if birincil \
@@ -50,6 +57,15 @@ static func tahkimat_durumunu_ayarla(seviye: int, maliyet: float) -> void:
 	_hepsini_yenile()
 
 
+## Seçili bölgenin limanını yazar: kıyıda değilse düğme gizlenir; `maliyet` 0 ise liman
+## (kuyruktakilerle birlikte) en yüksek seviyededir ve düğme kapanır.
+static func liman_durumunu_ayarla(kiyi: bool, seviye: int, maliyet: float) -> void:
+	liman_kurulabilir = kiyi
+	_liman_seviyesi = seviye
+	_liman_maliyeti = maliyet
+	_hepsini_yenile()
+
+
 static func _hepsini_yenile() -> void:
 	for dugme: Button in _dugmeler:
 		if is_instance_valid(dugme):
@@ -71,3 +87,12 @@ static func _yaziyi_yenile(dugme: Button) -> void:
 				dugme.text = "Tahkimat kur"
 			else:
 				dugme.text = ust + "\nKur (%d)" % roundi(_tahkimat_maliyeti)
+		"liman":
+			dugme.disabled = _liman_maliyeti == 0.0
+			var ust: String = "Liman %d/3" % _liman_seviyesi if _liman_seviyesi > 0 else "Liman kur"
+			if _liman_maliyeti == 0.0:
+				dugme.text = ust + "\nTam"
+			elif _liman_maliyeti < 0.0:
+				dugme.text = ust
+			else:
+				dugme.text = ust + ("\nGeliştir (%d)" if _liman_seviyesi > 0 else "\n(%d)") % roundi(_liman_maliyeti)

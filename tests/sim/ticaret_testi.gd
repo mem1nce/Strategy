@@ -214,6 +214,32 @@ func sina_yapay_zeka_teklifleri() -> String:
 	return ""
 
 
+## Yapay zekâ oyuncuya teklif yağdırmaz: en çok yz_oyuncuya_azami_teklif teklif bekler, aynı ülke
+## ikinci kez teklif etmez, reddedilen ülke yz_ret_bekleme_gun boyunca yeniden teklif etmez.
+func sina_oyuncuya_teklif_sinirli() -> String:
+	var oyun: Oyun = _oyun()
+	var t: Ticaret = oyun.ticaret
+	oyun.oyuncuyu_sec("TUR")
+	for a: Dictionary in t.ulkenin_anlasmalari("TUR"):
+		t._cikar(a)
+	if not t._oyuncuya_teklif_edilebilir("GRC", 0):
+		return "Bekleyen teklif yokken teklif edilebilmeli."
+	t.teklif_et(oyun, "GRC", "TUR", 0)
+	if t._oyuncuya_teklif_edilebilir("GRC", 0):
+		return "Aynı ülke ikinci kez teklif etmemeli."
+	for i: int in t.yz_oyuncuya_azami_teklif - 1:
+		t.teklif_et(oyun, ["BGR", "GEO", "ARM", "IRN"][i], "TUR", 0)
+	if t._oyuncuya_teklif_edilebilir("SYR", 0):
+		return "Bekleyen teklif sınırdayken yeni teklif gelmemeli."
+	t.teklifi_yanitla(oyun, "GRC", false)
+	if t._oyuncuya_teklif_edilebilir("GRC", 24):
+		return "Reddeden ülke hemen yeniden teklif etmemeli."
+	var bitis: int = (t.teklif_suresi_gun + t.yz_ret_bekleme_gun) * 24 + 1
+	if not t._oyuncuya_teklif_edilebilir("GRC", bitis):
+		return "Bekleme bitince yeniden teklif edebilmeli."
+	return ""
+
+
 func sina_liman_gelisir_kapasite_artar() -> String:
 	var oyun: Oyun = _oyun()
 	var t: Ticaret = oyun.ticaret

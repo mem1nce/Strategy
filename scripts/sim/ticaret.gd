@@ -33,6 +33,10 @@ var yz_degisim_esigi: float = 1.2
 ## Yapay zekâ ortak ararken en büyük bu kadar ekonomiye ve kendi kara komşularına bakar.
 var yz_aday_sayisi: int = 40
 var yz_liman_olasiligi: float = 0.03
+## Oyuncuya aynı anda en çok bu kadar teklif bekler; oyuncunun reddettiği (ya da yanıtsız bıraktığı)
+## ülke bu kadar gün yeniden teklif etmez.
+var yz_oyuncuya_azami_teklif: int = 2
+var yz_ret_bekleme_gun: int = 90
 
 var ag: RotaAgi = null
 ## Geçitler: {"id", "ad", "havzalar", "kontrol": Array[String] (bölgeler), "merkez": Vector2}.
@@ -55,6 +59,8 @@ var anlasmalar: Array[Dictionary] = []
 var ambargolar: Dictionary[String, bool] = {}
 ## Oyuncuya gelen ticaret teklifleri: {"kimden", "kime", "bitis_saati"}.
 var teklifler: Array[Dictionary] = []
+## Oyuncunun reddettiği ülke -> yeniden teklif edebileceği saat.
+var reddedilenler: Dictionary[String, int] = {}
 ## Olayla kapanan geçitler: geçit id'si -> açılacağı saat.
 var kapali_gecitler: Dictionary[String, int] = {}
 ## Ülke -> {"ticaret": anlaşmalardan net gelir, "gecis": aldığı geçiş ücretleri} (son gün).
@@ -95,6 +101,8 @@ func _init() -> void:
 	yz_degisim_esigi = float(ayar.get("yz_degisim_esigi", yz_degisim_esigi))
 	yz_aday_sayisi = int(ayar.get("yz_aday_sayisi", yz_aday_sayisi))
 	yz_liman_olasiligi = float(ayar.get("yz_liman_olasiligi", yz_liman_olasiligi))
+	yz_oyuncuya_azami_teklif = int(ayar.get("yz_oyuncuya_azami_teklif", yz_oyuncuya_azami_teklif))
+	yz_ret_bekleme_gun = int(ayar.get("yz_ret_bekleme_gun", yz_ret_bekleme_gun))
 
 
 ## Deniz ağını ve geçitleri kurar, başlangıç limanlarını bölgelere yazar ve başlangıç
@@ -443,6 +451,7 @@ func teklifi_yanitla(oyun: Oyun, kimden: String, kabul: bool) -> bool:
 		return false
 	teklifler.erase(bulunan)
 	if not kabul:
+		reddedilenler[kimden] = int(bulunan["bitis_saati"]) + yz_ret_bekleme_gun * 24
 		return false
 	var oyuncu: String = oyun.oyuncu_ulkesi
 	if ambargoda_mi(oyun, kimden, oyuncu):
@@ -611,6 +620,7 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int, sanayiler: Dictionary, carpan: flo
 	for t: Dictionary in teklifler.duplicate():
 		if int(t["bitis_saati"]) <= su_anki_saat:
 			teklifler.erase(t)
+			reddedilenler[str(t["kimden"])] = su_anki_saat + yz_ret_bekleme_gun * 24
 	gunluk = sonuc
 	return sonuc
 
@@ -722,6 +732,9 @@ func _yz_ara(oyun: Oyun, ulke_id: String, su_anki_saat: int, liman_zari: float) 
 			continue
 		if diger == ulke_id or ortaklari.has(diger):
 			continue
+		if diger == oyun.oyuncu_ulkesi and not oyun.yz_oyuncuyu_yonetsin \
+				and not _oyuncuya_teklif_edilebilir(ulke_id, su_anki_saat):
+			continue
 		# Dolu bir ülke, en zayıf anlaşmasından değerli olmayan bir teklifi kabul etmez.
 		var onun_zayifi: float = 0.0
 		if not bos:
@@ -753,6 +766,19 @@ func _yz_ara(oyun: Oyun, ulke_id: String, su_anki_saat: int, liman_zari: float) 
 		teklif_et(oyun, ulke_id, en_iyi, su_anki_saat)
 	else:
 		_liman_dusun(oyun, ulke_id, liman_zari)
+
+
+## Oyuncuya yeni teklif: bekleyen teklif sayısı sınırın altındaysa, bu ülkenin bekleyen teklifi
+## yoksa ve oyuncu onu yakın zamanda reddetmediyse.
+func _oyuncuya_teklif_edilebilir(ulke_id: String, su_anki_saat: int) -> bool:
+	if int(reddedilenler.get(ulke_id, -1)) > su_anki_saat:
+		return false
+	var sayi: int = 0
+	for t: Dictionary in teklifler:
+		if t["kimden"] == ulke_id:
+			return false
+		sayi += 1
+	return sayi < yz_oyuncuya_azami_teklif
 
 
 ## Kapasitesi dolu ülke ara sıra limanını geliştirir (kapasite ve anlaşma değeri artar).
@@ -802,7 +828,7 @@ func kayit_verisi(oyun: Oyun) -> Dictionary:
 		if bolge.liman > 0:
 			limanlar[bolge.id] = bolge.liman
 	return {"anlasmalar": anlasma_verisi, "ambargolar": ambargolar.keys(), "teklifler": teklifler,
-		"kapali_gecitler": kapali_gecitler, "limanlar": limanlar}
+		"reddedilenler": reddedilenler, "kapali_gecitler": kapali_gecitler, "limanlar": limanlar}
 
 
 ## Kayıttaki anlaşmaları, ambargoları, teklifleri ve limanları uygular. Eski kayıtta ticaret yoksa
@@ -830,6 +856,10 @@ func kayittan_yukle(oyun: Oyun, veri: Dictionary) -> void:
 	for t: Dictionary in (veri.get("teklifler", []) as Array):
 		teklifler.append({"kimden": str(t.get("kimden", "")), "kime": str(t.get("kime", "")),
 			"bitis_saati": int(t.get("bitis_saati", 0))})
+	reddedilenler = {}
+	var retler: Dictionary = veri.get("reddedilenler", {})
+	for ulke_id: String in retler:
+		reddedilenler[ulke_id] = int(retler[ulke_id])
 	kapali_gecitler = {}
 	var kapali: Dictionary = veri.get("kapali_gecitler", {})
 	for gecit_id: String in kapali:

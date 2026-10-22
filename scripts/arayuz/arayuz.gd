@@ -39,6 +39,15 @@ signal harita_modu_degisti(mod: HaritaPaleti.Mod)
 signal butce_istendi
 ## Birlik kartındaki "Terhis et" onaylandı.
 signal terhis_istendi
+## Üst çubuktaki "Ticaret" açıldı: main.gd ticaret özetini hazırlayıp ticareti_goster() çağırır.
+signal ticaret_istendi
+## Oyuncu bir ülkeye ticaret anlaşması teklif etmek (`teklif` true) ya da onunla anlaşmasını
+## bitirmek (false) istedi.
+signal ticaret_anlasmasi_istendi(ulke_id: String, teklif: bool)
+## Oyuncu gelen bir ticaret teklifini yanıtladı.
+signal ticaret_teklifi_yanitlandi(ulke_id: String, kabul: bool)
+## Oyuncu bir ülkeye ambargo uygulamak (`uygula` true) ya da kaldırmak (false) istedi.
+signal ambargo_istendi(ulke_id: String, uygula: bool)
 
 ## Kaybetme başlığının rengi (üzüntü/tehlike).
 const KAYBETME_RENGI: Color = Color("#e05b5b")
@@ -53,6 +62,10 @@ const SIRALAMA_ALT_BOSLUGU: float = 250.0
 ## Teknoloji paneli büyüktür: sol üstteki hazine yazısının altından ekranın altına kadar olan
 ## alanda ortalanır. Açıkken alt panel kapalıdır (bkz. main.gd, _teknolojiyi_ac).
 const TEKNOLOJI_UST_BOSLUGU: float = 250.0
+## Bütçe ve Ticaret panelleri sol kenardaki harita modu düğmelerine ve sağdaki bildirimlere binmez.
+const ORTA_PANEL_SOL_BOSLUGU: float = 140.0
+## Üst çubuktaki ülke kartının (iki satır kaynakla) altından başlarlar.
+const ORTA_PANEL_UST_BOSLUGU: float = 200.0
 
 var _dunya: Dunya = null
 var _kenar: MarginContainer = null
@@ -65,6 +78,7 @@ var _bildirim_kutusu: BildirimKutusu = null
 var _tumen_secim_paneli: TumenSecimPaneli = null
 var _teknoloji_paneli: TeknolojiPaneli = null
 var _butce_paneli: ButcePaneli = null
+var _ticaret_paneli: TicaretPaneli = null
 var _serit: SeritPaneli = null
 var _mod_secici: HaritaModuSecici = null
 ## Android geri tuşuyla oyundan ana menüye dönmeden önce sorulan onay.
@@ -100,6 +114,11 @@ func kur(dunya: Dunya) -> void:
 		else:
 			butce_istendi.emit())
 	_ust_cubuk.teknoloji_degisti.connect(_teknoloji_degisti)
+	_ust_cubuk.ticaret_degisti.connect(func(acik: bool) -> void:
+		if acik:
+			ticaret_istendi.emit()
+		else:
+			Gecis.kapat(_ticaret_paneli))
 
 	# Üst çubukla alt panel arasındaki boşluk; sol kenarında harita modu düğmeleri durur
 	# (oyuncu ülkesini seçince belirir).
@@ -122,6 +141,9 @@ func kur(dunya: Dunya) -> void:
 	_bolge_paneli.savas_istendi.connect(func(ulke_id: String) -> void: savas_istendi.emit(ulke_id))
 	_bolge_paneli.baris_istendi.connect(func(ulke_id: String) -> void: baris_istendi.emit(ulke_id))
 	_bolge_paneli.insa_istendi.connect(_insa_basildi)
+	_bolge_paneli.ticaret_istendi.connect(func(ulke_id: String, teklif: bool) -> void:
+		ticaret_anlasmasi_istendi.emit(ulke_id, teklif))
+	_bolge_paneli.ambargo_istendi.connect(func(ulke_id: String, uygula: bool) -> void: ambargo_istendi.emit(ulke_id, uygula))
 
 	_birlik_paneli = BirlikPaneli.new()
 	dikey.add_child(_birlik_paneli)
@@ -160,13 +182,32 @@ func kur(dunya: Dunya) -> void:
 	var butce_ortalayici: CenterContainer = CenterContainer.new()
 	butce_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	butce_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	butce_ortalayici.offset_top = SIRALAMA_UST_BOSLUGU
+	butce_ortalayici.offset_top = ORTA_PANEL_UST_BOSLUGU
 	butce_ortalayici.offset_bottom = -KENAR_BOSLUGU
+	butce_ortalayici.offset_left = ORTA_PANEL_SOL_BOSLUGU
+	butce_ortalayici.offset_right = -(BildirimKutusu.KART_BOYUTU.x + 2 * KENAR_BOSLUGU)
 	kok.add_child(butce_ortalayici)
 	_butce_paneli = ButcePaneli.new()
 	butce_ortalayici.add_child(_butce_paneli)
 	_butce_paneli.kapat_basildi.connect(func() -> void: Gecis.kapat(_butce_paneli))
 	_teknoloji_paneli.arastirma_istendi.connect(func(dal: String) -> void: arastirma_istendi.emit(dal))
+
+	var ticaret_ortalayici: CenterContainer = CenterContainer.new()
+	ticaret_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ticaret_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ticaret_ortalayici.offset_top = ORTA_PANEL_UST_BOSLUGU
+	ticaret_ortalayici.offset_bottom = -KENAR_BOSLUGU
+	ticaret_ortalayici.offset_left = ORTA_PANEL_SOL_BOSLUGU
+	ticaret_ortalayici.offset_right = -(BildirimKutusu.KART_BOYUTU.x + 2 * KENAR_BOSLUGU)
+	kok.add_child(ticaret_ortalayici)
+	_ticaret_paneli = TicaretPaneli.new()
+	ticaret_ortalayici.add_child(_ticaret_paneli)
+	_ticaret_paneli.kapat_basildi.connect(_ticaret_panelini_kapat)
+	_ticaret_paneli.teklif_istendi.connect(func(ulke_id: String) -> void: ticaret_anlasmasi_istendi.emit(ulke_id, true))
+	_ticaret_paneli.bitir_istendi.connect(func(ulke_id: String) -> void: ticaret_anlasmasi_istendi.emit(ulke_id, false))
+	_ticaret_paneli.teklif_yanitlandi.connect(func(ulke_id: String, kabul: bool) -> void:
+		ticaret_teklifi_yanitlandi.emit(ulke_id, kabul))
+	_ticaret_paneli.ambargo_kaldir_istendi.connect(func(ulke_id: String) -> void: ambargo_istendi.emit(ulke_id, false))
 
 	var tumen_ortalayici: CenterContainer = CenterContainer.new()
 	tumen_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -190,6 +231,8 @@ func kur(dunya: Dunya) -> void:
 	_bildirim_kutusu = BildirimKutusu.new()
 	bildirim_konumu.add_child(_bildirim_kutusu)
 	_bildirim_kutusu.bildirime_dokunuldu.connect(func(bolge_id: String) -> void: bildirime_dokunuldu.emit(bolge_id))
+	_bildirim_kutusu.teklif_yanitlandi.connect(func(ulke_id: String, kabul: bool) -> void:
+		ticaret_teklifi_yanitlandi.emit(ulke_id, kabul))
 
 	_serit = SeritPaneli.new()
 	kok.add_child(_serit)
@@ -215,6 +258,9 @@ func acik_paneli_kapat() -> bool:
 		return true
 	if _butce_paneli.visible:
 		Gecis.kapat(_butce_paneli)
+		return true
+	if _ticaret_paneli.visible:
+		_ticaret_panelini_kapat()
 		return true
 	if _teknoloji_paneli.visible:
 		_teknoloji_panelini_kapat()
@@ -306,6 +352,7 @@ func kaynak_dengesini_goster(petrol: float, maden: float) -> void:
 func butceyi_goster(ozet: Dictionary) -> void:
 	if not _butce_paneli.visible:
 		_teknoloji_panelini_kapat()
+		_ticaret_panelini_kapat()
 		Gecis.kapat(_siralama_paneli)
 		_ust_cubuk.siralama_dugmesini_kapat()
 	_butce_paneli.goster(ozet)
@@ -313,6 +360,42 @@ func butceyi_goster(ozet: Dictionary) -> void:
 
 func butce_acik_mi() -> bool:
 	return _butce_paneli.visible
+
+
+## Ticaret panelini açar ya da (açıksa) yeniler; diğer orta panelleri kapatır (bkz. TicaretPaneli.goster).
+func ticareti_goster(ozet: Dictionary) -> void:
+	if not _ticaret_paneli.visible:
+		_teknoloji_panelini_kapat()
+		Gecis.kapat(_butce_paneli)
+		Gecis.kapat(_siralama_paneli)
+		_ust_cubuk.siralama_dugmesini_kapat()
+	_ticaret_paneli.goster(ozet, _dunya)
+
+
+func ticaret_acik_mi() -> bool:
+	return _ticaret_paneli.visible
+
+
+func _ticaret_panelini_kapat() -> void:
+	Gecis.kapat(_ticaret_paneli)
+	_ust_cubuk.ticaret_dugmesini_kapat()
+
+
+## Bölge panelindeki ticaret ve ambargo düğmelerini ayarlar (bkz. BolgePaneli.ticaret_durumunu_ayarla).
+func bolge_ticaretini_ayarla(gorunur: bool, anlasma_var: bool, ambargo_var: bool, savasta: bool) -> void:
+	_bolge_paneli.ticaret_durumunu_ayarla(gorunur, anlasma_var, ambargo_var, savasta)
+
+
+## Gelen ticaret teklifini Kabul / Reddet düğmeli bir bildirim kartı olarak gösterir.
+func ticaret_teklifi_goster(metin: String, ulke_id: String) -> void:
+	var ulke: Ulke = _dunya.ulkeler.get(ulke_id)
+	if ulke != null:
+		_bildirim_kutusu.teklif_ekle(metin, ulke)
+
+
+## Yanıtlanan ya da düşen teklifin kartını kaldırır.
+func ticaret_teklifini_kaldir(ulke_id: String) -> void:
+	_bildirim_kutusu.teklifi_kaldir(ulke_id)
 
 
 ## Oyuncunun inşa kuyruğunun önündeki işi üst çubukta gösterir (bkz. UstCubuk.uretimi_goster).
@@ -393,6 +476,8 @@ func _insa_basildi(tur: String) -> void:
 func _siralama_degisti(acik: bool) -> void:
 	if acik:
 		_teknoloji_panelini_kapat()
+		_ticaret_panelini_kapat()
+		Gecis.kapat(_butce_paneli)
 		siralama_istendi.emit()
 	else:
 		Gecis.kapat(_siralama_paneli)
@@ -402,6 +487,8 @@ func _teknoloji_degisti(acik: bool) -> void:
 	if acik:
 		Gecis.kapat(_siralama_paneli)
 		_ust_cubuk.siralama_dugmesini_kapat()
+		_ticaret_panelini_kapat()
+		Gecis.kapat(_butce_paneli)
 		teknoloji_istendi.emit()
 	else:
 		Gecis.kapat(_teknoloji_paneli)

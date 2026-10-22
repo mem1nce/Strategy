@@ -142,4 +142,20 @@ func _calistir() -> void:
 		zaman.bir_saat_ilerle()
 	arayuz.butceyi_goster(_ana.call("_butce_ozeti"))
 	await _cek("19_butce")
+	arayuz.call("acik_paneli_kapat")
+
+	# Ticaret paneli (bir teklif bekliyorken) ve teklif bildirimi.
+	oyun.ticaret.teklif_et(oyun, "JPN", "TUR", zaman.toplam_saat)
+	arayuz.call("_ticaret_panelini_kapat")
+	arayuz.ticareti_goster(_ana.call("_ticaret_ozeti"))
+	await _cek("20_ticaret_teklifler")
+	var sekmeler: SekmeGrubu = arayuz.get("_ticaret_paneli").get("_sekmeler")
+	(sekmeler.get_child(0).get_child(0) as Button).button_pressed = true
+	await _cek("21_ticaret_anlasmalar")
+	arayuz.call("acik_paneli_kapat")
+	# Yabancı ülke paneli (ticaret ve ambargo düğmeleri) ve kıyı bölgesinde liman düğmesi.
+	_ana.call("_bolgeyi_sec", "ITA_1")
+	await _cek("22_ulke_ticaret")
+	_ana.call("_bolgeyi_sec", "TUR_2")
+	await _cek("23_liman")
 	quit(0)

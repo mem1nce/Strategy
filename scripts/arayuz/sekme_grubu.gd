@@ -35,5 +35,7 @@ func ekle(metin: String, simge: String = "", boyut: Vector2 = Vector2(104.0, 96.
 
 ## Seçili sekmeyi sinyal yaymadan değiştirir.
 func sec(sira: int) -> void:
-	if sira >= 0 and sira < _sira.get_child_count():
-		(_sira.get_child(sira) as Button).set_pressed_no_signal(true)
+	if sira < 0 or sira >= _sira.get_child_count():
+		return
+	for i: int in _sira.get_child_count():
+		(_sira.get_child(i) as Button).set_pressed_no_signal(i == sira)

@@ -7,7 +7,7 @@ extends PanelContainer
 signal kapat_basildi
 
 const GENISLIK: float = 1080.0
-const GRAFIK_BOYUTU: Vector2 = Vector2(0.0, 200.0)
+const GRAFIK_BOYUTU: Vector2 = Vector2(0.0, 120.0)
 
 var _gelirler: VBoxContainer = null
 var _giderler: VBoxContainer = null

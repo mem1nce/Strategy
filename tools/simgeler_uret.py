@@ -63,6 +63,14 @@ SIMGELER = {
     # --- Stratejik kaynaklar ---
     "petrol": ['<path d="M12 3c3 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.8 6-11z"/>', '<path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>'],
     "maden": ['<path d="M5 9c3-4 11-4 14 0"/>', '<path d="M12 6v15"/>', '<path d="M3 19l4-4 3 2 4-3 3 2 4-2"/>'],
+    # --- Ticaret ---
+    "ticaret": ['<path d="M4 8h15M15 4l4 4-4 4"/>', '<path d="M20 16H5M9 12l-4 4 4 4"/>'],
+    "liman": ['<circle cx="12" cy="5" r="2"/>', '<path d="M12 7v14M8 11h8"/>', '<path d="M5 14a7 7 0 0 0 14 0"/>'],
+    "gecit": ['<path d="M4 3c3 4 3 14 0 18"/>', '<path d="M20 3c-3 4-3 14 0 18"/>', '<path d="M12 18V6M9 9l3-3 3 3"/>'],
+    "gemi": ['<path d="M3 14h18l-3 6H6z"/>', '<path d="M6 14V9h12v5"/>', '<path d="M12 9V4"/>'],
+    "kamyon": ['<path d="M2 6h12v10H2z"/>', '<path d="M14 10h4l3 3v3h-7"/>', '<circle cx="6" cy="18" r="2"/>',
+               '<circle cx="17" cy="18" r="2"/>'],
+    "ambargo": ['<circle cx="12" cy="12" r="8"/>', '<path d="M6.5 6.5l11 11"/>'],
 }
 
 

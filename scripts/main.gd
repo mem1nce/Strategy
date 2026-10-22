@@ -10,8 +10,13 @@ const ALT_BOSLUK: float = 340.0
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
 ## Bütçe kalemlerinin simgeleri (art/icons).
 const BUTCE_SIMGELERI: Dictionary[String, String] = {
-	"sanayi": "sanayi", "ihracat": "gelir", "bakim": "ordu", "ithalat": "maden", "faiz": "para",
+	"sanayi": "sanayi", "ticaret": "ticaret", "ihracat": "gelir", "gecis": "gecit", "bakim": "ordu",
+	"ithalat": "maden", "faiz": "para",
 }
+## Ticaret panelinde gösterilen en iyi aday ortak sayısı.
+const ADAY_SAYISI: int = 6
+## Dünyanın çevresi (km); rota uzunluğu harita biriminden yaklaşık km'ye çevrilirken kullanılır.
+const DUNYA_CEVRESI_KM: float = 40075.0
 
 ## "--ekran-goruntusu <dosya>" komut satırı argümanı; harita yerleşsin diye biraz beklenir,
 ## sonra ekran PNG olarak kaydedilip oyun kapanır. Çağırmak için (proje klasöründen):
@@ -32,6 +37,8 @@ var _bekleyen_kayit: Dictionary = {}
 var _secili_birlikler: Array[Birlik] = []
 ## Alt panelde gösterilen bölgenin id'si; "Tümen kur" / "Fabrika kur" bu bölgeye sıralanır.
 var _secili_bolge_id: String = ""
+## Oyuncunun ticaret ortakları; değişince (ör. yapay zekâ anlaşmayı bitirince) bildirim çıkar.
+var _oyuncu_ortaklari: Array[String] = []
 
 
 func _ready() -> void:
@@ -86,6 +93,8 @@ func _ready() -> void:
 		if _oyun.oyuncu_ulkesi in [a, b]:
 			_ses.cal("savas_ilani"))
 	_oyun.ulke_teslim_oldu.connect(_ulke_teslim_oldu)
+	_oyun.ticaret_degisti.connect(_ticaret_degisti)
+	_oyun.ticaret_teklifi_geldi.connect(_ticaret_teklifi_geldi)
 
 	_kamera = HaritaKamerasi.new()
 	_kamera.name = "Kamera"
@@ -106,6 +115,12 @@ func _ready() -> void:
 		if _oyun.oyuncu_secildi_mi():
 			_arayuz.butceyi_goster(_butce_ozeti()))
 	_arayuz.insa_istendi.connect(_insa_istendi)
+	_arayuz.ticaret_istendi.connect(func() -> void:
+		if _oyun.oyuncu_secildi_mi():
+			_arayuz.ticareti_goster(_ticaret_ozeti()))
+	_arayuz.ticaret_anlasmasi_istendi.connect(_ticaret_anlasmasi_istendi)
+	_arayuz.ticaret_teklifi_yanitlandi.connect(_ticaret_teklifi_yanitlandi)
+	_arayuz.ambargo_istendi.connect(_ambargo_istendi)
 	_arayuz.tumen_istendi.connect(_tumen_istendi)
 	InsaDugmeleri.maliyetleri_ayarla(_oyun.fabrika_maliyeti(), _oyun.tahkimat_azami_seviye())
 	_arayuz.teknoloji_istendi.connect(_teknolojiyi_ac)
@@ -315,6 +330,10 @@ func _bolgeyi_sec(bolge_id: String) -> void:
 	_arayuz.bolgeyi_goster(bolge, not _oyun.oyuncu_secildi_mi(), savas_dugmesi_gorunur, savasta, kendi_bolgen, ozet)
 	if bolge != null:
 		_arayuz.bolge_birliklerini_yaz(_birlik_bilgisi(bolge), _oyun.oyuncu_bolgeyi_goruyor_mu(bolge.id))
+	if yabanci_bolge:
+		var ticaret: Ticaret = _oyun.ticaret
+		_arayuz.bolge_ticaretini_ayarla(true, not ticaret.anlasma(_oyun.oyuncu_ulkesi, bolge.sahip).is_empty(),
+				ticaret.ambargo_uyguluyor_mu(_oyun.oyuncu_ulkesi, bolge.sahip), savasta)
 
 
 ## Ülke seçim kartı için ülkenin nüfusu, günlük sanayisi ve tümen sayısı ile bunların dünyadaki
@@ -365,7 +384,12 @@ func _insa_istendi(tur: String) -> void:
 	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
 		return
 	var ulke_id: String = _oyun.oyuncu_ulkesi
-	if tur == "tahkimat":
+	if tur == "liman":
+		var liman: int = _oyun.sonraki_liman_seviyesi(ulke_id, _secili_bolge_id)
+		_siralama_sonucunu_bildir(_oyun.liman_sirala(ulke_id, _secili_bolge_id), "Liman",
+				_oyun.ticaret.liman_maliyeti(liman))
+		_tahkimat_dugmesini_guncelle()
+	elif tur == "tahkimat":
 		var seviye: int = _oyun.sonraki_tahkimat_seviyesi(ulke_id, _secili_bolge_id)
 		_siralama_sonucunu_bildir(_oyun.tahkimat_sirala(ulke_id, _secili_bolge_id), "Tahkimat",
 				_oyun.tahkimat_maliyeti(seviye))
@@ -399,8 +423,11 @@ func _tahkimat_dugmesini_guncelle() -> void:
 	if _secili_bolge_id == "" or not _oyun.oyuncu_secildi_mi():
 		return
 	var seviye: int = _oyun.sonraki_tahkimat_seviyesi(_oyun.oyuncu_ulkesi, _secili_bolge_id)
-	InsaDugmeleri.tahkimat_durumunu_ayarla(_oyun.dunya.bolgeler[_secili_bolge_id].tahkimat,
-			_oyun.tahkimat_maliyeti(seviye) if seviye > 0 else 0.0)
+	var bolge: Bolge = _oyun.dunya.bolgeler[_secili_bolge_id]
+	InsaDugmeleri.tahkimat_durumunu_ayarla(bolge.tahkimat, _oyun.tahkimat_maliyeti(seviye) if seviye > 0 else 0.0)
+	var liman: int = _oyun.sonraki_liman_seviyesi(_oyun.oyuncu_ulkesi, _secili_bolge_id)
+	InsaDugmeleri.liman_durumunu_ayarla(_oyun.ticaret.kiyi_bolgeleri.has(_secili_bolge_id), bolge.liman,
+			_oyun.ticaret.liman_maliyeti(liman) if liman > 0 else 0.0)
 
 
 ## Bir bölgenin tahkimatı yükseldi: harita işaretini ve (o bölge gösteriliyorsa) paneli yeniler.
@@ -514,6 +541,142 @@ func _kaynak_ozeti(ulke_id: String) -> Array:
 	return satirlar
 
 
+## Ticaret panelinin verisi (bkz. TicaretPaneli.goster): oyuncunun anlaşmaları, kapasitesi,
+## kabul etmesi olası en iyi aday ortaklar, gelen teklifler ve ambargolar.
+func _ticaret_ozeti() -> Dictionary:
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	var ticaret: Ticaret = _oyun.ticaret
+	var sanayiler: Dictionary = ticaret.gunluk_sanayiler(_oyun)
+	var km_carpani: float = DUNYA_CEVRESI_KM / maxf(_oyun.dunya.boyut.x, 1.0)
+	var anlasmalar: Array = []
+	for a: Dictionary in ticaret.ulkenin_anlasmalari(ulke_id):
+		var ortak: String = a["b"] if a["a"] == ulke_id else a["a"]
+		var rota: Dictionary = a["rota"]
+		var gecitler: Array[String] = []
+		for gecit_id: String in (rota.get("gecitler", []) as Array):
+			gecitler.append(str((ticaret.gecit_sozlugu.get(gecit_id, {}) as Dictionary).get("ad", gecit_id)))
+		anlasmalar.append({"ulke": ortak, "deger": float(a["deger"]),
+			"km": float(rota.get("uzunluk", 0.0)) * km_carpani, "gecitler": gecitler})
+	anlasmalar.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x["deger"] > y["deger"])
+
+	var adaylar: Array = []
+	for diger: Ulke in _oyun.dunya.ulke_listesi:
+		if diger.id == ulke_id or _oyun.dunya.ulkenin_bolge_sayisi(diger.id) == 0 \
+				or not ticaret.anlasma(ulke_id, diger.id).is_empty() or ticaret.ambargoda_mi(_oyun, ulke_id, diger.id):
+			continue
+		var deger: float = ticaret.deger_tahmini(_oyun, ulke_id, diger.id, sanayiler)
+		if deger <= 0.0:
+			continue
+		# Kapasitesi dolu ülke ancak en zayıf anlaşmasından değerli teklifi kabul eder.
+		if ticaret.anlasma_sayisi(diger.id) >= ticaret.kapasite(_oyun, diger.id):
+			var zayif: Dictionary = ticaret.en_zayif_anlasma(diger.id)
+			if zayif.is_empty() or deger <= float(zayif["deger"]):
+				continue
+		adaylar.append({"ulke": diger.id, "deger": deger})
+	adaylar.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x["deger"] > y["deger"])
+
+	var teklifler: Array = []
+	for t: Dictionary in ticaret.teklifler:
+		if t["kime"] == ulke_id:
+			teklifler.append({"ulke": t["kimden"], "deger": ticaret.deger_tahmini(_oyun, ulke_id, t["kimden"], sanayiler),
+				"kalan_gun": maxi(1, ceili((int(t["bitis_saati"]) - Zaman.toplam_saat) / 24.0))})
+	var ambargolar: Array = []
+	for anahtar: String in ticaret.ambargolar:
+		var taraflar: PackedStringArray = anahtar.split(">")
+		if taraflar.size() != 2:
+			continue
+		if taraflar[0] == ulke_id:
+			ambargolar.append({"ulke": taraflar[1], "uygulayan_sen": true})
+		elif taraflar[1] == ulke_id:
+			ambargolar.append({"ulke": taraflar[0], "uygulayan_sen": false})
+	return {"kapasite": ticaret.kapasite(_oyun, ulke_id), "sayi": ticaret.anlasma_sayisi(ulke_id),
+		"anlasmalar": anlasmalar, "adaylar": adaylar.slice(0, ADAY_SAYISI), "teklifler": teklifler,
+		"ambargolar": ambargolar}
+
+
+## Ticaret durumu değişti: açık paneli ve seçili bölgenin düğmelerini yeniler; oyuncunun
+## ortakları değiştiyse bildirir.
+func _ticaret_degisti() -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke_id: String = _oyun.oyuncu_ulkesi
+	var ortaklar: Array[String] = []
+	for a: Dictionary in _oyun.ticaret.ulkenin_anlasmalari(ulke_id):
+		ortaklar.append(a["b"] if a["a"] == ulke_id else a["a"])
+	for ortak: String in ortaklar:
+		if not _oyuncu_ortaklari.has(ortak) and _oyun.dunya.ulkeler.has(ortak):
+			_arayuz.bildirim_goster("%s ile ticaret anlaşması yapıldı." % _oyun.dunya.ulkeler[ortak].ad,
+					_oyun.dunya.ulkeler[ortak].baskent_bolgesi)
+	for eski: String in _oyuncu_ortaklari:
+		if not ortaklar.has(eski) and _oyun.dunya.ulkeler.has(eski):
+			_arayuz.bildirim_goster("%s ile ticaret anlaşması bitti." % _oyun.dunya.ulkeler[eski].ad,
+					_oyun.dunya.ulkeler[eski].baskent_bolgesi)
+	_oyuncu_ortaklari = ortaklar
+	if _arayuz.ticaret_acik_mi():
+		_arayuz.ticareti_goster(_ticaret_ozeti())
+	if _secili_bolge_id != "" and _secili_birlikler.is_empty():
+		var bolge: Bolge = _oyun.dunya.bolgeler[_secili_bolge_id]
+		if bolge.sahip != ulke_id:
+			_arayuz.bolge_ticaretini_ayarla(true, not _oyun.ticaret.anlasma(ulke_id, bolge.sahip).is_empty(),
+					_oyun.ticaret.ambargo_uyguluyor_mu(ulke_id, bolge.sahip), _oyun.savasta_mi(ulke_id, bolge.sahip))
+	_kaynaklari_guncelle()
+
+
+## Yapay zekâ oyuncuya ticaret anlaşması önerdi: Kabul / Reddet düğmeli bildirim kartı.
+func _ticaret_teklifi_geldi(kimden: String) -> void:
+	var ulke: Ulke = _oyun.dunya.ulkeler.get(kimden)
+	if ulke == null:
+		return
+	var deger: float = _oyun.ticaret.deger_tahmini(_oyun, _oyun.oyuncu_ulkesi, kimden, _oyun.ticaret.gunluk_sanayiler(_oyun))
+	_arayuz.ticaret_teklifi_goster("%s ticaret anlaşması öneriyor (+%s/gün)." % [ulke.ad, Bicim.tutar(deger)], kimden)
+	_ses.cal("onay")
+	if _arayuz.ticaret_acik_mi():
+		_arayuz.ticareti_goster(_ticaret_ozeti())
+
+
+## Oyuncu gelen teklifi yanıtladı (bildirim kartından ya da Ticaret panelinden).
+func _ticaret_teklifi_yanitlandi(kimden: String, kabul: bool) -> void:
+	_arayuz.ticaret_teklifini_kaldir(kimden)
+	var yapildi: bool = _oyun.ticaret.teklifi_yanitla(_oyun, kimden, kabul)
+	if kabul and not yapildi:
+		_ses.cal("hata")
+		_arayuz.bildirim_goster("Anlaşma yapılamadı (ticaret yolu yok ya da teklif düştü).", "")
+	elif kabul:
+		_ses.cal("onay")
+	_ticaret_degisti()
+
+
+## Ülke paneli ya da Ticaret panelinden: anlaşma teklif et ya da anlaşmayı bitir.
+func _ticaret_anlasmasi_istendi(ulke_id: String, teklif: bool) -> void:
+	if not _oyun.oyuncu_secildi_mi():
+		return
+	var ulke: Ulke = _oyun.dunya.ulkeler.get(ulke_id)
+	if ulke == null:
+		return
+	if not teklif:
+		_oyun.ticaret.anlasmayi_bitir(_oyun, _oyun.oyuncu_ulkesi, ulke_id)
+		_ses.cal("onay")
+		return
+	var sonuc: String = _oyun.ticaret.teklif_et(_oyun, _oyun.oyuncu_ulkesi, ulke_id, Zaman.toplam_saat)
+	if sonuc == "kabul":
+		_ses.cal("onay")
+	else:
+		_ses.cal("hata")
+		_arayuz.bildirim_goster("%s ticaret teklifini reddetti." % ulke.ad, ulke.baskent_bolgesi)
+
+
+## Ülke paneli ya da Ticaret panelinden: ambargo uygula ya da kaldır.
+func _ambargo_istendi(ulke_id: String, uygula: bool) -> void:
+	if not _oyun.oyuncu_secildi_mi() or not _oyun.dunya.ulkeler.has(ulke_id):
+		return
+	var ad: String = _oyun.dunya.ulkeler[ulke_id].ad
+	if uygula and _oyun.ticaret.ambargo_uygula(_oyun, _oyun.oyuncu_ulkesi, ulke_id):
+		_arayuz.bildirim_goster("%s'a ambargo uygulandı: anlaşmalar bitti, geçitlerin ona kapalı." % ad, "")
+	elif not uygula and _oyun.ticaret.ambargo_kaldir(_oyun, _oyun.oyuncu_ulkesi, ulke_id):
+		_arayuz.bildirim_goster("%s'a uygulanan ambargo kaldırıldı." % ad, "")
+	_ses.cal("onay")
+
+
 ## Birlik kartında "Terhis et" onaylandı: kartta gösterilen tümenler dağıtılır.
 func _terhis_istendi() -> void:
 	if _secili_birlikler.is_empty():
@@ -582,6 +745,12 @@ func _oyuncu_secildi(ulke_id: String) -> void:
 	_bolgeyi_sec("")
 	_harita.oyuncuyu_ayarla(ulke_id)
 	_arayuz.oyuncuyu_goster(ulke)
+	_oyuncu_ortaklari = []
+	for a: Dictionary in _oyun.ticaret.ulkenin_anlasmalari(ulke_id):
+		_oyuncu_ortaklari.append(a["b"] if a["a"] == ulke_id else a["a"])
+	for t: Dictionary in _oyun.ticaret.teklifler:
+		if t["kime"] == ulke_id:
+			_ticaret_teklifi_geldi(t["kimden"])
 	_kaynaklari_guncelle()
 	_uretimi_guncelle()
 	_harita.isgalleri_yenile(Zaman.toplam_saat)

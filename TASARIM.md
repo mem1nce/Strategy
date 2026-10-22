@@ -541,10 +541,20 @@ data/trade.json (← `tools/ticaret_uret.py`, Natural Earth `ne_10m_ports`).
   Savaş kendiliğinden ambargo sayılır. Yapay zekâ kendisine ambargo uygulayana karşılık verir,
   o kaldırınca kaldırır.
 - **Teklif:** oyuncunun teklifine yapay zekâ hemen yanıt verir. Yapay zekâ oyuncuya teklif
-  edince bildirim kartı (Kabul / Reddet) gelir; 30 gün yanıtsız kalan teklif düşer.
+  edince bildirim kartı (Kabul / Reddet) gelir; 30 gün yanıtsız kalan teklif düşer. Oyuncuya
+  aynı anda en çok 2 teklif bekler; reddedilen (ya da yanıtsız kalan) ülke 90 gün yeniden
+  teklif etmez.
 - **Yapay zekâ:** her düşünmede %5 olasılıkla en değerli (ve kabul etmesi olası) adaya teklif
   eder; kapasitesi doluysa yalnızca en zayıfından %20 değerliyse. Doluysa ara sıra limanını
   geliştirir.
+- **Arayüz:** üst çubukta "Ticaret" düğmesi Ticaret panelini açar: başlıkta kapasite (ör.
+  2/5), dört sekme — Anlaşmalar (ortağın bayrağı, günlük değer, rota uzunluğu ≈ km, geçtiği
+  geçitler, "Bitir"), Adaylar (kabul etmesi olası en iyi 6 ülke, tahmini değer, "Teklif et"),
+  Teklifler (Kabul / Reddet, kalan gün) ve Ambargolar (kaldırılabilir). Yabancı ülkenin
+  panelinde "Ticaret teklif et" / "Anlaşmayı bitir" ve "Ambargo uygula / kaldır"; kendi kıyı
+  bölgende "Liman kur / geliştir". Üst çubuktaki düğmeler 1920 genişliğe sığdığı için "Daha
+  fazla" menüsü gerekmedi. Bütçe ve Ticaret panelleri soldaki mod düğmeleri ile sağdaki
+  bildirimler arasında durur.
 
 ## 9c. Ticaret yolları ve geçitler
 

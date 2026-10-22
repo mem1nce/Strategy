@@ -21,6 +21,10 @@ signal baris_istendi(ulke_id: String)
 ## "Tümen kur" ("tumen"), "Fabrika kur" ("fabrika") ya da "Tahkimat kur" ("tahkimat")
 ## düğmesine basıldığında yayılır.
 signal insa_istendi(tur: String)
+## "Ticaret teklif et" (`teklif` true) ya da "Anlaşmayı bitir" (false) basıldı.
+signal ticaret_istendi(ulke_id: String, teklif: bool)
+## "Ambargo uygula" (`uygula` true) ya da "Ambargo kaldır" (false) basıldı.
+signal ambargo_istendi(ulke_id: String, uygula: bool)
 
 const DUGME_BOYUTU: Vector2 = Vector2(210.0, 112.0)
 const ANA_DUGME_BOYUTU: Vector2 = Vector2(340.0, 112.0)
@@ -60,7 +64,12 @@ var _savas_onayi: ConfirmationDialog = null
 var _tumen_kur: Button = null
 var _fabrika_kur: Button = null
 var _tahkimat_kur: Button = null
+var _liman_kur: Button = null
 var _baris: Button = null
+var _ticaret: Button = null
+var _ambargo: Button = null
+var _anlasma_var: bool = false
+var _ambargo_var: bool = false
 
 
 func _ready() -> void:
@@ -92,6 +101,17 @@ func _ready() -> void:
 	_baris.pressed.connect(func() -> void: baris_istendi.emit(_ulke_id))
 	yatay.add_child(_baris)
 
+	_ticaret = Bilesenler.ikincil_dugme("", "ticaret", DUGME_BOYUTU)
+	_ticaret.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
+	_ticaret.pressed.connect(func() -> void: ticaret_istendi.emit(_ulke_id, not _anlasma_var))
+	yatay.add_child(_ticaret)
+	_ambargo = Bilesenler.ikincil_dugme("", "ambargo", DUGME_BOYUTU)
+	_ambargo.add_theme_font_size_override("font_size", ArayuzTemasi.YAZI_KUCUK)
+	_ambargo.pressed.connect(func() -> void: ambargo_istendi.emit(_ulke_id, not _ambargo_var))
+	yatay.add_child(_ambargo)
+
+	_liman_kur = InsaDugmeleri.dugme_olustur("liman", DUGME_BOYUTU, insa_istendi)
+	yatay.add_child(_liman_kur)
 	_fabrika_kur = InsaDugmeleri.dugme_olustur("fabrika", DUGME_BOYUTU, insa_istendi)
 	yatay.add_child(_fabrika_kur)
 	_tahkimat_kur = InsaDugmeleri.dugme_olustur("tahkimat", DUGME_BOYUTU, insa_istendi)
@@ -222,7 +242,23 @@ func goster(bolge: Bolge, dunya: Dunya, oyna_dugmesi_gorunur: bool,
 	_tumen_kur.visible = insa_dugmeleri_gorunur
 	_fabrika_kur.visible = insa_dugmeleri_gorunur
 	_tahkimat_kur.visible = insa_dugmeleri_gorunur
+	_liman_kur.visible = insa_dugmeleri_gorunur and InsaDugmeleri.liman_kurulabilir
+	_ticaret.visible = false
+	_ambargo.visible = false
 	show()
+
+
+## Yabancı bir ülkenin bölgesi gösterilirken ticaret düğmelerini ayarlar (goster'den sonra
+## çağrılır): `anlasma_var` ise "Anlaşmayı bitir", değilse "Ticaret teklif et" (savaştaysa
+## gizli); ambargo uygulanıyorsa "Ambargo kaldır", değilse "Ambargo uygula".
+func ticaret_durumunu_ayarla(gorunur: bool, anlasma_var: bool, ambargo_var: bool, savasta: bool) -> void:
+	_anlasma_var = anlasma_var
+	_ambargo_var = ambargo_var
+	_ticaret.text = "Anlaşmayı\nbitir" if anlasma_var else "Ticaret\nteklif et"
+	_ticaret.theme_type_variation = ArayuzTemasi.TEHLIKE_DUGME if anlasma_var else &""
+	_ticaret.visible = gorunur and not savasta and not ambargo_var
+	_ambargo.text = "Ambargo\nkaldır" if ambargo_var else "Ambargo\nuygula"
+	_ambargo.visible = gorunur and not savasta
 
 
 func _bolgeyi_doldur(ulke: Ulke, bolge: Bolge, kendi: bool, yabanci_oyunda: bool, savasta: bool) -> void:
