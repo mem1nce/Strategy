@@ -18,6 +18,7 @@ const KAYNAK_ADLARI: Dictionary[String, String] = {"petrol": "Petrol", "maden": 
 ## İnşa işi türü -> maden tüketimindeki adı.
 const IS_ADLARI: Dictionary[int, String] = {
 	InsaIsi.Tur.TUMEN: "tumen", InsaIsi.Tur.FABRIKA: "fabrika", InsaIsi.Tur.TAHKIMAT: "tahkimat",
+	InsaIsi.Tur.LIMAN: "liman",
 }
 
 var taban_fiyat: Dictionary[String, float] = {"petrol": 1.0, "maden": 1.0}
@@ -136,26 +137,48 @@ func bolgenin_uretimi(oyun: Oyun, bolge: Bolge, kaynak: String, su_anki_saat: in
 	return miktar
 
 
-## Ülkelerin piyasaya erişimi: kıyısı olan ya da barışta olduğu kara komşusunun kıyısı olan
-## ülke. Ülke id'si -> true.
+## Kıyılı ülkeler ve ülkelerin kara komşuları; yalnızca bölge sahiplikleri değişince yeniden
+## hesaplanır (bkz. Bolge.sahiplik_surumu).
+var _kiyili: Dictionary[String, bool] = {}
+var _komsular: Dictionary[String, Dictionary] = {}
+var _komsu_surumu: int = -1
+## Kara komşusu bölge çiftleri (her çift bir kez, düz dizi: a0, b0, a1, b1, …) ve kıyı bölgeleri;
+## komşuluk değişmediği için bir kez kurulur.
+var _sinir_ciftleri: Array[Bolge] = []
+var _kiyi_bolgeleri: Array[Bolge] = []
+
+
+## Ülkelerin piyasaya erişimi: kıyısı olan ya da barışta (ambargosuz) olduğu kara komşusunun
+## kıyısı olan ülke. Ülke id'si -> true.
 func erisimler(oyun: Oyun) -> Dictionary[String, bool]:
-	var kiyili: Dictionary[String, bool] = {}
-	var komsular: Dictionary[String, Dictionary] = {}
-	for bolge: Bolge in oyun.dunya.bolge_listesi:
-		if bolge.kiyi:
-			kiyili[bolge.sahip] = true
-		for komsu_id: String in bolge.kara_komsulari:
-			var komsu_sahibi: String = oyun.dunya.bolgeler[komsu_id].sahip
-			if komsu_sahibi != bolge.sahip:
-				if not komsular.has(bolge.sahip):
-					komsular[bolge.sahip] = {}
-				komsular[bolge.sahip][komsu_sahibi] = true
+	if _komsu_surumu != Bolge.sahiplik_surumu:
+		_komsu_surumu = Bolge.sahiplik_surumu
+		if _sinir_ciftleri.is_empty():
+			for bolge: Bolge in oyun.dunya.bolge_listesi:
+				if bolge.kiyi:
+					_kiyi_bolgeleri.append(bolge)
+				for komsu_id: String in bolge.kara_komsulari:
+					if bolge.id < komsu_id:
+						_sinir_ciftleri.append(bolge)
+						_sinir_ciftleri.append(oyun.dunya.bolgeler[komsu_id])
+		_kiyili = {}
+		_komsular = {}
+		for bolge: Bolge in _kiyi_bolgeleri:
+			_kiyili[bolge.sahip] = true
+		for i: int in range(0, _sinir_ciftleri.size(), 2):
+			var a: String = _sinir_ciftleri[i].sahip
+			var b: String = _sinir_ciftleri[i + 1].sahip
+			if a != b:
+				(_komsular.get_or_add(a, {}) as Dictionary)[b] = true
+				(_komsular.get_or_add(b, {}) as Dictionary)[a] = true
+	var kiyili: Dictionary[String, bool] = _kiyili
+	var komsular: Dictionary[String, Dictionary] = _komsular
 	var sonuc: Dictionary[String, bool] = kiyili.duplicate()
 	for ulke_id: String in komsular:
 		if sonuc.has(ulke_id):
 			continue
 		for komsu: String in komsular[ulke_id]:
-			if kiyili.has(komsu) and not oyun.savasta_mi(ulke_id, komsu):
+			if kiyili.has(komsu) and not oyun.ambargoda_mi(ulke_id, komsu):
 				sonuc[ulke_id] = true
 				break
 	return sonuc
@@ -186,6 +209,18 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int, sanayiler: Dictionary[String, floa
 	for kaynak: String in KAYNAKLAR:
 		dunya_arzi[kaynak] = 0.0
 		dunya_talebi[kaynak] = 0.0
+	# Önce herkesin talebi ve fazlası: ticaret ortaklarının fazlası kadarlık ithalat ucuzdur.
+	var talepler: Dictionary[String, Dictionary] = {}
+	var fazlalar: Dictionary[String, Dictionary] = {}
+	for kaynak: String in KAYNAKLAR:
+		fazlalar[kaynak] = {}
+	for ulke_id: String in sanayiler:
+		var t: Dictionary = {}
+		for kaynak: String in KAYNAKLAR:
+			t[kaynak] = ulke_talebi(oyun, ulke_id, kaynak, sanayiler.get(ulke_id, 0.0), zirhlilar.get(ulke_id, 0))
+			fazlalar[kaynak][ulke_id] = float((uretimler[kaynak] as Dictionary).get(ulke_id, 0.0)) - float(t[kaynak])
+		talepler[ulke_id] = t
+	var indirim: float = oyun.ticaret.ortak_indirimi
 	for ulke: Ulke in oyun.dunya.ulke_listesi:
 		var ulke_id: String = ulke.id
 		if not sanayiler.has(ulke_id):
@@ -194,7 +229,7 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int, sanayiler: Dictionary[String, floa
 		var kaynak_durumu: Dictionary = {}
 		for kaynak: String in KAYNAKLAR:
 			var uretim: float = float((uretimler[kaynak] as Dictionary).get(ulke_id, 0.0))
-			var talep: float = ulke_talebi(oyun, ulke_id, kaynak, sanayiler.get(ulke_id, 0.0), zirhlilar.get(ulke_id, 0))
+			var talep: float = float(talepler[ulke_id][kaynak])
 			dunya_arzi[kaynak] += uretim
 			dunya_talebi[kaynak] += talep
 			var ihrac: float = 0.0
@@ -208,7 +243,8 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int, sanayiler: Dictionary[String, floa
 			elif fark < 0.0:
 				if erisim.has(ulke_id) and not oyun.ekonomi.iflasta_mi(ulke_id):
 					ithal = -fark
-					ticaret["ithalat"] += ithal * fiyatlar[kaynak]
+					var ucuz: float = minf(ithal, oyun.ticaret.ortak_fazlasi(ulke_id, fazlalar[kaynak]))
+					ticaret["ithalat"] += (ithal - ucuz * indirim) * fiyatlar[kaynak]
 				else:
 					acik = -fark
 			kaynak_durumu[kaynak] = {"uretim": uretim, "talep": talep, "ithal": ithal, "ihrac": ihrac,

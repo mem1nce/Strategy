@@ -34,9 +34,15 @@ var isgal_saati: int = -1
 ## Bölgede kurulan fabrikaların sanayiye kattığı toplam (bkz. Oyun.bolge_sanayisi,
 ## Oyun._insayi_tamamla).
 var fabrika_sanayisi: float = 0.0
+## Fabrikasız sanayi (ev sahibi ülkenin GSYH'si ve nüfus payından); ilk kullanımda hesaplanır
+## (bkz. Oyun.bolge_sanayisi). Henüz hesaplanmadıysa -1.
+var taban_sanayi: float = -1.0
 ## Tahkimat seviyesi (0-3). Her seviye burada savunana avantaj verir; bölge el değiştirince
 ## bir seviye düşer (bkz. Oyun._bolgeyi_devret).
 var tahkimat: int = 0
+## Liman seviyesi (0-3; yalnızca kıyı bölgelerinde). Ticaret kapasitesini ve anlaşmaların
+## değerini artırır (bkz. Ticaret). Başlangıç seviyesi data/trade.json'dan gelir.
+var liman: int = 0
 ## Bölge, en az bir kıyı (deniz) sınırına değiyor mu?
 var kiyi: bool = false
 ## Bölge adının ve işaretlerinin çizileceği nokta (en büyük çokgenin içinde).

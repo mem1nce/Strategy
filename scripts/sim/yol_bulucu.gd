@@ -75,6 +75,36 @@ func yol_suresi(yol: Array[String]) -> float:
 	return toplam
 
 
+## Verilen bölgeleri (geçilemez) ve bölge çiftleri arasındaki bağlantıları geçici olarak kapatır;
+## geri_ac() için gereken kaydı döndürür (ör. düşmanın tuttuğu geçitler, bkz. Oyun.birlikleri_yurut).
+func gecici_kapat(bolgeler: Array[String], ciftler: Array[Vector2i]) -> Dictionary:
+	var kapatilan_noktalar: Array[int] = []
+	for bolge_id: String in bolgeler:
+		if _bolge_id.has(bolge_id) and not is_point_disabled(_bolge_id[bolge_id]):
+			set_point_disabled(_bolge_id[bolge_id], true)
+			kapatilan_noktalar.append(_bolge_id[bolge_id])
+	var kapatilan_baglantilar: Array[Vector2i] = []
+	for cift: Vector2i in ciftler:
+		if are_points_connected(cift.x, cift.y):
+			disconnect_points(cift.x, cift.y)
+			kapatilan_baglantilar.append(cift)
+	return {"noktalar": kapatilan_noktalar, "baglantilar": kapatilan_baglantilar}
+
+
+func geri_ac(kayit: Dictionary) -> void:
+	for nokta: int in (kayit.get("noktalar", []) as Array):
+		set_point_disabled(nokta, false)
+	for cift: Vector2i in (kayit.get("baglantilar", []) as Array):
+		connect_points(cift.x, cift.y)
+
+
+## İki bölgenin YolBulucu'daki sıra çifti (bölge yoksa (-1, -1)).
+func bolge_cifti(bolge_a: String, bolge_b: String) -> Vector2i:
+	if not _bolge_id.has(bolge_a) or not _bolge_id.has(bolge_b):
+		return Vector2i(-1, -1)
+	return Vector2i(_bolge_id[bolge_a], _bolge_id[bolge_b])
+
+
 func _baglanti_ekle(a: int, b: int, saat: float) -> void:
 	if not are_points_connected(a, b):
 		connect_points(a, b)

@@ -44,6 +44,10 @@ signal bolge_el_degistirdi(bolge_id: String, eski_sahip: String, yeni_sahip: Str
 signal insa_tamamlandi(ulke_id: String, bolge_id: String)
 ## Savaş sisi açıkken oyuncunun gördüğü bölgeler değiştiğinde yayılır (bkz. oyuncu_bolgeyi_goruyor_mu).
 signal gorunurluk_degisti
+## Ticaret anlaşmaları ya da ambargolar değişince yayılır (bkz. Ticaret).
+signal ticaret_degisti
+## Bir yapay zekâ ülkesi oyuncuya ticaret anlaşması teklif edince yayılır.
+signal ticaret_teklifi_geldi(kimden: String)
 
 const DENGE_DOSYASI: String = "res://data/balance.json"
 ## Tümenin güç altına düştüğünde yok sayıldığı eşik.
@@ -160,6 +164,8 @@ var arastirmalar: Dictionary[String, Dictionary] = {}
 var hazineler: Dictionary[String, float] = {}
 ## Günlük bütçe, borç ve iflas (bkz. Ekonomi).
 var ekonomi: Ekonomi = Ekonomi.new()
+## Limanlar, ticaret anlaşmaları, rotalar, geçitler ve ambargolar (bkz. Ticaret).
+var ticaret: Ticaret = Ticaret.new()
 ## Ülke id'si -> o ülkenin inşa kuyruğu (Array[InsaIsi], en fazla AZAMI_KUYRUK_UZUNLUGU).
 ## Yalnızca kuyruğun önündeki iş ilerler (tek kuyruk).
 var insa_kuyruklari: Dictionary[String, Array] = {}
@@ -232,6 +238,7 @@ func _init(yeni_dunya: Dunya) -> void:
 	_ulke_birlik_bolgelerini_hesapla()
 	ekonomi.baslangic_hazinelerini_kur(self)
 	ekonomi.piyasa.kur(self)
+	ticaret.kur(self)
 
 
 ## Verilen bölgedeki tümenler.
@@ -258,7 +265,7 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 		return false
 	if kaynak_sahibi.id != hedef_sahibi.id and not savasta_mi(kaynak_sahibi.id, hedef_sahibi.id):
 		return false
-	var yol: Array[String] = dunya.yol_bulucu.en_kisa_yol(kaynak_bolge_id, hedef_bolge_id)
+	var yol: Array[String] = _gecitleri_gozeterek_yol(kaynak_sahibi.id, kaynak_bolge_id, hedef_bolge_id)
 	if yol.size() < 2:
 		return false
 	var sure: float = dunya.yol_bulucu.yol_suresi(yol)
@@ -281,6 +288,33 @@ func birlikleri_yurut(tasinacaklar: Array[Birlik], hedef_bolge_id: String, su_an
 	_en_yakin_varis = varis if _en_yakin_varis < 0 else mini(_en_yakin_varis, varis)
 	birlikler_degisti.emit()
 	return true
+
+
+## Askeri hareket yolu: savaştığı bir ülkenin tuttuğu geçitten (bkz. Ticaret) geçemez. Böyle
+## geçitlerin kontrol bölgeleri (yolun başı ya da sonu değilse) ve geçitten geçen deniz kenarları
+## bu arama için kapatılır; yol daha uzun yoldan dolaşır ya da bulunamaz.
+func _gecitleri_gozeterek_yol(ulke_id: String, kaynak_bolge_id: String, hedef_bolge_id: String) -> Array[String]:
+	var bolgeler: Array[String] = []
+	var ciftler: Array[Vector2i] = []
+	for gecit: Dictionary in ticaret.gecitler:
+		var dusman: bool = false
+		for sahip: String in ticaret.gecit_sahipleri(self, gecit["id"]):
+			if sahip != ulke_id and savasta_mi(ulke_id, sahip):
+				dusman = true
+				break
+		if not dusman:
+			continue
+		for bolge_id: String in gecit["kontrol"]:
+			if bolge_id != kaynak_bolge_id and bolge_id != hedef_bolge_id:
+				bolgeler.append(bolge_id)
+		for kenar: Array in (ticaret.gecit_kenarlari.get(gecit["id"], []) as Array):
+			ciftler.append(dunya.yol_bulucu.bolge_cifti(kenar[0], kenar[1]))
+	if bolgeler.is_empty() and ciftler.is_empty():
+		return dunya.yol_bulucu.en_kisa_yol(kaynak_bolge_id, hedef_bolge_id)
+	var kayit: Dictionary = dunya.yol_bulucu.gecici_kapat(bolgeler, ciftler)
+	var yol: Array[String] = dunya.yol_bulucu.en_kisa_yol(kaynak_bolge_id, hedef_bolge_id)
+	dunya.yol_bulucu.geri_ac(kayit)
+	return yol
 
 
 ## Verilen tümenleri yarıya ayırır ve ayrılan yarıyı döndürür; kalan yarı `stok`ta, aynı
@@ -541,6 +575,8 @@ func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> voi
 		bolge.tahkimat = maxi(0, bolge.tahkimat - 1)
 	bolge.sahip = yeni_sahip
 	bolge.isgal_saati = su_anki_saat
+	if eski_sahip != yeni_sahip:
+		ticaret.bolge_degisti(self, bolge.id, eski_sahip, yeni_sahip)
 	bolge_sahipligi_degisti.emit()
 	if eski_sahip != yeni_sahip:
 		bolge_el_degistirdi.emit(bolge.id, eski_sahip, yeni_sahip)
@@ -572,6 +608,7 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	var galip_id: String = baskent_sahibi.id
 	for bolge: Bolge in su_anki_bolgeler:
 		bolge.sahip = galip_id
+		ticaret.bolge_degisti(self, bolge.id, ulke_id, galip_id)
 		bolge_el_degistirdi.emit(bolge.id, ulke_id, galip_id)
 		bolge.isgal_saati = su_anki_saat
 		bolge.tahkimat = maxi(0, bolge.tahkimat - 1)
@@ -583,6 +620,7 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	_saat_dizini_saati = -1
 	_tarama_gerekli = true
 
+	ticaret.ulke_yok_oldu(self, ulke_id)
 	bolge_sahipligi_degisti.emit()
 	birlikler_degisti.emit()
 	ulke_teslim_oldu.emit(ulke_id, galip_id)
@@ -658,6 +696,11 @@ func _geri_cek(liste: Array[Birlik], bolge_id: String) -> void:
 	birlikler_degisti.emit()
 
 
+## İki ülke arasında ticaret kapalı mı (ambargo ya da savaş; bkz. Ticaret.ambargoda_mi)?
+func ambargoda_mi(ulke_a: String, ulke_b: String) -> bool:
+	return ticaret.ambargoda_mi(self, ulke_a, ulke_b)
+
+
 ## İki ülke savaşta mı?
 func savasta_mi(ulke_a: String, ulke_b: String) -> bool:
 	var karsilar: Variant = _ulke_savaslari.get(ulke_a)
@@ -674,6 +717,7 @@ func savas_ilan_et(ilan_eden: String, hedef: String, su_anki_saat: int) -> bool:
 		return false
 	_savaslar[_savas_anahtari(ilan_eden, hedef)] = su_anki_saat
 	_savas_dizinini_kur()
+	ticaret.savas_basladi(self, ilan_eden, hedef)
 	savas_ilan_edildi.emit(ilan_eden, hedef)
 	if hedef == oyuncu_ulkesi and ilan_eden != oyuncu_ulkesi:
 		var ilan_eden_ulke: Ulke = dunya.ulkeler[ilan_eden]
@@ -693,6 +737,7 @@ func baris_teklif_et(teklif_eden: String, hedef: String, su_anki_saat: int) -> b
 		return false
 	_savaslar.erase(anahtar)
 	_savas_dizinini_kur()
+	ticaret.iliskiler_degisti(teklif_eden, hedef)
 	baris_yapildi.emit(teklif_eden, hedef)
 	return true
 
@@ -803,6 +848,29 @@ func fabrika_sirala(ulke_id: String, bolge_id: String) -> bool:
 	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.FABRIKA, fabrika_maliyeti(ulke_id), _fabrika_suresi_saat)
 
 
+## Verilen ülkenin, verilen (kendi) kıyı bölgesinde limanı bir seviye geliştirecek işi sıralar
+## (para peşin, inşaat sürerken maden harcar). Bölge kıyıda değilse ya da (kuyruktakilerle
+## birlikte) en yüksek seviyedeyse false döner.
+func liman_sirala(ulke_id: String, bolge_id: String) -> bool:
+	var seviye: int = sonraki_liman_seviyesi(ulke_id, bolge_id)
+	if seviye < 1:
+		return false
+	return _ise_sirala(ulke_id, bolge_id, InsaIsi.Tur.LIMAN, ticaret.liman_maliyeti(seviye), ticaret.liman_suresi_saat)
+
+
+## Bölgenin limanının, kuyruktaki liman işleri de bitince ulaşacağı seviyenin bir fazlası; kıyı
+## bölgesi değilse ya da en yüksek seviyeye zaten ulaşılacaksa 0.
+func sonraki_liman_seviyesi(ulke_id: String, bolge_id: String) -> int:
+	var bolge: Bolge = dunya.bolgeler.get(bolge_id)
+	if bolge == null or not ticaret.kiyi_bolgeleri.has(bolge_id):
+		return 0
+	var seviye: int = bolge.liman + 1
+	for is_: InsaIsi in (insa_kuyruklari.get(ulke_id, []) as Array):
+		if is_.tur == InsaIsi.Tur.LIMAN and is_.bolge_id == bolge_id:
+			seviye += 1
+	return seviye if seviye <= 3 else 0
+
+
 ## Verilen ülkenin kuyruğunun önündeki (o an yürümekte olan) iş; kuyruk boşsa null.
 ## Üst çubuktaki üretim göstergesi için (bkz. Arayuz.uretimi_goster).
 func onde_ki_is(ulke_id: String) -> InsaIsi:
@@ -905,6 +973,12 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 				bolge.tahkimat = mini(_tahkimat_azami, bolge.tahkimat + 1)
 				tahkimat_degisti.emit(bolge.id)
 			ne = "Tahkimat"
+		InsaIsi.Tur.LIMAN:
+			if bolge != null and bolge.sahip == is_.sahip:
+				bolge.liman = mini(3, bolge.liman + 1)
+				ticaret.bolge_degisti(self, bolge.id, is_.sahip, is_.sahip)
+				ticaret_degisti.emit()
+			ne = "Liman"
 		_:
 			if bolge != null:
 				bolge.fabrika_sanayisi += _fabrika_sanayi_artisi
@@ -989,12 +1063,14 @@ func _gelir_carpani(ulke_id: String) -> float:
 ## (toprağın kendi ekonomik niteliğini yansıtır). Son `isgal_cezasi_gun` gün içinde ele
 ## geçirilmiş ve hâlâ ev sahibinde olmayan bölge toplamın `isgal_cezasi_orani` kadarını üretir.
 func bolge_sanayisi(bolge: Bolge, su_anki_saat: int) -> float:
-	var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
-	var taban: float = 0.0
-	if ev_ulke != null and ev_ulke.nufus > 0:
-		var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
-		taban = ulke_sanayisi * (float(bolge.nufus) / float(ev_ulke.nufus))
-	var sanayi: float = taban + bolge.fabrika_sanayisi
+	# Taban sanayi yalnızca ev sahibi ülkenin verisine bağlıdır, hiç değişmez: bir kez hesaplanır.
+	if bolge.taban_sanayi < 0.0:
+		var ev_ulke: Ulke = _bolge_ev_sahibi(bolge)
+		bolge.taban_sanayi = 0.0
+		if ev_ulke != null and ev_ulke.nufus > 0:
+			var ulke_sanayisi: float = sqrt(float(ev_ulke.gsyh_milyon_dolar) / _sanayi_gsyh_bolen)
+			bolge.taban_sanayi = ulke_sanayisi * (float(bolge.nufus) / float(ev_ulke.nufus))
+	var sanayi: float = bolge.taban_sanayi + bolge.fabrika_sanayisi
 	if bolge_isgal_altinda_mi(bolge, su_anki_saat):
 		sanayi *= _isgal_cezasi_orani
 	return sanayi
@@ -1056,6 +1132,8 @@ func _bolgelere_gore_birlikler() -> Dictionary[String, Array]:
 ## kurulup burada saklanır.
 func _ulke_dusun(ulke_id: String, su_anki_saat: int, onbellek: Dictionary = {}) -> void:
 	_yz_terhis_dusun(ulke_id)
+	_yz_ambargo_dusun(ulke_id)
+	ticaret.yz_dusun(self, ulke_id, su_anki_saat, _rng.randf(), _rng.randf())
 	_savas_ilanini_degerlendir(ulke_id, su_anki_saat)
 	_yz_arastirma_dusun(ulke_id)
 	_yz_tahkimat_dusun(ulke_id)
@@ -1143,7 +1221,8 @@ func _yz_terhis_dusun(ulke_id: String) -> void:
 	var limit: float = ekonomi.borc_limiti(self, ulke_id)
 	var iflasta: bool = ekonomi.iflasta_mi(ulke_id)
 	var gidisat: float = -float(hazineler.get(ulke_id, 0.0)) - net * _yz_terhis_ongoru_gun
-	var tehlike: bool = iflasta or (borc > 0.0 and borc >= _yz_terhis_borc_orani * limit) 			or (net < 0.0 and gidisat > limit)
+	var tehlike: bool = iflasta or (borc > 0.0 and borc >= _yz_terhis_borc_orani * limit) \
+			or (net < 0.0 and gidisat > limit)
 	if not tehlike:
 		return
 	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
@@ -1165,9 +1244,11 @@ func _yz_terhis_dusun(ulke_id: String) -> void:
 				break
 		if not on_cephe or iflasta:
 			adaylar.append(birlik)
-	# Başkentte en az bir tümen kalır; fazlası da aday olur.
+	# Başkentte en az bir tümen kalır (bakımını geliri karşılayamıyorsa o da gider); fazlası da aday olur.
 	if baskenttekiler.size() > 1:
 		adaylar.append_array(baskenttekiler.slice(1))
+	if not baskenttekiler.is_empty() and ekonomi.gunluk_gelir(self, ulke_id) < BirlikTurleri.bakim(baskenttekiler[0].tur):
+		adaylar.append(baskenttekiler[0])
 	adaylar.sort_custom(func(a: Birlik, b: Birlik) -> bool: return BirlikTurleri.bakim(a.tur) > BirlikTurleri.bakim(b.tur))
 	var secilen: Array[Birlik] = []
 	var kazanc: float = 0.0
@@ -1177,6 +1258,18 @@ func _yz_terhis_dusun(ulke_id: String) -> void:
 		secilen.append(birlik)
 		kazanc += ekonomi.bakim_carpani(self, birlik, not _ulkenin_savasta_mi(ulke_id)) * BirlikTurleri.bakim(birlik.tur)
 	terhis_et(secilen)
+
+
+## Karşılık: kendisine ambargo uygulayana yapay zekâ da ambargo uygular; o kaldırınca kaldırır.
+func _yz_ambargo_dusun(ulke_id: String) -> void:
+	for anahtar: String in ticaret.ambargolar.keys():
+		var taraflar: PackedStringArray = anahtar.split(">")
+		if taraflar.size() == 2 and taraflar[1] == ulke_id and not ticaret.ambargo_uyguluyor_mu(ulke_id, taraflar[0]):
+			ticaret.ambargo_uygula(self, ulke_id, taraflar[0])
+	for anahtar: String in ticaret.ambargolar.keys():
+		var taraflar: PackedStringArray = anahtar.split(">")
+		if taraflar.size() == 2 and taraflar[0] == ulke_id and not ticaret.ambargo_uyguluyor_mu(taraflar[1], ulke_id):
+			ticaret.ambargo_kaldir(self, ulke_id, taraflar[1])
 
 
 ## Yapay zekânın kuracağı tümen türü: taban ağırlıklara (karışık ordu) göre rastgele seçilir;
@@ -1443,6 +1536,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"teknolojiler": teknolojiler,
 		"arastirmalar": arastirmalar,
 		"ekonomi": ekonomi.kayit_verisi(oyuncu_ulkesi),
+		"ticaret": ticaret.kayit_verisi(self),
 	}
 
 
@@ -1525,6 +1619,7 @@ func kayittan_yukle(veri: Dictionary) -> void:
 					"toplam_saat": int(a.get("toplam_saat", 1))}
 	# 5. sürümden eski kayıtlarda bütçe yok: kalemler ilk gün başında hesaplanır.
 	ekonomi.kayittan_yukle(veri.get("ekonomi", {}), oyuncu_ulkesi)
+	ticaret.kayittan_yukle(self, veri.get("ticaret", {}))
 	_ulke_birlik_bolgelerini_hesapla()
 
 

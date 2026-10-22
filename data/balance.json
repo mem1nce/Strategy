@@ -67,6 +67,26 @@
 		"yz_petrol_acigi_zirhli_esigi": 0.2,
 		"yz_petrol_acigi_zirhli_carpani": 0.3
 	},
+	"ticaret": {
+		"deger_katsayisi": 0.13,
+		"liman_bonusu": 0.1,
+		"mesafe_olcegi": 2500,
+		"kara_carpani": 3.0,
+		"buzlu_deniz_carpani": 8.0,
+		"gecis_ucreti": 0.05,
+		"ortak_indirimi": 0.2,
+		"taban_kapasite": 2,
+		"azami_kapasite": 8,
+		"baslangic_doluluk": 0.5,
+		"komsu_onceligi": 1.5,
+		"liman_taban_maliyeti": 150,
+		"liman_suresi_saat": 480,
+		"teklif_suresi_gun": 30,
+		"yz_anlasma_olasiligi": 0.05,
+		"yz_aday_sayisi": 40,
+		"yz_degisim_esigi": 1.2,
+		"yz_liman_olasiligi": 0.03
+	},
 	"yapay_zeka": {
 		"fabrika_olasiligi": 0.2,
 		"saldiri_esigi": 1.3,
@@ -79,7 +99,7 @@
 		"karsi_tur_bonusu": 0.6,
 		"arastirma_olasiligi": 0.3,
 		"tahkimat_olasiligi": 0.08,
-		"uretim_net_payi": 0.3,
+		"uretim_net_payi": 0.4,
 		"terhis_borc_orani": 0.5,
 		"terhis_ongoru_gun": 60,
 		"gunluk_azami_terhis": 3

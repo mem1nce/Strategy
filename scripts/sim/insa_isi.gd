@@ -1,8 +1,8 @@
 class_name InsaIsi
 extends RefCounted
-## Bir ülkenin üretim kuyruğundaki tek bir iş: yeni tümen, fabrika ya da tahkimat (bkz. Oyun).
+## Bir ülkenin üretim kuyruğundaki tek bir iş: yeni tümen, fabrika, tahkimat ya da liman (bkz. Oyun).
 
-enum Tur { TUMEN, FABRIKA, TAHKIMAT }
+enum Tur { TUMEN, FABRIKA, TAHKIMAT, LIMAN }
 
 var tur: Tur = Tur.TUMEN
 var sahip: String = ""

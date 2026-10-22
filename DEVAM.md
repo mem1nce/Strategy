@@ -793,6 +793,29 @@ Adımlar:
    - YZ: bütçe payı 0,3; 60 gün içinde limite gidecekse ya da iflastaysa terhis (en çok 3/gün).
    - Uzun koşu tohum 1: teslim 18, iflas 10, petrol 0,97-1,67, maden 0,50-3,00, 75 sn.
      Maden fiyatı oynak (inşaat talebi dalgalı); 7. adımda bakılacak.
+3. ✅ (simülasyon) Limanlar, ticaret anlaşmaları, rotalar ve geçitler (`sim/ticaret.gd`,
+   `sim/rota_agi.gd`, data/trade.json ← `tools/ticaret_uret.py`; TASARIM 9b, 9c).
+   - Liman seviyeleri Natural Earth `ne_10m_ports` (tools/kaynak/) + kıyı başkentleri:
+     538 kıyı bölgesi; seviye 1/2/3: 68/51/60. Havzalar betikte tohum noktalarıyla taşma
+     doldurmayla (yarım çözünürlüklü kara maskesi, geçit kesit çizgileri engel) bulunur;
+     1495 deniz kenarı, 20'si geçit kenarı; geçidi atlayan 2 kenar atılır.
+   - Rota A* (AStar2D): kara ×3, kutup denizi (66° üstü) ×8; geçit kapatma düğümü kapatarak.
+     Askerî deniz hareketi `YolBulucu.gecici_kapat` ile savaştığı ülkenin geçidinden geçmez.
+   - Başlangıçta ~130 anlaşma, ortalama ülkede ticaret gelirin ~%13'ü. Türkiye: kapasite 5, en
+     iyi liman TUR_2 (İstanbul).
+   - YZ: %5 olasılıkla teklif (aday: en büyük 40 ekonomi + kara komşuları + boş kapasiteli
+     ülkeler; kabul etmeyecek dolu ülkeler ucuzca elenir, en çok 40 tahmin), ambargoya
+     karşılık, dolunca ara sıra liman.
+   - Performans: gün başı önbellekleri (ham sanayi, en iyi liman, kapasite, sıralı ekonomiler),
+     ortak dizini, bölge sahipliği değişince yalnızca etkilenen rotalar kirlenir; piyasa
+     erişimi için sınır bölge çiftleri bir kez kurulur.
+   - `tests/sim/ticaret_testi.gd` (12 sınama: Türkiye-Rusya savaşında Rusya rotaları
+     Boğaz'dan geçmez, Mısır savaşında Fransa-Japonya rotası Afrika'yı dolanır ve değeri düşer,
+     ortak indirimi, ambargo, geçiş ücreti, kabul kuralları…). Toplam 183/183.
+   - Uzun koşu (P-çekirdekte; tohum 1/2/3): süre 105/102/119 sn, iflas 6/9/3, ticaret payı
+     %18,7/%19,3/%19,6, anlaşma 2,17/2,17/2,27, fiyatlar sınırda. Tohum 3 süresi sınıra yakın.
+   - Arayüz (Ticaret paneli, ülke paneli düğmeleri, liman düğmesi, teklif bildirimi) sonraki
+     işte.
 
 ## Kararlar
 

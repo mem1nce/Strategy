@@ -455,9 +455,8 @@ data/balance.json → "butce".
   tek dinamik ekonomi alanıdır.
 - **Hazine:** oyun her ülke için yaklaşık **60 günlük gelirle** başlar. Her oyun günü başında
   (`Oyun.gun_basladi()` → `Ekonomi.gunu_isle()`) günlük bütçenin neti işlenir.
-- **Günlük bütçe kalemleri:** gelir — sanayi (bu paketin sonraki adımlarında ticaret, kaynak
-  ihracatı, geçiş ücretleri, tazminat eklenir); gider — ordu bakımı, borç faizi (sonra kaynak
-  ithalatı). Son günün kalemleri `Ekonomi.kalemler`'de, oyuncunun son 90 günlük hazinesi
+- **Günlük bütçe kalemleri:** gelir — sanayi, ticaret (9b), kaynak ihracatı (9a), geçiş
+  ücretleri (9c) (tazminat sonra eklenir); gider — ordu bakımı, kaynak ithalatı, borç faizi. Son günün kalemleri `Ekonomi.kalemler`'de, oyuncunun son 90 günlük hazinesi
   `Ekonomi.gecmis`'te durur.
 - **Borç:** hazine eksiye inebilir (yalnızca bakım, faiz gibi günlük giderlerle; inşaat ve
   araştırma peşin ödenir, eksi hazineyle başlatılamaz). Eksi bakiye borçtur ve aylık
@@ -481,9 +480,10 @@ data/balance.json → "butce".
   %130'unu öder; savaştaki ülkenin kendi toprağındaki tümeni tamını öder.
 - **Terhis:** birlik kartındaki "Terhis et" (onaylı) gösterilen tümenleri dağıtır; bakımları
   biter, para geri gelmez (`Oyun.terhis_et`).
-- **Yapay zekâ ve bütçe:** yeni tümenin bakımı düşüldükten sonra neti gelirinin %10'undan
-  azsa tümen kurmaz. Borcu limitin %50'sini geçince, iflastayken ya da eksi hazinede neti
-  açıktayken günde en çok 2 tümen terhis eder (önce bakımı yüksek olanlar; cephedekiler değil).
+- **Yapay zekâ ve bütçe:** yeni tümenin bakımı düşüldükten sonra neti gelirinin %40'ından
+  azsa tümen kurmaz. Borcu limitin %50'sini geçince, iflastayken ya da 60 gün içinde limite
+  gidecekse günde en çok 3 tümen terhis eder (önce bakımı yüksek olanlar; cephedekiler ancak
+  iflastayken). Başkentte bir tümen kalır; geliri onun bakımına bile yetmiyorsa o da gider.
 - **Gelir çarpanı:** Sanayi teknolojisi geliri seviye başına %10 artırır.
 - Arayüz: oyuncunun kendi bölgesine dokununca açılan bölge ya da birlik panelinde
   **"Tümen kur"**, **"Fabrika kur (500)"** ve **"Tahkimat 1/3 · Kur (160)"** düğmeleri vardır
@@ -517,6 +517,53 @@ data/balance.json → "butce".
   Bütçe panelinde üretim, tüketim, dünya fiyatı (eğilim okuyla) ve durum (ihraç / ithal / açık).
 - **Yapay zekâ:** alım-satım bütçesine işler (bütçe kuralları geçerli); petrol açığını
   kapatamıyorsa zırhlıyı daha az kurar.
+
+## 9b. Limanlar ve ticaret anlaşmaları
+
+`sim/ticaret.gd`; sayılar data/balance.json → "ticaret"; limanlar, havzalar ve geçitler
+data/trade.json (← `tools/ticaret_uret.py`, Natural Earth `ne_10m_ports`).
+
+- **Liman:** kıyı bölgelerinde 0-3 seviye (`Bolge.liman`). Natural Earth'teki büyük limanlar
+  2-3, öbür kıyı başkentleri 1 ile başlar. Oyuncu kendi kıyı bölgesinde "Liman kur /
+  geliştir" ile seviye artırır (maliyet 150 × yeni seviye, 20 gün, inşa kuyruğunda, maden
+  tüketir).
+- **Kapasite:** 2 + (liman seviyeleri toplamı) / 2, en çok 8 anlaşma.
+- **Anlaşma:** iki ülke arasında rota açar; ikisi de her gün aynı değeri kazanır:
+  `0,13 × harmonik_ort(ham sanayiler) × (1 + 0,1 × (iki uç limanın seviyesi)) / (1 + rota
+  uzunluğu / 2500)`. Rotanın geçtiği geçitlerin ücreti (9c) iki taraftan yarı yarıya düşülür.
+- **Ortak indirimi:** kaynak ithalatının, ticaret ortaklarının o kaynaktaki toplam fazlası
+  kadarlık kısmı %20 ucuzdur.
+- **Kabul:** yapay zekâ boş kapasitesi varsa ya da teklif en zayıf anlaşmasından değerliyse
+  (o zaman en zayıfı bırakır) kabul eder; savaştığı ya da ambargolu olduğu ülkeyle asla.
+- **Başlangıç:** her ülke kapasitesinin yarısı (en az 1) kadar anlaşmayla başlar; büyük
+  ekonomiler önce seçer, kara komşuları ve değerli ortaklar öncelikli.
+- **Ambargo:** bir ülkeye ambargo, onunla anlaşmaları bitirir ve kendi geçitlerini ona kapatır.
+  Savaş kendiliğinden ambargo sayılır. Yapay zekâ kendisine ambargo uygulayana karşılık verir,
+  o kaldırınca kaldırır.
+- **Teklif:** oyuncunun teklifine yapay zekâ hemen yanıt verir. Yapay zekâ oyuncuya teklif
+  edince bildirim kartı (Kabul / Reddet) gelir; 30 gün yanıtsız kalan teklif düşer.
+- **Yapay zekâ:** her düşünmede %5 olasılıkla en değerli (ve kabul etmesi olası) adaya teklif
+  eder; kapasitesi doluysa yalnızca en zayıfından %20 değerliyse. Doluysa ara sıra limanını
+  geliştirir.
+
+## 9c. Ticaret yolları ve geçitler
+
+- **Rota:** iki ülkenin en iyi limanları (yoksa başkentleri) arasında A* (`sim/rota_agi.gd`);
+  düğümler kara bölgeleri, her (kıyı bölgesi, havza) için deniz düğümü ve geçit düğümleridir.
+  Kara kenarı uzunluğun 3 katı, kutup denizi 8 katı sayılır (deniz tercih edilir). Rota,
+  taraflardan biriyle savaşta ya da ambargoda olan ülkenin toprağından geçmez.
+- **Havzalar:** Atlantik, Karayip, Pasifik, Hint, Andaman, Güney Çin, Akdeniz, Karadeniz,
+  Kızıldeniz, Basra, Baltık, Hazar. Havzalar arası her deniz kenarı ya serbesttir (açık okyanus)
+  ya da bir geçitten geçer; hiçbir deniz kenarı bir geçidi atlayamaz (betik denetler).
+- **Geçitler:** İstanbul Boğazı, Süveyş, Panama, Cebelitarık, Hürmüz, Babülmendep, Malakka,
+  Danimarka boğazları. Her biri kontrol bölgeleri ve bağladığı iki havzayla tanımlıdır;
+  Süveyş ve Panama deniz bağlantısı olarak eklenir.
+- **Geçiş ücreti:** rota değerinin %5'i geçidi kontrol eden ülkeye gider; iki kıyı ayrı
+  ülkelerdeyse paylaşılır. Kontrol eden taraflardan biriyle savaşta ya da ambargodaysa geçit o
+  rotaya kapalıdır: rota dolanır ya da kesilir (değeri 0).
+- **Askerî deniz hareketi** de aynı kurala uyar: savaştığı ülkenin geçidinden geçemez.
+- **Yeniden hesap:** rotalar yalnızca savaş, barış, anlaşma, ambargo ya da geçit/liman
+  sahipliği değişince yeniden hesaplanır.
 
 ## 10. Yapay zekâ
 
