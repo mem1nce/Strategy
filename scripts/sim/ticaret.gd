@@ -465,6 +465,14 @@ func teklifi_yanitla(oyun: Oyun, kimden: String, kabul: bool) -> bool:
 	return anlasma_yap(oyun, kimden, oyuncu)
 
 
+## Geçidi verilen saate kadar kapatır (olay: geçit kazası); bütün rotalar gün başında yeniden
+## hesaplanır.
+func gecidi_kapat(gecit_id: String, bitis_saati: int) -> void:
+	kapali_gecitler[gecit_id] = bitis_saati
+	for a: Dictionary in anlasmalar:
+		a["kirli"] = true
+
+
 ## Ambargo uygular: o ülkeyle anlaşmalar biter, elindeki geçitler ona kapanır (rotalar yeniden
 ## hesaplanır).
 func ambargo_uygula(oyun: Oyun, uygulayan: String, hedef: String) -> bool:

@@ -67,6 +67,9 @@ var birlikler: Array[Birlik] = []
 ## Savaştaki ülke çiftleri. Anahtar iki ülke id'sinin sıralı birleşimi (bkz. _savas_anahtari),
 ## değer savaşın ilan edildiği saat (Zaman.toplam_saat) — barış teklifinde süreyi ölçmek için.
 var _savaslar: Dictionary[String, int] = {}
+## Süren savaşlarda kaybedilen bölge sayıları: "A>B" -> A'nın B'ye kaybettiği (barışta tazminat
+## için; bkz. Ekonomi.tazminat_baslat).
+var savas_kayiplari: Dictionary[String, int] = {}
 ## Ülke id'si -> {savaştığı ülke id'si: true}. _savaslar ile birlikte güncellenir (bkz.
 ## _savas_dizinini_kur); savasta_mi() gibi saatte binlerce kez yapılan sorgular metin anahtarı
 ## kurmadan buradan yanıtlanır.
@@ -106,6 +109,10 @@ var _yz_saldiri_esigi: float = 1.3
 var _yz_savas_ilani_gun_araligi: int = 30
 ## Savaş ilan edebilmesi için hedeften en az bu kat güçlü olması gerekir.
 var _yz_savas_ilani_esigi: float = 2.0
+## Ticaret ortağına savaş ilanı için güç üstünlüğü eşiği bu kadar katlanır (savaş anlaşmayı bitirir).
+var _yz_ticaret_ortagi_savas_carpani: float = 2.0
+## Savaş açmak için hazinede en az bu kadar günlük gelir bulunmalı ("savaş sandığı").
+var _yz_savas_sandigi_gun: float = 30.0
 ## Koşullar sağlansa bile savaş ilan etme olasılığı ("küçük bir olasılıkla").
 var _yz_savas_ilani_olasiligi: float = 0.1
 var _yz_azami_eszamanli_savas: int = 2
@@ -224,6 +231,9 @@ func _init(yeni_dunya: Dunya) -> void:
 	_yz_saldiri_esigi = float(yz_ayarlari.get("saldiri_esigi", _yz_saldiri_esigi))
 	_yz_savas_ilani_gun_araligi = int(yz_ayarlari.get("savas_ilani_gun_araligi", _yz_savas_ilani_gun_araligi))
 	_yz_savas_ilani_esigi = float(yz_ayarlari.get("savas_ilani_esigi", _yz_savas_ilani_esigi))
+	_yz_ticaret_ortagi_savas_carpani = float(yz_ayarlari.get("ticaret_ortagi_savas_carpani",
+			_yz_ticaret_ortagi_savas_carpani))
+	_yz_savas_sandigi_gun = float(yz_ayarlari.get("savas_sandigi_gun", _yz_savas_sandigi_gun))
 	_yz_savas_ilani_olasiligi = float(yz_ayarlari.get("savas_ilani_olasiligi", _yz_savas_ilani_olasiligi))
 	_yz_azami_eszamanli_savas = int(yz_ayarlari.get("azami_eszamanli_savas", _yz_azami_eszamanli_savas))
 	_yz_oyuncuya_dokunulmazlik_gun = int(yz_ayarlari.get("oyuncuya_dokunulmazlik_gun", _yz_oyuncuya_dokunulmazlik_gun))
@@ -580,6 +590,10 @@ func _bolgeyi_devret(bolge: Bolge, yeni_sahip: String, su_anki_saat: int) -> voi
 	bolge.isgal_saati = su_anki_saat
 	if eski_sahip != yeni_sahip:
 		ticaret.bolge_degisti(self, bolge.id, eski_sahip, yeni_sahip)
+		# Barışta tazminatı kimin ödeyeceği için savaşta kaybedilen bölgeler sayılır.
+		if savasta_mi(eski_sahip, yeni_sahip):
+			var kayip_anahtari: String = "%s>%s" % [eski_sahip, yeni_sahip]
+			savas_kayiplari[kayip_anahtari] = int(savas_kayiplari.get(kayip_anahtari, 0)) + 1
 	bolge_sahipligi_degisti.emit()
 	if eski_sahip != yeni_sahip:
 		bolge_el_degistirdi.emit(bolge.id, eski_sahip, yeni_sahip)
@@ -598,9 +612,9 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	var ulke: Ulke = dunya.ulkeler.get(ulke_id)
 	if ulke == null:
 		return
+	# Son bölgesini (ör. tek bölgeli ülkenin başkentini) yeni kaybeden ülke de teslim olur; bu
+	# işlev yalnızca bir bölge el değiştirince çağrıldığı için ülke bir kez teslim olur.
 	var su_anki_bolgeler: Array[Bolge] = dunya.ulkenin_bolgeleri(ulke_id)
-	if su_anki_bolgeler.is_empty():
-		return
 	var baskent_sahibi: Ulke = dunya.bolgenin_sahibi(ulke.baskent_bolgesi)
 	if baskent_sahibi == null or baskent_sahibi.id == ulke_id:
 		return
@@ -622,8 +636,20 @@ func _teslimi_kontrol_et(ulke_id: String, su_anki_saat: int) -> void:
 	birlikler = kalanlar
 	_saat_dizini_saati = -1
 	_tarama_gerekli = true
+	# Kuyruktaki işler de silinir: yoksa biten tümen işi başkasının bölgesinde yeni bir tümen
+	# doğurup teslim olmuş ülkeyi "diriltiyordu".
+	insa_kuyruklari.erase(ulke_id)
+	insa_kuyrugu_degisti.emit(ulke_id)
 
 	ticaret.ulke_yok_oldu(self, ulke_id)
+	# Teslim olanın artı hazinesi başkentini alana geçer (borcu silinir).
+	var kalan_hazine: float = float(hazineler.get(ulke_id, 0.0))
+	if kalan_hazine > 0.0:
+		hazineler[galip_id] = float(hazineler.get(galip_id, 0.0)) + kalan_hazine
+		if galip_id == oyuncu_ulkesi:
+			bildirim_gonder.emit("%s teslim oldu: hazinesi (%d) sana geçti." % [ulke.ad, roundi(kalan_hazine)],
+					ulke.baskent_bolgesi)
+	hazineler[ulke_id] = 0.0
 	bolge_sahipligi_degisti.emit()
 	birlikler_degisti.emit()
 	ulke_teslim_oldu.emit(ulke_id, galip_id)
@@ -719,6 +745,8 @@ func savas_ilan_et(ilan_eden: String, hedef: String, su_anki_saat: int) -> bool:
 	if savasta_mi(ilan_eden, hedef) or not dunya.ulkeler_komsu_mu(ilan_eden, hedef):
 		return false
 	_savaslar[_savas_anahtari(ilan_eden, hedef)] = su_anki_saat
+	savas_kayiplari.erase("%s>%s" % [ilan_eden, hedef])
+	savas_kayiplari.erase("%s>%s" % [hedef, ilan_eden])
 	_savas_dizinini_kur()
 	ticaret.savas_basladi(self, ilan_eden, hedef)
 	savas_ilan_edildi.emit(ilan_eden, hedef)
@@ -741,6 +769,11 @@ func baris_teklif_et(teklif_eden: String, hedef: String, su_anki_saat: int) -> b
 	_savaslar.erase(anahtar)
 	_savas_dizinini_kur()
 	ticaret.iliskiler_degisti(teklif_eden, hedef)
+	var kayip_a: int = int(savas_kayiplari.get("%s>%s" % [teklif_eden, hedef], 0))
+	var kayip_b: int = int(savas_kayiplari.get("%s>%s" % [hedef, teklif_eden], 0))
+	savas_kayiplari.erase("%s>%s" % [teklif_eden, hedef])
+	savas_kayiplari.erase("%s>%s" % [hedef, teklif_eden])
+	ekonomi.tazminat_baslat(self, teklif_eden, hedef, kayip_a, kayip_b, su_anki_saat)
 	baris_yapildi.emit(teklif_eden, hedef)
 	return true
 
@@ -958,6 +991,9 @@ func _insayi_tamamla(is_: InsaIsi) -> void:
 	var ne: String = "Fabrika"
 	match is_.tur:
 		InsaIsi.Tur.TUMEN:
+			# Bölge bu arada el değiştirdiyse tümen doğmaz (para geri gelmez).
+			if bolge == null or bolge.sahip != is_.sahip:
+				return
 			var yeni: Birlik = Birlik.new()
 			yeni.sahip = is_.sahip
 			yeni.tur = is_.birlik_turu
@@ -1404,6 +1440,11 @@ func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
 		return
 	if _rng.randf() >= _yz_savas_ilani_olasiligi:
 		return
+	# Günlük neti eksi olan ya da hazinesinde `_yz_savas_sandigi_gun` günlük gelir bulunmayan ülke
+	# yeni savaş açmaz (savaşta bakım artar, ticaret kesilir).
+	if ekonomi.net(self, ulke_id) < 0.0 \
+			or float(hazineler.get(ulke_id, 0.0)) < _yz_savas_sandigi_gun * ekonomi.gunluk_gelir(self, ulke_id):
+		return
 
 	var kendi_guc: float = _ulkenin_toplam_gucu(ulke_id)
 	if kendi_guc <= 0.0:
@@ -1420,7 +1461,10 @@ func _savas_ilanini_degerlendir(ulke_id: String, su_anki_saat: int) -> void:
 		if not dunya.ulkeler_komsu_mu(ulke_id, diger.id):
 			continue
 		var diger_guc: float = _gorunen_guc(diger.id, gorunenler)
-		if diger_guc <= 0.0 or kendi_guc < _yz_savas_ilani_esigi * diger_guc:
+		var esik: float = _yz_savas_ilani_esigi
+		if not ticaret.anlasma(ulke_id, diger.id).is_empty():
+			esik *= _yz_ticaret_ortagi_savas_carpani
+		if diger_guc <= 0.0 or kendi_guc < esik * diger_guc:
 			continue
 		savas_ilan_et(ulke_id, diger.id, su_anki_saat)
 		return
@@ -1531,6 +1575,7 @@ func kaydet_icin_veri() -> Dictionary:
 		"bolgeler": bolgeler,
 		"birlikler": birlik_verisi,
 		"savaslar": savas_verisi,
+		"savas_kayiplari": savas_kayiplari,
 		"hazineler": hazineler,
 		"insa_kuyruklari": kuyruk_verisi,
 		"zafer_kazanildi": _zafer_kazanildi,
@@ -1577,6 +1622,10 @@ func kayittan_yukle(veri: Dictionary) -> void:
 	_savaslar = {}
 	for s: Dictionary in (veri.get("savaslar", []) as Array):
 		_savaslar[str(s.get("anahtar", ""))] = int(s.get("ilan_saati", 0))
+	savas_kayiplari = {}
+	var kayiplar: Dictionary = veri.get("savas_kayiplari", {})
+	for anahtar: String in kayiplar:
+		savas_kayiplari[anahtar] = int(kayiplar[anahtar])
 	_savas_dizinini_kur()
 
 	hazineler = {}

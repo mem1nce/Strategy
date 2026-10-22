@@ -56,9 +56,6 @@ const KAYBETME_RENGI: Color = Color("#e05b5b")
 const KENAR_BOSLUGU: int = 20
 ## Bildirim kartlarının üst çubuğun altında kalması için üstten boşluk (piksel).
 const BILDIRIM_UST_BOSLUGU: float = 140.0
-## Sıralama panelinin üst çubuğa ve alt panele binmemesi için bırakılan boşluklar (piksel).
-const SIRALAMA_UST_BOSLUGU: float = 150.0
-const SIRALAMA_ALT_BOSLUGU: float = 250.0
 ## Teknoloji paneli büyüktür: sol üstteki hazine yazısının altından ekranın altına kadar olan
 ## alanda ortalanır. Açıkken alt panel kapalıdır (bkz. main.gd, _teknolojiyi_ac).
 const TEKNOLOJI_UST_BOSLUGU: float = 250.0
@@ -168,13 +165,16 @@ func kur(dunya: Dunya) -> void:
 	sonuc_ortalayici.add_child(_sonuc_paneli)
 	_sonuc_paneli.kapat_basildi.connect(func() -> void: sonuc_kapatildi.emit())
 
-	# Sıralama paneli üst çubukla alt panel arasındaki boşluğun ortasında durur; ekranın
-	# tam ortasında dursaydı alt panele biniyordu.
+	# Sıralama paneli (Güç / Ekonomi sekmeleriyle uzun): bütçe ve ticaret panelleri gibi ülke
+	# kartının altından ekranın altına kadar, soldaki mod düğmeleri ile sağdaki bildirimler
+	# arasında durur.
 	var siralama_ortalayici: CenterContainer = CenterContainer.new()
 	siralama_ortalayici.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	siralama_ortalayici.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	siralama_ortalayici.offset_top = SIRALAMA_UST_BOSLUGU
-	siralama_ortalayici.offset_bottom = -SIRALAMA_ALT_BOSLUGU
+	siralama_ortalayici.offset_top = ORTA_PANEL_UST_BOSLUGU
+	siralama_ortalayici.offset_bottom = -KENAR_BOSLUGU
+	siralama_ortalayici.offset_left = ORTA_PANEL_SOL_BOSLUGU
+	siralama_ortalayici.offset_right = -(BildirimKutusu.KART_BOYUTU.x + 2 * KENAR_BOSLUGU)
 	kok.add_child(siralama_ortalayici)
 	_siralama_paneli = SiralamaPaneli.new()
 	siralama_ortalayici.add_child(_siralama_paneli)
@@ -428,8 +428,8 @@ func yz_yonetimini_goster(acik: bool) -> void:
 
 
 ## Güç sıralamasını ortada gösterir. `siralama`, Oyun.guc_siralamasi()'nin döndürdüğü listedir.
-func siralamayi_goster(siralama: Array[Dictionary], oyuncu_ulkesi: String) -> void:
-	_siralama_paneli.goster(siralama, _dunya, oyuncu_ulkesi)
+func siralamayi_goster(siralama: Array[Dictionary], oyuncu_ulkesi: String, ekonomi: Array[Dictionary] = []) -> void:
+	_siralama_paneli.goster(siralama, _dunya, oyuncu_ulkesi, ekonomi)
 
 
 ## Yeni bir bildirim kartı gösterir (bkz. Oyun.bildirim_gonder).
@@ -445,6 +445,11 @@ func bildirim_goster(metin: String, bolge_id: String) -> void:
 static func _bildirim_turu(metin: String) -> Array:
 	var kucuk: String = metin.to_lower()
 	for kural: Array in [
+			["petrol krizi", "petrol", ArayuzTemasi.TEHLIKE], ["durgunluk", "ticaret", ArayuzTemasi.TEHLIKE],
+			["ticaret patlaması", "ticaret", ArayuzTemasi.BASARI], ["maden bolluğu", "maden", ArayuzTemasi.BASARI],
+			["geçit kazası", "gecit", ArayuzTemasi.TEHLIKE], ["tazminat", "para", ArayuzTemasi.VURGU],
+			["ticaret anlaşması yapıldı", "ticaret", ArayuzTemasi.BASARI], ["ticaret anlaşması bitti", "ticaret", ArayuzTemasi.TEHLIKE],
+			["ambargo", "ambargo", ArayuzTemasi.VURGU], ["hazinesi", "para", ArayuzTemasi.BASARI],
 			["savaş ilan", "savas", ArayuzTemasi.TEHLIKE], ["muharebe", "muharebe", ArayuzTemasi.TEHLIKE],
 			["kaybett", "savas", ArayuzTemasi.TEHLIKE], ["teslim", "baris", ArayuzTemasi.VURGU],
 			["barış", "baris", ArayuzTemasi.BASARI], ["ele geçir", "ordu", ArayuzTemasi.BASARI],

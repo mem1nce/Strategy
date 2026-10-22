@@ -212,3 +212,52 @@ kaydırma, tekerlek = yakınlaştırma.
     kaymalı. Ayarlar → "Grafik: Düşük" → dalga, kabartma ve kâğıt dokusu kalkmalı (harita düz
     renkli). Ayarlar → Lisanslar → Natural Earth, flag-icons (MIT), Cinzel ve Inter (OFL)
     metinleri okunmalı, kaydırılabilmeli.
+
+39. **Bütçe** — Ülkeni seç, sol üstteki ülke kartına dokun → ortada "Bütçe" paneli açılmalı:
+    solda gelirler (Sanayi, Ticaret, Kaynak ihracatı, Geçiş ücretleri, Savaş tazminatı), sağda
+    giderler (Ordu bakımı, Kaynak ithalatı, Borç faizi, Ödenen tazminat), altta günlük net,
+    borç / limit çubuğu, petrol-maden tablosu (üretim, tüketim, fiyat okuyla) ve hazine grafiği.
+    Panel sağdaki bildirimlerin ve sol üstteki kartın altına binmemeli. Kartın altında petrol
+    ve maden dengesi artıysa yeşil, eksiyse kırmızı yazmalı.
+
+40. **Terhis ve iflas** — Kendi tümenine dokun → "Terhis et" → onay penceresi; onaylayınca
+    tümen kalkmalı, günlük bakım azalmalı. (İflas için çok tümen kurup bekle: borç limiti
+    aşılınca "İflas ettin" bildirimi gelmeli, inşaat durmalı.)
+
+41. **Ticaret paneli** — Sağ üstteki "Ticaret" düğmesine bas → panel açılmalı, başlıkta
+    "Kapasite 2/5" gibi rozet olmalı. Anlaşmalar: ortağın bayrağı, günlük değer, "Rota ≈ … km",
+    geçtiği geçitler ve kırmızı "Bitir". Adaylar: "Teklif et"e bas → kabul edilirse "… ile
+    ticaret anlaşması yapıldı", edilmezse "… reddetti" bildirimi. Ambargolar sekmesi
+    uygulananları göstermeli.
+
+42. **Gelen teklif** — Oyunu biraz akıt → sağda bayraklı, "Kabul / Reddet" düğmeli bir teklif
+    kartı gelmeli (aynı anda en çok 2). Kabul → anlaşma panelde görünmeli. Reddet → kart
+    kapanmalı ve o ülke uzun süre yeniden teklif etmemeli.
+
+43. **Ülke panelinde ticaret** — Yabancı bir bölgeye dokun → "Ticaret teklif et" (anlaşma
+    varsa kırmızı "Anlaşmayı bitir") ve "Ambargo uygula" düğmeleri olmalı. Ambargo uygula →
+    o ülkeyle anlaşma bitmeli, düğme "Ambargo kaldır"a dönmeli, teklif düğmesi kaybolmalı.
+
+44. **Liman** — Kendi kıyı bölgene dokun → "Liman kur" ya da "Liman 2/3 Geliştir (450)" düğmesi
+    olmalı (iç bölgede olmamalı). Bas → üst çubukta "Liman · … sa" üretimi görünmeli; bitince
+    seviye artmalı.
+
+45. **Ticaret haritası** — Sol kenardaki dördüncü (⇄) düğme → ülke renkleri soluklaşmalı,
+    rotalar çizilmeli (senin rotaların altın ve kalın), limanlarda çapa ve seviye, geçitlerde
+    halka ve bayrak, petrol/maden simgeleri olmalı. Oyun akarken küçük gemi ve kamyonlar
+    rotalarda gidip gelmeli, durunca durmalı. Ayarlar → "Grafik: Düşük" → araçlar kaybolmalı.
+    Siyasi moda dönünce yalnızca kendi rotaların ince ve soluk görünmeli.
+
+46. **Geçit paneli** — Ticaret modunda İstanbul Boğazı'nın halkasına dokun → altta "İstanbul
+    Boğazı · Açık" paneli: kontrol eden Türkiye, Karadeniz – Akdeniz, geçen rota sayısı ve
+    günlük geçiş ücreti. Başka bir bölgeye dokununca kapanmalı.
+
+47. **Savaş ve geçit** — Türkiye olarak Rusya'yla savaşa gir (ya da Rusya'yla savaştaki bir
+    ülkeyi seç) → ertesi gün Ticaret modunda Rusya rotaları İstanbul Boğazı'ndan geçmemeli.
+
+48. **Olaylar ve tazminat** — Uzun oynayınca yılda bir kadar "Petrol krizi", "Küresel
+    durgunluk", "Geçit kazası" gibi bildirim kartları gelmeli. Bir savaşı daha çok bölge alarak
+    bitir → "Tazminat: … sana ödeyecek" bildirimi ve bütçede "Savaş tazminatı" geliri.
+
+49. **Sıralama: Ekonomi** — "Sıralama" → "Ekonomi" sekmesi → günlük gelire göre ilk 10 ülke,
+    yanında ⇄ simgesiyle ticaret geliri; senin satırın altın çerçeveli.

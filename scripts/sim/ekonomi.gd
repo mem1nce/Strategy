@@ -9,12 +9,12 @@ extends RefCounted
 const DENGE_DOSYASI: String = "res://data/balance.json"
 
 ## Bütçe kalemleri, panelde bu sırayla yazılır.
-const GELIR_KALEMLERI: Array[String] = ["sanayi", "ticaret", "ihracat", "gecis"]
-const GIDER_KALEMLERI: Array[String] = ["bakim", "ithalat", "faiz"]
+const GELIR_KALEMLERI: Array[String] = ["sanayi", "ticaret", "ihracat", "gecis", "tazminat"]
+const GIDER_KALEMLERI: Array[String] = ["bakim", "ithalat", "faiz", "tazminat_odeme"]
 const KALEM_ADLARI: Dictionary[String, String] = {
 	"sanayi": "Sanayi", "ticaret": "Ticaret", "ihracat": "Kaynak ihracatı", "gecis": "Geçiş ücretleri",
-	"bakim": "Ordu bakımı",
-	"ithalat": "Kaynak ithalatı", "faiz": "Borç faizi",
+	"tazminat": "Savaş tazminatı", "bakim": "Ordu bakımı",
+	"ithalat": "Kaynak ithalatı", "faiz": "Borç faizi", "tazminat_odeme": "Ödenen tazminat",
 }
 
 var baslangic_gun_geliri: float = 60.0
@@ -29,6 +29,9 @@ var iflas_guc_kaybi: float = 0.04
 ## İflas, borç limitin bu oranının altına inince biter (sınırda gidip gelmesin diye).
 var iflas_cikis_orani: float = 0.8
 var gecmis_gun: int = 90
+## Barışta daha çok bölge kaybeden taraf, günlük gelirinin bu oranını bu kadar gün öteki tarafa öder.
+var tazminat_orani: float = 0.15
+var tazminat_gun: int = 180
 
 ## Ülke -> kalem adı -> son günün değeri (gelirler ve giderler pozitif yazılır).
 var kalemler: Dictionary[String, Dictionary] = {}
@@ -38,6 +41,10 @@ var gecmis: Dictionary[String, PackedFloat32Array] = {}
 var iflaslar: Dictionary[String, bool] = {}
 ## Petrol ve maden piyasası (bkz. Piyasa).
 var piyasa: Piyasa = Piyasa.new()
+## Dünya ekonomisi olayları (bkz. EkonomikOlaylar).
+var olaylar: EkonomikOlaylar = EkonomikOlaylar.new()
+## Süren tazminatlar: {"oduyen", "alan", "bitis_saati"}.
+var tazminatlar: Array[Dictionary] = []
 
 
 func _init() -> void:
@@ -50,6 +57,8 @@ func _init() -> void:
 	iflas_guc_kaybi = float(ayar.get("iflas_gunluk_guc_kaybi", iflas_guc_kaybi))
 	iflas_cikis_orani = float(ayar.get("iflas_cikis_orani", iflas_cikis_orani))
 	gecmis_gun = int(ayar.get("gecmis_gun", gecmis_gun))
+	tazminat_orani = float(ayar.get("tazminat_orani", tazminat_orani))
+	tazminat_gun = int(ayar.get("tazminat_gun", tazminat_gun))
 
 
 ## Oyun başında her ülkenin hazinesi yaklaşık `baslangic_gun_geliri` (60) günlük gelirdir.
@@ -149,9 +158,12 @@ func iflasta_mi(ulke_id: String) -> bool:
 ## iflastaki ülkelerin tümenleri güç kaybeder.
 func gunu_isle(oyun: Oyun, su_anki_saat: int) -> void:
 	var dunya: Dunya = oyun.dunya
+	olaylar.gunu_isle(oyun, su_anki_saat)
+	piyasa.olay_carpanlari = {"petrol": olaylar.carpan("petrol_uretimi"), "maden": olaylar.carpan("maden_uretimi")}
 	var sanayiler: Dictionary[String, float] = Piyasa._ham_sanayiler(oyun, su_anki_saat)
 	var kaynak_ticareti: Dictionary[String, Dictionary] = piyasa.gunu_isle(oyun, su_anki_saat, sanayiler)
-	var anlasma_gelirleri: Dictionary[String, Dictionary] = oyun.ticaret.gunu_isle(oyun, su_anki_saat, sanayiler)
+	var anlasma_gelirleri: Dictionary[String, Dictionary] = oyun.ticaret.gunu_isle(oyun, su_anki_saat, sanayiler,
+			olaylar.carpan("ticaret"))
 	var bakimlar: Dictionary[String, float] = {}
 	var barista: Dictionary[String, bool] = {}
 	for birlik: Birlik in oyun.birlikler:
@@ -175,8 +187,17 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int) -> void:
 			"ithalat": float(ticaret.get("ithalat", 0.0)),
 			"bakim": bakimlar.get(ulke_id, 0.0) * (1.0 - UlkeBonuslari.deger(ulke_id, "bakim_indirimi")),
 			"faiz": maxf(0.0, -hazine) * aylik_faiz / 30.0,
+			"tazminat": 0.0,
+			"tazminat_odeme": 0.0,
 		}
 		kalemler[ulke_id] = kalem
+	_tazminatlari_isle(oyun, su_anki_saat)
+
+	for ulke: Ulke in dunya.ulke_listesi:
+		var ulke_id: String = ulke.id
+		if not kalemler.has(ulke_id) or (not sanayiler.has(ulke_id) and not bakimlar.has(ulke_id)):
+			continue
+		var hazine: float = oyun.hazineler.get(ulke_id, 0.0)
 		hazine += net(oyun, ulke_id)
 		oyun.hazineler[ulke_id] = hazine
 		_iflasi_guncelle(oyun, ulke_id)
@@ -187,6 +208,58 @@ func gunu_isle(oyun: Oyun, su_anki_saat: int) -> void:
 		gecmis[ulke_id] = liste
 	if not iflaslar.is_empty():
 		_iflas_kayiplari(oyun)
+
+
+## Süren tazminatlar: ödeyen, bugünkü gelirinin (tazminat hariç) `tazminat_orani`nı alana öder.
+## Süresi biten ya da taraflarından biri yok olan tazminat düşer.
+func _tazminatlari_isle(oyun: Oyun, su_anki_saat: int) -> void:
+	for t: Dictionary in tazminatlar.duplicate():
+		var oduyen: String = t["oduyen"]
+		var alan: String = t["alan"]
+		if int(t["bitis_saati"]) <= su_anki_saat or not kalemler.has(oduyen) or not kalemler.has(alan) \
+				or oyun.dunya.ulkenin_bolge_sayisi(oduyen) == 0 or oyun.dunya.ulkenin_bolge_sayisi(alan) == 0:
+			tazminatlar.erase(t)
+			continue
+		var gelir: float = 0.0
+		for kalem: String in GELIR_KALEMLERI:
+			if kalem != "tazminat":
+				gelir += float(kalemler[oduyen].get(kalem, 0.0))
+		var tutar: float = maxf(0.0, gelir) * tazminat_orani
+		kalemler[oduyen]["tazminat_odeme"] = float(kalemler[oduyen].get("tazminat_odeme", 0.0)) + tutar
+		kalemler[alan]["tazminat"] = float(kalemler[alan].get("tazminat", 0.0)) + tutar
+
+
+## Barış yapıldı: savaşta daha çok bölge kaybeden taraf (eşitse kimse) `tazminat_gun` gün
+## tazminat öder. Ödeyenin id'si döner (yoksa boş).
+func tazminat_baslat(oyun: Oyun, ulke_a: String, ulke_b: String, a_kaybi: int, b_kaybi: int, su_anki_saat: int) -> String:
+	if a_kaybi == b_kaybi:
+		return ""
+	var oduyen: String = ulke_a if a_kaybi > b_kaybi else ulke_b
+	var alan: String = ulke_b if oduyen == ulke_a else ulke_a
+	tazminatlar.append({"oduyen": oduyen, "alan": alan, "bitis_saati": su_anki_saat + tazminat_gun * 24})
+	if oyun.oyuncu_ulkesi == oduyen or oyun.oyuncu_ulkesi == alan:
+		var karsi: Ulke = oyun.dunya.ulkeler[alan if oyun.oyuncu_ulkesi == oduyen else oduyen]
+		if oyun.oyuncu_ulkesi == oduyen:
+			oyun.bildirim_gonder.emit("Tazminat: %d gün boyunca günlük gelirinin %%%d'ini %s'a ödeyeceksin."
+					% [tazminat_gun, roundi(tazminat_orani * 100), karsi.ad], "")
+		else:
+			oyun.bildirim_gonder.emit("Tazminat: %s %d gün boyunca günlük gelirinin %%%d'ini sana ödeyecek."
+					% [karsi.ad, tazminat_gun, roundi(tazminat_orani * 100)], "")
+	return oduyen
+
+
+## Ülkeler gelirine göre büyükten küçüğe: {"ulke_id", "gelir", "ticaret"} (sıralama panelinin
+## Ekonomi sekmesi için).
+func ekonomi_siralamasi(oyun: Oyun) -> Array[Dictionary]:
+	var sonuc: Array[Dictionary] = []
+	for ulke: Ulke in oyun.dunya.ulke_listesi:
+		if oyun.dunya.ulkenin_bolge_sayisi(ulke.id) == 0:
+			continue
+		var k: Dictionary = kalem_tahmini(oyun, ulke.id)
+		sonuc.append({"ulke_id": ulke.id, "gelir": gunluk_gelir(oyun, ulke.id),
+			"ticaret": float(k.get("ticaret", 0.0))})
+	sonuc.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["gelir"]) > float(b["gelir"]))
+	return sonuc
 
 
 func _iflasi_guncelle(oyun: Oyun, ulke_id: String) -> void:
@@ -229,6 +302,8 @@ func kayit_verisi(oyuncu_ulkesi: String) -> Dictionary:
 		"iflaslar": iflaslar.keys(),
 		"oyuncu_gecmisi": Array(gecmis.get(oyuncu_ulkesi, PackedFloat32Array())),
 		"piyasa": piyasa.kayit_verisi(),
+		"olay": olaylar.kayit_verisi(),
+		"tazminatlar": tazminatlar,
 	}
 
 
@@ -244,6 +319,11 @@ func kayittan_yukle(veri: Dictionary, oyuncu_ulkesi: String) -> void:
 	for ulke_id: Variant in (veri.get("iflaslar", []) as Array):
 		iflaslar[str(ulke_id)] = true
 	piyasa.kayittan_yukle(veri.get("piyasa", {}))
+	olaylar.kayittan_yukle(veri.get("olay", {}))
+	tazminatlar = []
+	for t: Dictionary in (veri.get("tazminatlar", []) as Array):
+		tazminatlar.append({"oduyen": str(t.get("oduyen", "")), "alan": str(t.get("alan", "")),
+			"bitis_saati": int(t.get("bitis_saati", 0))})
 	gecmis = {}
 	var oyuncu_gecmisi: Array = veri.get("oyuncu_gecmisi", [])
 	if oyuncu_ulkesi != "" and not oyuncu_gecmisi.is_empty():

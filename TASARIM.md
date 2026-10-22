@@ -593,6 +593,26 @@ data/trade.json (← `tools/ticaret_uret.py`, Natural Earth `ne_10m_ports`).
   "Grafik: Düşük" ayarında kapalı.
 - **Siyasi mod:** yalnızca oyuncunun rotaları, ince ve soluk altın.
 
+## 9e. Ekonomik olaylar ve tazminat
+
+- **Olaylar** (`sim/ekonomik_olaylar.gd`, hepsi data/events.json'da): her gün yılda ortalama
+  1 olay olasılığıyla, oyunun tohumlu rastgele sayı üretecinden; aynı anda tek olay. Oyuncuya
+  bildirim kartıyla duyurulur.
+  - Petrol krizi: dünya petrol üretimi ×0,75, 90 gün (fiyat yükselir).
+  - Küresel durgunluk: ticaret değerleri ×0,7, 120 gün.
+  - Ticaret patlaması: ticaret değerleri ×1,3, 90 gün.
+  - Maden bolluğu: dünya maden üretimi ×1,5, 90 gün.
+  - Geçit kazası: rastgele bir (açık) geçit 30 gün kapanır; rotalar dolanır.
+- **Tazminat:** barışta, savaşta daha çok bölge kaybeden taraf 180 gün boyunca günlük
+  gelirinin (tazminat hariç) %15'ini öbür tarafa öder (bütçede "Savaş tazminatı" / "Ödenen
+  tazminat"; data/balance.json → "butce"). Kayıplar `Oyun.savas_kayiplari`'nda sayılır, savaş
+  başlayınca sıfırlanır; eşitse tazminat yok.
+- **Teslim:** teslim olan ülkenin artı hazinesi başkentini alana geçer (borcu silinir). Son
+  bölgesini (ör. tek bölgeli ülkenin başkenti) kaybeden ülke de teslim olur.
+- **Sıralama paneli:** "Güç" ve "Ekonomi" sekmeleri; Ekonomi, günlük gelire göre ilk 10 ülkeyi
+  günlük ticaret geliriyle birlikte gösterir.
+- **Görevler:** projede görev sistemi yok; görev şablonu eklenmedi.
+
 ## 10. Yapay zekâ
 
 Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
@@ -623,7 +643,9 @@ Oyuncunun ülkesi dışındaki her ülke, kendi kendine karar verir.
   yapmaz. Tutarsa, doğrudan komşu olup kendisinden `yapay_zeka.savas_ilani_esigi` (×2) kat
   güçsüz, henüz savaşılmayan ilk ülkeye ilan eder. Oyuncu, oyunun ilk
   `yapay_zeka.oyuncuya_dokunulmazlik_gun` (90) günü boyunca aday sayılmaz
-  (`Oyun._savas_ilanini_degerlendir`).
+  (`Oyun._savas_ilanini_degerlendir`). Ekonomi: günlük neti eksiyse ya da hazinesinde
+  `yapay_zeka.savas_sandigi_gun` (30) günlük gelir yoksa savaş açmaz; ticaret ortağına savaş
+  için güç eşiği `yapay_zeka.ticaret_ortagi_savas_carpani` (×2) kat artar.
 - **"Ordumu yapay zekâ yönetsin":** üst çubuktaki "Ordu: YZ" düğmesi (`Oyun.yz_oyuncuyu_yonetsin`)
   açılınca, oyuncunun ülkesi de `_yapay_zekayi_isle()`'nin atladığı istisnadan çıkar ve aynı
   barış/savaş davranışıyla yönetilir. Tercih kayıtta saklanır.
@@ -874,6 +896,7 @@ istenen aşama yapılır.
 | 7 | ✅ | **Kayıt** | Oyunu kaydetme ve yükleme |
 | 7a | ✅ | **Birlik türleri, teknoloji, tahkimat** | Piyade/zırhlı/topçu ve üstünlük üçgeni, 4 dal × 3 seviye araştırma, 3 seviye tahkimat, YZ'nin üçünü de kullanması |
 | 7b | ✅ | **Görsel yenileme** | Stil kılavuzu (STIL.md) ve ortak tema, kabartmalı harita, harita modları, bayraklı tümen kartları, yeni arayüz; kurallar değişmedi |
+| 7c | ✅ | **Ekonomi ve ticaret** | Bütçe, bakım, borç ve iflas; petrol/maden piyasası; limanlar, ticaret anlaşmaları, rotalar ve geçitler; Ticaret harita modu; ekonomik olaylar ve tazminat (bkz. 9-9e) |
 | 8 | ◐ | **Android** | Dışa aktarma, gerçek telefonda dokunma ve güvenli alan denemesi, performans |
 
 Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, odak ağacı,
@@ -881,7 +904,9 @@ Kapsam dışı (istenmedikçe eklenmez): hava ve deniz kuvvetleri, diplomasi, od
 
 **Denge hedefleri** (`tests/uzun_kosu.gd`, 5 yıllık tam YZ oyunu): 5-30 ülke teslim olur,
 hiçbir ülke dünyadaki bölgelerin %40'ını geçmez, üç tümen türünün her biri üretimin en az
-%15'i olur, koşu 120 saniyeden kısa sürer.
+%15'i olur, koşu 120 saniyeden kısa sürer. Ekonomi: 0-10 ülke iflas eder, petrol ve maden
+fiyatı taban fiyatın 0,5-3 katında kalır, ticaret ortalama bir ülkenin gelirinin %15-35'i olur,
+ülke başına 2-5 anlaşma düşer.
 
 ## 15. Geçmiş
 

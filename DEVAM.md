@@ -835,6 +835,37 @@ Adımlar:
      küçük boyutu olmayan bir kabın içinde.
    - Görsel sınama: `tests/gorsel_cek.gd` 20-26 (ticaret paneli, ülke ticaret düğmeleri, liman,
      Ticaret modu dünya/Akdeniz, geçit paneli), 16:9 ve 20:9'da bakıldı.
+6. ✅ Olaylar ve tazminat (TASARIM 9e): `sim/ekonomik_olaylar.gd` + data/events.json (petrol
+   krizi, küresel durgunluk, ticaret patlaması, maden bolluğu, geçit kazası; yılda ~1, tohumlu,
+   aynı anda tek olay, bildirim kartıyla). Barışta daha çok bölge kaybeden 180 gün gelirinin
+   %15'ini öder (`Oyun.savas_kayiplari`, `Ekonomi.tazminatlar`, bütçe kalemleri). Teslim olanın
+   artı hazinesi başkenti alana geçer. Sıralama panelinde "Güç / Ekonomi" sekmeleri.
+   - Eski hata düzeltildi: tek bölgeli ülke başkentini kaybedince teslim işlemi hiç
+     çalışmıyordu (tümenleri ve hazinesi ortada kalıyordu); artık son bölgesini kaybeden de
+     teslim olur.
+   - `tests/sim/olay_testi.gd` (7 sınama). Toplam 191/191.
+   - Görev sistemi yok: görev şablonu eklenmedi.
+7. ✅ Denge ve sınama.
+   - Uzun koşuya "bölgesiz kalan ülke" bilgisi eklendi. Ölçünce, tek bölgeli ülkelerin
+     başkentini kaybedince teslim sayılmadan yok olduğu (önceki teslim sayısı eksik
+     sayılıyordu) ve teslim olan ülkenin inşa kuyruğu silinmediği için biten tümen işinin onu
+     "dirilttiği" görüldü (listede aynı ülke iki kez). İkisi düzeltildi: teslimde kuyruk
+     silinir, el değiştirmiş bölgede tümen doğmaz.
+   - Dürüst sayımla teslim 33-37'ye çıktı (hedef 5-30). YZ'nin savaş kararına ekonomi
+     eklendi (data/balance.json → yapay_zeka): neti eksiyse ya da hazinesinde 30 günlük gelir
+     ("savaş sandığı", `savas_sandigi_gun`) yoksa savaş açmaz; ticaret ortağına savaş için
+     güç üstünlüğü eşiği ×2 (`ticaret_ortagi_savas_carpani`). Savaş ilanı olasılığını 0,08'e
+     indirmek ters tepti (ordular büyüdü, süre 440 sn'ye çıktı); 0,1'de bırakıldı.
+   - Uzun koşu (P-çekirdekte; tohum 1/2/3): teslim 29/25/25, iflas 8/6/7, petrol 1,00-1,86 /
+     0,90-3,00 / 0,78-2,99, maden 0,50-3,00 (üçünde de sınıra değiyor), ticaret payı
+     %19,2/%19,1/%18,5, anlaşma 2,20/2,11/2,09, en büyük ülke %4-6, tür payları ≥%21, süre
+     111/120/119 sn. **Süre sınıra çok yakın**: savaş azalınca ordular büyüdü (piyade üretimi
+     ~640'tan ~1200'e). Bilgisayarda Chrome/VS Code açıkken ölçüldü; sonraki pakette tümen
+     sayısı ya da dizin maliyeti düşürülmeli.
+   - 16:9 (1600×900) ve 20:9 (2000×900) ekran görüntüleri: bütçe, ticaret paneli, ülke
+     ticaret düğmeleri, liman, Ticaret modu, geçit paneli, sıralama Ekonomi sekmesi.
+8. ✅ Belgeler: "Nasıl oynanır" (bütçe, kaynaklar, ticaret, geçitler, tazminat, Ticaret modu),
+   TASARIM 9-9e ve yol haritası (7c), STIL (Ticaret modu), TEST_LISTESI 39-49.
 
 ## Kararlar
 

@@ -52,8 +52,26 @@ const NASIL_OYNANIR_METNI_BICIMI: String = (
 		"Savaş sisi: yalnızca kendi bölgelerini, tümenlerinin olduğu yerleri ve bunların " +
 		"komşularını görürsün; karanlık bölgelerdeki düşman tümenleri görünmez.\n" +
 		"Her ülkenin küçük bir bonusu var (en çok %%15); bölge panelinde yazar.\n" +
+		"Bütçe: sol üstteki ülke kartına dokun. Gelirin sanayi, ticaret, kaynak satışı ve " +
+		"geçiş ücretlerinden gelir; ordu bakımı, kaynak alımı ve borç faizi gider. Barışta " +
+		"kendi toprağındaki tümenler daha az bakım ister; gereksiz tümeni birlik kartından " +
+		"terhis et. Hazine eksiye düşerse borçlanırsın; borç 90 günlük geliri geçerse iflas " +
+		"edersin: inşaat durur, tümenler güç kaybeder.\n" +
+		"Kaynaklar: petrol (sanayi ve zırhlılar) ve maden (inşaatlar). Fazlası kendiliğinden " +
+		"satılır, eksiği alınır; fiyat arz ve talebe göre değişir. Alamadığın petrol gelirini " +
+		"ve zırhlılarını, maden inşaatı yavaşlatır.\n" +
+		"Ticaret: üst çubuktaki \"Ticaret\" düğmesinden anlaşma teklif et, gelen teklifleri " +
+		"yanıtla. Anlaşma iki tarafa da her gün gelir getirir; kapasiteni limanlarınla " +
+		"(kıyı bölgende \"Liman\") artırırsın. Bir ülkeye ambargo uygulayabilirsin; savaş da " +
+		"ambargo sayılır.\n" +
+		"Geçitler: İstanbul, Süveyş, Panama gibi geçitlerden geçen rotalar geçidi tutana " +
+		"ücret öder. Savaştığın ülkenin geçidinden ne ticaretin ne donanman geçebilir; rota " +
+		"dolanır ya da kesilir.\n" +
+		"Barışta daha çok bölge kaybeden taraf 180 gün tazminat öder. Teslim olan ülkenin " +
+		"hazinesi başkentini alana geçer.\n" +
 		"Sol kenardaki düğmeler haritayı değiştirir: siyasi, diplomasi (sen / savaştığın / " +
-		"tarafsız) ve ekonomi (bölgelerin sanayisi).\n" +
+		"tarafsız), ekonomi (bölgelerin sanayisi) ve ticaret (rotalar, limanlar, geçitler; " +
+		"geçide dokununca bilgisi açılır).\n" +
 		"Amaç: kıtandaki bölgelerin %%%d'ı ya da daha fazlasını ele geçirmek ya da " +
 		"ülkeni teslim olmaktan korumak.")
 

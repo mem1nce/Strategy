@@ -44,7 +44,9 @@
 		"borc_limiti_gun": 90,
 		"iflas_gunluk_guc_kaybi": 0.04,
 		"iflas_cikis_orani": 0.8,
-		"gecmis_gun": 90
+		"gecmis_gun": 90,
+		"tazminat_orani": 0.15,
+		"tazminat_gun": 180
 	},
 	"piyasa": {
 		"taban_fiyat": {"petrol": 1.0, "maden": 1.0},
@@ -94,6 +96,8 @@
 		"saldiri_esigi": 1.3,
 		"savas_ilani_gun_araligi": 30,
 		"savas_ilani_esigi": 2.0,
+		"ticaret_ortagi_savas_carpani": 2.0,
+		"savas_sandigi_gun": 30,
 		"savas_ilani_olasiligi": 0.1,
 		"azami_eszamanli_savas": 2,
 		"oyuncuya_dokunulmazlik_gun": 90,

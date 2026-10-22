@@ -102,6 +102,14 @@ func _init() -> void:
 	basarili = basarili and teslim_tamam
 	print("  %s Teslim olan ülke: %d (hedef %d-%d) %s" % [_isaret(teslim_tamam), teslimler.size(),
 			ASGARI_TESLIM, AZAMI_TESLIM, ", ".join(teslimler)])
+	var bolgesiz: int = 0
+	var tek_bolgeli: int = 0
+	for ulke: Ulke in oyun.dunya.ulke_listesi:
+		if oyun.dunya.ulkenin_bolge_sayisi(ulke.id) == 0 and not ulke.baslangic_bolgeleri.is_empty():
+			bolgesiz += 1
+			if ulke.baslangic_bolgeleri.size() == 1:
+				tek_bolgeli += 1
+	print("  Bilgi: bölgesiz kalan ülke %d (tek bölgeyle başlayan %d)" % [bolgesiz, tek_bolgeli])
 	var pay_tamam: bool = en_buyuk_pay <= AZAMI_PAY
 	basarili = basarili and pay_tamam
 	print("  %s En büyük ülke: %s, bölgelerin %%%.1f'i (hedef en çok %%%d)" % [_isaret(pay_tamam),

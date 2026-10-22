@@ -10,8 +10,8 @@ const ALT_BOSLUK: float = 340.0
 const YAKIN_DOKUNMA_YARICAPI: float = 30.0
 ## Bütçe kalemlerinin simgeleri (art/icons).
 const BUTCE_SIMGELERI: Dictionary[String, String] = {
-	"sanayi": "sanayi", "ticaret": "ticaret", "ihracat": "gelir", "gecis": "gecit", "bakim": "ordu",
-	"ithalat": "maden", "faiz": "para",
+	"sanayi": "sanayi", "ticaret": "ticaret", "ihracat": "gelir", "gecis": "gecit", "tazminat": "baris",
+	"bakim": "ordu", "ithalat": "maden", "faiz": "para", "tazminat_odeme": "baris",
 }
 ## Ticaret panelinde gösterilen en iyi aday ortak sayısı.
 const ADAY_SAYISI: int = 6
@@ -139,7 +139,8 @@ func _ready() -> void:
 	_arayuz.savas_istendi.connect(_savas_istendi)
 	_arayuz.baris_istendi.connect(_baris_istendi)
 	_arayuz.yz_yonetimi_degisti.connect(func(acik: bool) -> void: _oyun.yz_oyuncuyu_yonetsin = acik)
-	_arayuz.siralama_istendi.connect(func() -> void: _arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi))
+	_arayuz.siralama_istendi.connect(func() -> void:
+		_arayuz.siralamayi_goster(_oyun.guc_siralamasi(), _oyun.oyuncu_ulkesi, _oyun.ekonomi.ekonomi_siralamasi(_oyun)))
 	_arayuz.bildirime_dokunuldu.connect(_bildirime_dokunuldu)
 	_arayuz.harita_modu_degisti.connect(_harita.modu_ayarla)
 	_arayuz.menuye_donus_istendi.connect(_menuye_don)

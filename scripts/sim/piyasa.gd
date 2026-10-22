@@ -130,6 +130,7 @@ func bolgenin_uretimi(oyun: Oyun, bolge: Bolge, kaynak: String, su_anki_saat: in
 	var miktar: float = float((bolge_uretimi.get(kaynak, {}) as Dictionary).get(bolge.id, 0.0))
 	if miktar <= 0.0:
 		return 0.0
+	miktar *= olay_carpanlari.get(kaynak, 1.0)
 	if oyun._onceki_cekismeliler.has(bolge.id):
 		miktar *= muharebe_uretim_carpani
 	elif oyun.bolge_isgal_altinda_mi(bolge, su_anki_saat):
@@ -142,6 +143,8 @@ func bolgenin_uretimi(oyun: Oyun, bolge: Bolge, kaynak: String, su_anki_saat: in
 var _kiyili: Dictionary[String, bool] = {}
 var _komsular: Dictionary[String, Dictionary] = {}
 var _komsu_surumu: int = -1
+## Olayların üretim çarpanları (kaynak -> çarpan; bkz. EkonomikOlaylar), gün başında Ekonomi yazar.
+var olay_carpanlari: Dictionary[String, float] = {}
 ## Kara komşusu bölge çiftleri (her çift bir kez, düz dizi: a0, b0, a1, b1, …) ve kıyı bölgeleri;
 ## komşuluk değişmediği için bir kez kurulur.
 var _sinir_ciftleri: Array[Bolge] = []

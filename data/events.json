@@ -1,0 +1,41 @@
+{
+	"not": "Dünya ekonomisi olayları (bkz. TASARIM.md 9e). Yılda ortalama yillik_olay_sayisi olay; aynı anda tek olay sürer. Çarpanlar: petrol_uretimi, maden_uretimi (dünya üretimi), ticaret (anlaşma değerleri). gecit_kapat: rastgele bir geçit sure_gun boyunca kapanır. Metindeki %s geçidin adıdır.",
+	"yillik_olay_sayisi": 1.0,
+	"olaylar": [
+		{
+			"id": "petrol_krizi",
+			"ad": "Petrol krizi",
+			"metin": "Petrol krizi: dünya petrol üretimi düştü, fiyat yükselecek.",
+			"sure_gun": 90,
+			"carpanlar": {"petrol_uretimi": 0.75}
+		},
+		{
+			"id": "kuresel_durgunluk",
+			"ad": "Küresel durgunluk",
+			"metin": "Küresel durgunluk: ticaret gelirleri düştü.",
+			"sure_gun": 120,
+			"carpanlar": {"ticaret": 0.7}
+		},
+		{
+			"id": "ticaret_patlamasi",
+			"ad": "Ticaret patlaması",
+			"metin": "Ticaret patlaması: ticaret gelirleri arttı.",
+			"sure_gun": 90,
+			"carpanlar": {"ticaret": 1.3}
+		},
+		{
+			"id": "maden_bollugu",
+			"ad": "Maden bolluğu",
+			"metin": "Maden bolluğu: dünya maden üretimi arttı, fiyat düşecek.",
+			"sure_gun": 90,
+			"carpanlar": {"maden_uretimi": 1.5}
+		},
+		{
+			"id": "gecit_kazasi",
+			"ad": "Geçit kazası",
+			"metin": "Geçit kazası: %s 30 gün kapalı, rotalar dolanacak.",
+			"sure_gun": 30,
+			"gecit_kapat": true
+		}
+	]
+}

@@ -172,4 +172,10 @@ func _calistir() -> void:
 	await _cek("26_gecit")
 	_ana.call("_bolgeyi_sec", "")
 	(modlar.get_child(0).get_child(0) as Button).button_pressed = true
+
+	# Sıralama panelinin Ekonomi sekmesi.
+	arayuz.call("_siralama_degisti", true)
+	var siralama_sekmeleri: SekmeGrubu = (arayuz.get("_siralama_paneli").get("_panel") as BaslikliPanel).sag_alan.get_child(0)
+	(siralama_sekmeleri.get_child(0).get_child(1) as Button).button_pressed = true
+	await _cek("27_siralama_ekonomi")
 	quit(0)
